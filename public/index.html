@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="ar" dir="rtl" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14181B" id="themeColor">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>مخزن الورشة</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script src="theme.js"></script>
+<script src="config.js"></script>
+<!-- the servers every page opens first: the TLS handshake starts while the HTML is still arriving -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&family=Tajawal:wght@400;500;700&family=Poppins:wght@700;800&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<!-- pinned + SRI, the same file every page loads: a newer or altered file on the CDN is refused, not run (CLAUDE.md §8) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0/dist/umd/supabase.js" integrity="sha384-iLddHTLokph6Omwoyid4XKxHaWa6w41BnoEj0q5oOrzmYPpHIKt1wyjReA7s//pP" crossorigin="anonymous"></script>
+<style>
+  /* Orion mechanic store — oil-black and lime on the Galaxy/Phonex tokens. */
+  :root{
+    --bg:#F1F2F4; --surface:#FFFFFF; --surface2:#E9EBEF; --ink:#14171C; --muted:#5D6470; --line:#DCE0E6;
+    --primary:#3F6212; --on-primary:#FFFFFF; --primary-rgb:63,98,18;
+    --yellow:#A3E635; --amt:#94600F; --amt-rgb:148,96,15;
+    --ok:#15803D; --ok-bg:rgba(22,163,74,.09); --err:#DC2626; --err-bg:rgba(220,38,38,.08); --warn:#C2410C;
+    --drv:#2563EB; --emp:#7C3AED;
+    --brand:#14181B; --head:#14181B; --head2:#26301F; --head-ink:#FFFFFF;
+    --hero:linear-gradient(135deg,#0B0E0C 0%,#1C2419 45%,#2D3B22 78%,#3F6212 100%);
+    --glow:0 10px 28px -10px rgba(20,24,27,.55);
+    --r-card:16px; --r-ctl:14px; --r-sm:12px; --r-chip:10px; --r-pill:9px; --r-hero:20px;
+    --font-head:"Cairo",system-ui,sans-serif; --font-body:"Tajawal",system-ui,sans-serif; --font-mark:"Poppins",sans-serif;
+    --nav-h:66px; --btn-h:48px; --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  html[data-theme="dark"]{
+    --bg:#0B0C0F; --surface:#15181D; --surface2:#1E2229; --ink:#ECEEF1; --muted:#9AA1AD; --line:#2A2F37;
+    --primary:#A3E635; --primary-rgb:163,230,53; --on-primary:#1A2E05; --amt:#FCD34D; --amt-rgb:252,211,77;
+    --ok:#22C55E; --err:#F87171; --warn:#FB923C; --drv:#60A5FA; --emp:#A78BFA;
+    --head:#07090A; --head2:#182016;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;-webkit-tap-highlight-color:transparent}
+  body{min-height:100dvh;display:flex;flex-direction:column}
+  h1,h2,b,th,button,label,.chip,.pill,.brand,.stat-v{font-family:var(--font-head)}
+  html[lang="ur"] body{font-family:"Noto Nastaliq Urdu",var(--font-body);line-height:1.9}
+  html[lang="ur"] td.num,html[lang="ur"] .stat-v,html[lang="ur"] .plate,html[lang="ur"] .amt{font-family:var(--font-head)}
+  html[dir="ltr"] th,html[dir="ltr"] td{text-align:left}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- header band ---------- */
+  header{background:linear-gradient(120deg,var(--head),var(--head2));color:var(--head-ink);padding:calc(10px + env(safe-area-inset-top,0px)) 16px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:0;z-index:5;overflow:hidden}
+  .stars{position:absolute;inset:0;pointer-events:none}
+  .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;animation:twinkle 3s ease-in-out 4}
+  .stars i.b{width:3px;height:3px}
+  @keyframes twinkle{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:.9;transform:scale(1.2)}}
+  header::before{content:"";position:absolute;inset:0;background:radial-gradient(120% 140% at 100% 0%,rgba(250,204,21,.22),transparent 55%);pointer-events:none}
+  header::after{content:"";position:absolute;inset:auto 0 0 0;height:4px;background:repeating-linear-gradient(135deg,#A3E635 0 14px,#14181B 14px 28px);opacity:.85;pointer-events:none}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0;position:relative}
+  .brand img.mark{height:38px;width:38px}
+  .brand h1{font-size:17px;margin:0;font-weight:800;line-height:1.2}
+  .brand small{color:rgba(255,255,255,.72);font-size:12px;font-weight:700;display:block;font-family:var(--font-head)}
+  .brand .tag{display:inline-block;background:var(--yellow);color:#17191E;font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:7px;margin-inline-start:6px;vertical-align:2px;letter-spacing:.4px;font-family:var(--font-mark)}
+  .tools{display:flex;align-items:center;gap:6px;flex-shrink:0;position:relative}
+  header button,select.lang{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:var(--head-ink);border-radius:var(--r-chip);padding:8px 11px;font:inherit;font-family:var(--font-head);font-weight:700;font-size:13px;line-height:1;transition:background .15s,transform .15s}
+  header button:active{transform:scale(.94)}
+  select.lang{width:auto;color-scheme:dark;font-size:12px;padding:7px 8px}
+  select.lang option{color:#16161A;background:#FFFFFF}
+  .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#26301F,#84CC16);color:#fff;font-family:var(--font-head);font-weight:800;font-size:16px;display:grid;place-items:center;border:2px solid rgba(255,255,255,.35);padding:0;position:relative}
+  .avatar.big{width:52px;height:52px;font-size:22px;border:0}
+
+  /* ---------- sheets ---------- */
+  .sheet-backdrop{position:fixed;inset:0;background:rgba(8,9,12,.55);z-index:20;animation:fade .2s}
+  @keyframes fade{from{opacity:0}}
+  .sheet{position:fixed;left:12px;right:12px;bottom:calc(12px + var(--kb,0px));max-width:536px;margin:auto;background:var(--surface);border-radius:20px;padding:10px 16px 16px;z-index:21;animation:sheetIn .32s var(--ease)}
+  @keyframes sheetIn{from{transform:translateY(40px);opacity:0}}
+  .sheet .handle{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+  .sheet-head{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .sheet-head b{font-size:16px}
+  .sheet-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-family:var(--font-head);font-weight:700;font-size:14px}
+  .sheet-row .segment{margin:0}.sheet-row .segment button{height:32px;padding:0 12px;font-size:12px}
+  .switch{width:46px;height:26px;border-radius:13px;background:var(--line);border:0;position:relative;padding:0;transition:background .2s;cursor:pointer}
+  .switch span{position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s var(--ease)}
+  .switch.on{background:var(--primary)}.switch.on span{transform:translateX(20px)}
+  html[dir="rtl"] .switch.on span{transform:translateX(-20px)}
+  html[data-theme="dark"] .switch.on span{background:#17191E}
+  button.ghost.danger{color:var(--err);border-color:rgba(220,38,38,.5);margin-top:16px}
+  .sheet.list{max-height:84vh;max-height:calc(84dvh - var(--kb,0px));display:flex;flex-direction:column;padding-bottom:8px}
+  .sheet:not(.list){max-height:calc(100vh - 24px - var(--kb,0px));max-height:calc(100dvh - 24px - var(--kb,0px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  /* a sheet open on a computer: the page behind stays still, and the wheel — wherever the mouse is — scrolls the sheet (9 Oct 2026) */
+  .sheet:focus{outline:none}
+  @media (pointer:fine){html{scrollbar-gutter:stable}html.sheet-open{overflow:hidden}.sheet:not(.list),.opts{scrollbar-width:thin;scrollbar-color:rgba(var(--primary-rgb),.5) transparent}}
+  .sheet.list b.title{font-size:16px;margin:0 0 10px}
+  .sheet.list input{margin-bottom:8px;padding:11px 14px;font-size:15px}
+  .opts{overflow:auto;flex:1;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+  .opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 12px;border-radius:12px;font-size:15px;cursor:pointer;animation:rise .25s var(--ease) both}
+  .opt:active{background:var(--surface2)}
+  .opt.on{background:rgba(var(--primary-rgb),.10);color:var(--primary);font-weight:700}
+  .opt.new{color:var(--amt);font-weight:800}
+  .opt .sub{font-size:12px;color:var(--muted);font-weight:500}
+  .opt svg{width:18px;height:18px;stroke:var(--primary);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .opt.on svg{opacity:1}
+  .opts .none{color:var(--muted);text-align:center;padding:18px 8px;font-size:13px;line-height:1.6}
+  #editBody label:first-child{margin-top:0}
+  select.picked{display:none}
+  .picker{width:100%;font:inherit;font-family:var(--font-body);font-size:16px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);text-align:start;display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;transition:border-color .15s}
+  .picker:active{border-color:var(--primary)}
+  .picker>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .picker .ph{color:var(--muted)}
+  .picker svg{width:18px;height:18px;flex-shrink:0;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- layout ---------- */
+  main{flex:1;padding:16px;padding-bottom:calc(var(--nav-h) + 24px);max-width:560px;width:100%;margin:0 auto}
+  .screen{display:none}
+  .screen.active{display:block;animation:screenIn 320ms var(--ease)}
+  @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .screen.active .card{animation:rise 420ms var(--ease) both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  label{display:block;font-weight:800;font-size:13px;margin:14px 0 8px}
+  label .req{color:var(--err);font-size:11px;margin-inline-start:6px}
+  label .opt-t{color:var(--muted);font-size:11px;font-weight:700;margin-inline-start:6px}
+  input,select,textarea{width:100%;font:inherit;font-size:16px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);color:var(--ink);color-scheme:light;transition:border-color .15s,box-shadow .2s}
+  html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{color-scheme:dark}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(var(--primary-rgb),.14)}
+  input::placeholder,textarea::placeholder{color:var(--muted)}
+  input.ltr{direction:ltr;text-align:start}
+  html[dir="rtl"] input.ltr{text-align:right}
+  html[dir="rtl"] input.ltr:placeholder-shown{direction:rtl}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row>*{min-width:0}
+  input[type=date],input[type=month]{-webkit-appearance:none;appearance:none;min-height:52px}
+  .tbl{overflow-x:auto;margin:0 -4px;padding:0 4px;scrollbar-width:none}.tbl::-webkit-scrollbar{display:none}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;min-height:1em;line-height:1.55}
+  .hint b{color:var(--ink)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-chip);background:var(--surface);font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;cursor:pointer;transition:transform .15s,border-color .15s}
+  .chip:active{transform:scale(.95)}
+  .chip .n{font-size:11px;font-weight:900;opacity:.75}
+  .chip.on{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+
+  /* ---------- buttons ---------- */
+  button.primary{width:100%;margin-top:20px;min-height:var(--btn-h);height:auto;line-height:1.3;padding:12px 20px;font-family:var(--font-head);font-size:15px;font-weight:800;border:0;border-radius:var(--r-ctl);background:linear-gradient(120deg,#16181D,#2E3440 55%,#434B59);color:#fff;cursor:pointer;position:relative;overflow:hidden;transition:transform .12s,opacity .2s;box-shadow:var(--glow);border-bottom:3px solid #FACC15}
+  html[data-theme="dark"] button.primary{background:linear-gradient(120deg,#84CC16,#A3E635);color:#1A2E05;border-bottom-color:#4D7C0F}
+  button.primary:active{transform:scale(.98)}
+  button.primary:disabled{opacity:.38;box-shadow:none}
+  button.primary.busy{color:transparent}
+  button.primary.busy::after{content:"";position:absolute;inset:0;margin:auto;width:20px;height:20px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+  button.primary.done{background:linear-gradient(120deg,#0F6B3A,#16A34A)}
+  button.primary.bad{background:linear-gradient(120deg,#B91C1C,#DC2626);box-shadow:0 10px 26px -12px rgba(220,38,38,.6);border-bottom-color:#7F1D1D;color:#fff}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes ripple{to{transform:scale(2.6);opacity:0}}
+  button.ghost{width:100%;margin-top:10px;min-height:var(--btn-h);padding:0 16px;font-family:var(--font-head);font-size:14px;font-weight:700;border:1.4px solid rgba(var(--primary-rgb),.55);border-radius:var(--r-ctl);background:transparent;color:var(--primary);cursor:pointer;transition:transform .12s}
+  button.ghost:active{transform:scale(.98)}
+  .btn-sm{font-family:var(--font-head);font-size:12px;font-weight:700;padding:6px 10px;border-radius:var(--r-chip);border:1px solid transparent;background:var(--surface2);color:var(--ink);margin-inline-start:4px;cursor:pointer;transition:transform .12s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+  .btn-sm:active{transform:scale(.94)}
+  .btn-sm.danger{background:rgba(220,38,38,.10);color:var(--err)}
+  .btn-sm.pr{background:rgba(var(--primary-rgb),.12);color:var(--primary)}
+  .row2b{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .row2b button{margin-top:0;font-size:13px;line-height:1.25;padding:0 8px}
+  .segment{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0;margin-top:2px}
+  .segment button{flex:0 0 auto;height:36px;white-space:nowrap;padding:0 14px;border:0;border-radius:var(--r-chip);background:var(--surface2);font-family:var(--font-head);font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer;transition:all .18s var(--ease)}
+  .segment button.on{background:var(--primary);color:var(--on-primary);font-weight:800}
+  .segment.kind button{flex:1 1 0;height:44px;font-size:14px}
+  .addnote{display:inline-flex;align-items:center;gap:4px;margin-top:14px;padding:6px 2px;border:0;background:none;color:var(--primary);font:800 13px var(--font-head);cursor:pointer}
+
+  /* ---------- cards ---------- */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);padding:14px;margin-top:12px}
+  .card>b,.card .ch{font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;font-family:var(--font-head)}
+  .card .cd{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:6px}
+  /* the month: ◀ the month ▶, two chips and a box — the same bar on the fines and on the statement */
+  .mbar{display:flex;align-items:center;gap:8px}
+  .mbar .mnav{flex:0 0 auto;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:900 18px var(--font-head);cursor:pointer}
+  .mbar .mnav:disabled{opacity:.3}
+  .mbar .mname{flex:1;min-width:0;text-align:center;font:900 18px var(--font-head)}
+  .mbar .mname small{display:block;font-size:11px;color:var(--muted);font-weight:700}
+  .mrow{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .mrow input{flex:1;min-width:0;min-height:40px;padding:6px 10px;font-size:14px}
+  .mrow .chip{height:40px}
+  /* the period (26 Oct 2026): monthly · yearly · all — the same segment on the fines and on the statement */
+  .perseg{margin-bottom:10px}.perseg button{flex:1 1 0;height:40px;font-size:13.5px}
+  .mbar.all{min-height:42px}
+  /* a year or every period: a heading per month (its fines and its amount) over its fines */
+  .mhd{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:16px 0 0;padding:9px 12px;border-radius:var(--r-sm);background:var(--surface2);border-inline-start:4px solid var(--amt);font-family:var(--font-head);font-weight:800;font-size:13.5px}
+  .mhd small{color:var(--muted);font-weight:700;font-size:11.5px}.mhd .amt{font-size:15px}
+  /* the detailed report of the period on show */
+  .rpbox{margin-top:14px;padding:12px 14px;border:1.4px dashed rgba(var(--primary-rgb),.55);border-radius:var(--r-card);background:rgba(var(--primary-rgb),.04)}
+  .rpbox b{display:block;font-family:var(--font-head);font-size:14px}.rpbox small{display:block;color:var(--muted);font-size:11.5px;font-weight:700;margin-top:2px;line-height:1.5}
+  .stmh{margin-top:16px}.stmh>b{display:block;font-family:var(--font-head);font-size:14.5px;margin-bottom:2px}
+  /* the hero: the month's deductions at a glance */
+  .hero{background:var(--hero);border:0;border-radius:var(--r-hero);padding:18px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--glow);margin-top:12px}
+  .hero::before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;inset:-110px -70px auto auto;background:radial-gradient(circle,rgba(163,230,53,.26),rgba(255,255,255,0) 70%);pointer-events:none}
+  .hero::after{content:"";position:absolute;inset:auto 0 0 0;height:5px;background:repeating-linear-gradient(135deg,#A3E635 0 12px,transparent 12px 24px);opacity:.7;pointer-events:none}
+  .hero .h-ttl{font-size:13px;font-weight:700;opacity:.9;position:relative}
+  .hero .h-big{font-family:var(--font-head);font-size:34px;font-weight:900;line-height:1.1;margin-top:4px;position:relative;color:#D9F99D;unicode-bidi:plaintext}
+  .hero .h-big small{font-size:14px;font-weight:800;opacity:.9;color:#fff}
+  .hero .h-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px;position:relative}
+  .hero .h-row div{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:7px 8px}
+  .hero .h-row b{display:block;font-size:18px;font-weight:900;line-height:1.15;font-variant-numeric:tabular-nums}
+  .hero .h-row small{font-size:10.5px;font-weight:700;opacity:.85}
+  .fbar{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;margin:12px 0 0;padding:0 14px;border:1.4px dashed rgba(var(--primary-rgb),.6);border-radius:var(--r-ctl);background:rgba(var(--primary-rgb),.04);color:var(--primary);font-family:var(--font-head);font-weight:800;font-size:13.5px;text-align:start;cursor:pointer}
+  .fbar .s{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fbar.open{border-style:solid}
+
+  /* ---------- a fine, a person ---------- */
+  .plate{display:inline-flex;align-items:center;direction:ltr;border:2px solid #1D2733;border-radius:7px;background:#fff;color:#111;font:800 12.5px var(--font-mark);line-height:1;padding:3px 7px;white-space:nowrap;letter-spacing:.5px;vertical-align:middle}
+  .rec{display:inline-flex;align-items:center;gap:4px;font:800 12px var(--font-mark);direction:ltr;color:var(--ink);background:var(--surface2);border-radius:7px;padding:3px 7px;white-space:nowrap}
+  .oid{font:800 11.5px var(--font-mark);direction:ltr;unicode-bidi:isolate;color:var(--muted);white-space:nowrap}
+  .amt{font-family:var(--font-head);font-weight:900;color:var(--amt);font-variant-numeric:tabular-nums;white-space:nowrap;unicode-bidi:plaintext}
+  .kpill{display:inline-flex;align-items:center;gap:4px;font:800 10.5px var(--font-head);padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .kpill.driver{background:color-mix(in srgb,var(--drv) 13%,transparent);color:var(--drv)}
+  .kpill.employee{background:color-mix(in srgb,var(--emp) 13%,transparent);color:var(--emp)}
+  .kpill.off{background:var(--surface2);color:var(--muted)}
+  .frow{display:flex;gap:10px;align-items:flex-start;padding:12px;margin-top:10px;background:var(--surface);border:1px solid var(--line);border-inline-start:4px solid var(--kc,var(--line));border-radius:var(--r-card);animation:rise 360ms var(--ease) both}
+  .frow.driver{--kc:var(--drv)}.frow.employee{--kc:var(--emp)}
+  .frow .fb{flex:1;min-width:0;cursor:pointer}
+  .frow .fn{font-family:var(--font-head);font-weight:800;font-size:14.5px;line-height:1.35;overflow-wrap:anywhere}
+  .frow .fs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
+  .frow .fx{font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5;overflow-wrap:anywhere}
+  .frow .fa{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+  .frow .fa .amt{font-size:19px}
+  .frow .fa .acts{display:flex;gap:4px}.frow .fa .acts .btn-sm{margin:0;height:30px;padding:0 9px}
+  .frow.off{opacity:.62}
+  .totbox{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;margin-top:12px;border-radius:var(--r-card);background:rgba(var(--amt-rgb),.10);border-top:2px solid var(--amt)}
+  .totbox .tl{font-family:var(--font-head);font-weight:800;font-size:13.5px;line-height:1.4}
+  .totbox .tl small{display:block;font-weight:700;font-size:11.5px;color:var(--muted)}
+  .totbox .amt{font-size:24px}
+  .lhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 4px 2px;font-family:var(--font-head);font-weight:800;font-size:13.5px}
+  .lhead .n{color:var(--muted);font-size:12px}
+  .pinfo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 8px}
+  .pinfo div{background:var(--surface2);border-radius:var(--r-sm);padding:8px 10px}
+  .pinfo small{display:block;font-size:11px;color:var(--muted);font-weight:700}
+  .pinfo b{font-size:15px;overflow-wrap:anywhere}
+  .mgrp{margin-top:10px;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+  .mgrp .mh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);font-family:var(--font-head);font-weight:800;font-size:13px}
+  .mgrp .ml{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-top:1px solid var(--line);font-size:12.5px}
+  .mgrp .ml .mb{min-width:0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  /* [4.55] paid or not, and the papers of a fine */
+  .spill{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border-radius:999px;border:0;font:800 11.5px var(--font-head);white-space:nowrap;cursor:default;color:inherit}
+  button.spill{cursor:pointer}button.spill:active{transform:scale(.95)}
+  .spill.paid{background:rgba(22,163,74,.14);color:var(--ok)}
+  .spill.unpaid{background:rgba(224,123,0,.14);color:var(--warn)}
+  .btn-sm.fcnt{margin:0;height:26px;padding:0 9px}
+  .btn-sm.fcnt.add{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+  .frow.paid .fa .amt{color:var(--ok)}
+  .hero .h-row.pay{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hero .h-row.pay .pd b{color:#86EFAC}.hero .h-row.pay .up b{color:#FDBA74}
+  .segment.pay button{flex:1 1 0;height:44px;font-size:14px}
+  .segment.pay button.on[data-p=paid]{background:var(--ok);color:#fff}
+  .segment.pay button.on[data-p=unpaid]{background:var(--warn);color:#fff}
+  .upbox{margin-top:8px;padding:12px;border:1.5px dashed rgba(var(--primary-rgb),.4);border-radius:var(--r-ctl);background:rgba(var(--primary-rgb),.04)}
+  .upbox .row2b{margin-top:0}.upbox .row2b button.ghost{margin-top:0}
+  .fsel{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .fsel span{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 4px 4px 10px;border-radius:999px;background:var(--surface2);font-size:12px;font-weight:700}
+  .fsel span i{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+  .fsel button{border:0;background:rgba(220,38,38,.12);color:var(--err);border-radius:999px;width:24px;height:24px;cursor:pointer;font-weight:900}
+  .fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+  .fit{border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
+  .fit .fth{height:120px;display:flex;align-items:center;justify-content:center;background:var(--surface2);font:900 18px var(--font-head);color:var(--muted);overflow:hidden;cursor:pointer}
+  .fit .fth img{width:100%;height:100%;object-fit:cover;background:#fff}
+  .fit .fth.pdf{background:rgba(185,28,28,.08);color:#B91C1C}
+  .fit .fnm{font-size:11.5px;font-weight:700;padding:6px 8px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fit .fxx{font-size:11px;color:var(--muted);padding:0 8px}
+  .fit .fac{display:flex;gap:6px;padding:6px 8px 8px;flex-wrap:wrap}.fit .fac .btn-sm{margin:0;height:28px;padding:0 9px}
+  .fit .fac .btn-sm.armed{background:var(--err);color:#fff}
+  .lg{border-inline-start:3px solid var(--line);padding:6px 10px;margin-top:8px;background:var(--surface2);border-radius:10px;font-size:12.5px}
+  .lg.add{border-inline-start-color:var(--ok)}.lg.edit{border-inline-start-color:var(--amt)}.lg.delete{border-inline-start-color:var(--err)}
+  .lg .lh{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.lg .lt{color:var(--muted);font-size:11px;white-space:nowrap}
+  .lg .lc{margin-top:2px;overflow-wrap:anywhere}.lg .lc s{color:var(--err)}.lg .lc b{color:var(--ok)}
+
+  /* ---------- small things ---------- */
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{text-align:right;padding:9px 4px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{color:var(--muted);font-weight:800;font-size:12px}
+  tr:last-child td{border-bottom:0}
+  tr.tot td{font-family:var(--font-head);font-weight:900;background:rgba(var(--amt-rgb),.13);color:var(--amt);border-bottom:0;border-top:2px solid var(--amt)}
+  tr.sub td{background:var(--surface2);font-size:12px;color:var(--muted)}
+  td.num{font-family:var(--font-head);font-weight:900;text-align:center;direction:ltr;white-space:nowrap}
+  th.num{text-align:center}
+  td .nm{font-family:var(--font-head);font-weight:800;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+  table.stt{table-layout:fixed}table.stt td,table.stt th{overflow-wrap:anywhere}table.stt th{font-size:11px;line-height:1.3}
+  table.stt td.num{font-size:13px;white-space:normal}
+  .muted{color:var(--muted);font-size:11.5px}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:var(--r-pill);line-height:1.2;white-space:nowrap}
+  .pill.ok{background:rgba(22,163,74,.12);color:var(--ok)}.pill.err{background:rgba(220,38,38,.12);color:var(--err)}.pill.mute{background:var(--surface2);color:var(--muted)}
+  .msg{margin-top:12px;padding:12px 14px;border-radius:var(--r-sm);font-weight:700;font-size:13px;display:none;animation:rise 300ms var(--ease)}
+  .msg.ok{display:block;background:var(--ok-bg);color:var(--ok)}
+  .msg.err{display:block;background:var(--err-bg);color:var(--err)}
+  .empty{color:var(--muted);text-align:center;padding:28px 0;font-size:14px;line-height:1.6}
+  .skeleton{height:14px;border-radius:8px;background:linear-gradient(90deg,var(--surface2) 25%,var(--line) 37%,var(--surface2) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;margin:10px 0}
+  @keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+  .pane-d{font-size:12.5px;color:var(--muted);line-height:1.6;margin:0 4px 10px}
+  .infobox{background:rgba(var(--primary-rgb),.07);color:var(--ink);border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;line-height:1.7;margin-top:8px}
+  .warnbox{background:rgba(224,123,0,.11);color:var(--warn);border-radius:var(--r-sm);padding:10px 12px;font-weight:800;font-size:13px;line-height:1.6;margin-top:8px}
+  /* stuck to the sheet's very bottom (its 16px padding included), so nothing of the form shows under «save» while it scrolls */
+  .stick{position:sticky;bottom:-16px;z-index:2;background:var(--surface);margin:0 -16px -16px;padding:6px 16px 14px;box-shadow:0 -8px 12px -10px rgba(0,0,0,.18)}
+  /* the picker sheet opens OVER the edit sheet */
+  #editBackdrop{z-index:22}#editSheet{z-index:23}#pickBackdrop{z-index:24}#pickSheet{z-index:25}
+  .hidden{display:none!important}
+
+  /* ---------- bottom nav ---------- */
+  nav{position:fixed;bottom:0;right:0;left:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+  nav button{flex:1;min-width:0;padding:8px 1px 6px;background:none;border:0;font-family:var(--font-head);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:color .2s;position:relative}
+  nav button .ico{width:52px;max-width:100%;height:30px;border-radius:16px;display:grid;place-items:center;transition:background .25s var(--ease),transform .25s var(--ease)}
+  nav button>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  nav button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  nav button.on{color:var(--primary);font-weight:800}
+  nav button.on .ico{background:rgba(var(--primary-rgb),.14)}
+
+  /* ---------- login ---------- */
+  .login-hero{text-align:center;margin:18px 0 32px}
+  .login-hero img{height:74px;max-width:80%;object-fit:contain;background:var(--brand);padding:16px 24px;border-radius:23px;animation:pop 600ms var(--ease)}
+  @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+  .login-hero h2{margin:16px 0 2px;font-size:20px;font-weight:700}
+  .login-hero p{margin:0;color:var(--muted);font-size:13px;font-weight:600}
+  #scr-login{padding:8px 8px 0}
+  #toast{position:fixed;left:16px;right:16px;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));background:var(--ink);color:#fff;padding:12px 16px;border-radius:var(--r-sm);font-size:14px;font-weight:700;z-index:30;transform:translateY(20px);opacity:0;pointer-events:none;transition:all .3s var(--ease);max-width:520px;margin:auto}
+  html[data-theme="dark"] #toast{background:var(--surface2);color:var(--ink)}
+  #toast.show{transform:none;opacity:1}
+  #updateBar{position:fixed;left:12px;right:12px;top:calc(72px + env(safe-area-inset-top,0px));max-width:536px;margin:auto;background:#26301F;color:#fff;padding:12px 14px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:19;font-family:var(--font-head);font-weight:800;font-size:13.5px;box-shadow:var(--glow);border-bottom:3px solid #FACC15}
+  #updateBar button{background:#A3E635;color:#1A2E05;border:0;border-radius:10px;padding:9px 14px;font:inherit;font-weight:900;cursor:pointer;white-space:nowrap}
+  [dir=rtl] #email:placeholder-shown{direction:rtl}
+  button:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .stat-v{unicode-bidi:plaintext}
+  /* ---------- [4.63] the store's own pieces ---------- */
+  .frow.it{--kc:var(--line)}.frow.it.has{--kc:var(--ok)}.frow.it.low{--kc:var(--err)}.frow.it.zero{--kc:var(--surface2)}
+  .frow .qty{font-family:var(--font-head);font-weight:900;font-size:20px;line-height:1;direction:ltr;font-variant-numeric:tabular-nums}
+  .frow.it.zero .qty{color:var(--muted)}.frow.it.low .qty{color:var(--err)}
+  .kpill.f{background:var(--surface2);color:var(--muted)}
+  .kpill.k-receive{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+  .kpill.k-issue{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+  .kpill.k-return{background:color-mix(in srgb,#0891B2 14%,transparent);color:#0891B2}
+  .kpill.k-transfer{background:color-mix(in srgb,#7C3AED 14%,transparent);color:#7C3AED}
+  .kpill.k-adjust{background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
+  .frow.mv.k-receive,.frow.mv.k-return{--kc:var(--ok)}.frow.mv.k-issue{--kc:var(--warn)}.frow.mv.k-transfer{--kc:#7C3AED}.frow.mv.k-adjust{--kc:var(--primary)}
+  .frow.void,.hrow.void{opacity:.55}.frow.void .fn .ltr,.hrow.void b.ltr{text-decoration:line-through}
+  .neg{color:var(--err)}.pos{color:var(--ok)}
+  .hero .h-row .lw b{color:#FCA5A5}
+  .kv{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}.kv:last-child{border-bottom:0}
+  .pinfo div{background:var(--surface2);border-radius:var(--r-sm);padding:8px 10px}.pinfo small{display:block;font-size:11px;color:var(--muted)}.pinfo b{font-size:14px;overflow-wrap:anywhere}
+  .hrow{display:flex;gap:10px;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .hrow .hb{min-width:0}.hrow .ha{display:flex;flex-direction:column;align-items:flex-end;text-align:end;white-space:nowrap}.hrow .ha b{font:900 16px var(--font-head);direction:ltr}
+  .lrow{display:flex;gap:10px;align-items:center;padding:10px 12px;margin-top:8px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card)}
+  .lrow.over{border-color:var(--err);background:var(--err-bg)}
+  .lrow .lb{flex:1;min-width:0}.lrow .fn{font-family:var(--font-head);font-weight:800;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+  .lrow .lq{flex:0 0 92px;display:flex;flex-direction:column;align-items:center;gap:2px}.lrow .lq input{padding:10px 8px;text-align:center;font-weight:800}.lrow .lq small{font-size:10.5px;color:var(--muted)}
+  .lrow .lx{flex:0 0 auto;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:14px}
+  #mvAdd + .picker{margin-top:10px;border-style:dashed}
+  .fitrow{display:flex;gap:8px;align-items:flex-start;margin-top:8px}.fitrow > small{flex:0 0 86px;font-weight:800;color:var(--muted);padding-top:7px;font-size:11.5px}
+  .fitrow .fs{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+  .fitchip{display:inline-flex;flex-direction:column;align-items:center;gap:1px;padding:5px 9px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit;line-height:1.15}
+  .fitchip b{font:800 12px var(--font-mark)}.fitchip small{font-size:10px;color:var(--muted)}
+  .fitchip.has{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}.fitchip.has small{color:var(--ok);font-weight:800}
+  .fitchip.on{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.fitchip.on small{color:inherit}
+  .eqtag{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:9px;background:var(--surface2);font-size:12px;margin:2px}
+  .lg{padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.55}
+  nav button.hidden{display:none}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:700}.chk input{width:auto;height:auto;margin:0}
+</style>
+</head>
+<body>
+<header>
+  <div class="stars" id="stars"></div>
+  <div class="brand">
+    <img src="mark.svg" alt="" class="mark" data-onerr="remove">
+    <div><h1><span data-i18n="appTitle">مخزن الورشة</span><span class="tag">STORE</span></h1><small id="who"></small></div>
+  </div>
+  <div class="tools">
+    <select class="lang" id="lang"><option value="ar">العربية</option><option value="en">English</option></select>
+    <button id="btnMenu" class="avatar hidden" aria-label="menu"><span id="avatarInitial">A</span></button>
+  </div>
+</header>
+
+<!-- the account sheet -->
+<div id="sheetBackdrop" class="sheet-backdrop hidden"></div>
+<div id="sheet" class="sheet hidden">
+  <div class="handle"></div>
+  <div class="sheet-head"><div class="avatar big"><span id="avatarInitial2">A</span></div><div><b id="sheetName"></b><div class="muted" id="sheetRole"></div><div class="muted" id="sheetVersion" style="font-size:10.5px"></div></div></div>
+  <div class="sheet-row"><span data-i18n="language">اللغة</span><div class="segment" id="langChips"><button data-l="ar">العربية</button><button data-l="en">English</button></div></div>
+  <div class="sheet-row"><span data-i18n="darkMode">الوضع الداكن</span><button class="switch" id="btnTheme" aria-label="theme"><span></span></button></div>
+  <div class="sheet-row hidden" id="rowStores"><span data-i18n="storesRow">🏬 المخازن</span><button type="button" class="btn-sm" id="btnStores">🏬</button></div>
+  <div class="sheet-row hidden" id="rowLog"><span data-i18n="logRow">🕘 سجل تعديلات الأصناف</span><button type="button" class="btn-sm" id="btnLogRow">🕘</button></div>
+  <div class="sheet-row hidden" id="rowPass"><span data-i18n="changePass">تغيير كلمة المرور</span><button type="button" class="btn-sm" id="btnPass">✎</button></div>
+  <button class="ghost danger" id="btnLogout" data-i18n="logout">خروج</button>
+</div>
+
+<div id="editBackdrop" class="sheet-backdrop hidden"></div>
+<div id="editSheet" class="sheet hidden"><div class="handle"></div><b class="title" id="editTitle" style="display:block;font-size:16px;margin-bottom:6px"></b>
+  <div id="editBody"></div>
+  <div class="stick"><button class="primary" id="btnEditSave" data-i18n="saveChanges">حفظ</button><div class="msg" id="editMsg"></div></div>
+</div>
+<div id="pickBackdrop" class="sheet-backdrop hidden"></div>
+<div id="pickSheet" class="sheet list hidden"><div class="handle"></div><b class="title" id="pickTitle"></b><input id="pickSearch" type="search" autocapitalize="none" class="hidden"><div class="opts" id="pickOpts"></div></div>
+
+<main>
+  <!-- sign in -->
+  <section class="screen" id="scr-login">
+    <div class="login-hero">
+      <img src="logo.png" alt="" data-onerr="hide">
+      <div style="margin-top:14px"><img src="mark.svg" alt="" style="height:44px;width:44px;background:var(--brand);border-radius:12px;padding:6px"></div>
+      <h2 data-i18n="appTitle">مخزن الورشة</h2>
+      <p data-i18n="loginHint">سجّل الدخول للمتابعة</p>
+    </div>
+    <div id="loginForm">
+      <label data-i18n="username">اسم المستخدم</label>
+      <input id="email" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" data-i18n-ph="phUser" placeholder="اكتب اسم المستخدم">
+      <div class="hint" data-i18n="loginUserHint">اسم المستخدم بالإنجليزية كما أعطاك الأدمن — ليس اسمك بالعربي</div>
+      <label data-i18n="password">كلمة المرور</label>
+      <input id="password" type="password" autocomplete="current-password" data-i18n-ph="phPass" placeholder="اكتب كلمة السر">
+      <button class="primary" id="btnLogin" data-i18n="login">دخول</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </section>
+
+  <!-- an account that has no business here -->
+  <section class="screen" id="scr-noaccess">
+    <div class="card"><b data-i18n="noAccessTitle">مخزن الورشة ليس لهذا الحساب</b>
+      <div class="hint" data-i18n="noAccessHint">هذا الحساب موقوف أو بلا صلاحية — اطلب من الأدمن تفعيله.</div>
+      <div class="msg" id="noAccessMsg"></div>
+    </div>
+  </section>
+
+  <!-- the stock: every item, what each store holds -->
+  <section class="screen" id="scr-stock">
+    <div class="hero" id="skHero"></div>
+    <button type="button" class="fbar hidden" id="btnAddItem"><span class="s">＋ <span data-i18n="addItem">إضافة صنف جديد</span></span><span>📦</span></button>
+    <input id="skSearch" type="search" data-i18n-ph="searchItems" placeholder="ابحث بالاسم أو الكود أو رقم القطعة" autocapitalize="none" style="margin-top:14px">
+    <div class="chips" id="skStores" style="margin-top:10px"></div>
+    <div class="chips" id="skCats" style="margin-top:8px"></div>
+    <div id="skList"></div>
+    <div class="row2b"><button class="ghost" id="btnSkPdf">🖨️ <span data-i18n="stockPdf">جرد المخزون PDF</span></button><button class="ghost" id="btnSkCheck">🧮 <span data-i18n="stockCheck">مطابقة الرصيد</span></button></div>
+  </section>
+
+  <!-- a new movement: receive · issue · return · transfer · count -->
+  <section class="screen" id="scr-move">
+    <div class="segment kind" id="mvKind">
+      <button type="button" data-k="receive">⬇ <span data-i18n="k_receive">استلام</span></button>
+      <button type="button" data-k="issue">⬆ <span data-i18n="k_issue">صرف</span></button>
+      <button type="button" data-k="return">↩ <span data-i18n="k_return">مرتجع</span></button>
+      <button type="button" data-k="transfer">⇄ <span data-i18n="k_transfer">تحويل</span></button>
+      <button type="button" data-k="adjust">🧮 <span data-i18n="k_adjust">جرد</span></button>
+    </div>
+    <div class="pane-d" id="mvDesc" style="margin-top:10px"></div>
+    <div class="card">
+      <div class="row">
+        <div><label id="mvStoreL" data-i18n="mvStore">المخزن</label><select id="mvStore"></select></div>
+        <div><label data-i18n="mvDate">التاريخ</label><input id="mvDate" type="date"></div>
+      </div>
+      <div id="mvToBox" class="hidden"><label data-i18n="mvTo">إلى المخزن</label><select id="mvTo"></select></div>
+      <div id="mvPlateBox" class="hidden">
+        <label><span data-i18n="mvPlate">المركبة / المعدة (اللوحة)</span><span class="opt-t" data-i18n="optional">اختياري</span></label>
+        <select id="mvPlate" data-ph="plateSearch" data-none="noPlateFound"></select>
+        <div id="mvFits"></div>
+      </div>
+      <div id="mvPartyBox">
+        <label><span id="mvPartyL" data-i18n="mvPartyIssue">المستلم (الميكانيكي)</span><span class="opt-t" id="mvPartyOpt" data-i18n="optional">اختياري</span></label>
+        <input id="mvParty" maxlength="120" autocomplete="off">
+      </div>
+      <div id="mvRefBox"><label><span id="mvRefL" data-i18n="mvRefIssue">رقم أمر العمل</span><span class="opt-t" data-i18n="optional">اختياري</span></label>
+        <input id="mvRef" class="ltr" maxlength="60" autocapitalize="characters" autocomplete="off"></div>
+      <label><span data-i18n="mvNote">ملاحظة</span><span class="opt-t" data-i18n="optional">اختياري</span></label>
+      <input id="mvNote" maxlength="500" autocomplete="off">
+    </div>
+    <div class="lhead"><span data-i18n="mvLines">الأصناف</span><span class="n" id="mvLinesN"></span></div>
+    <div id="mvLines"></div>
+    <select id="mvAdd" data-ph="itemSearch" data-none="noItemFound"></select>
+    <button class="primary" id="btnMvSave" data-i18n="mvSave">حفظ الحركة</button>
+    <div class="msg" id="mvMsg"></div>
+  </section>
+
+  <!-- the movements of a period -->
+  <section class="screen" id="scr-moves">
+    <div class="row">
+      <div><label data-i18n="from">من</label><input id="hsFrom" type="date"></div>
+      <div><label data-i18n="to">إلى</label><input id="hsTo" type="date"></div>
+    </div>
+    <div class="chips" id="hsKinds" style="margin-top:10px"></div>
+    <div class="chips" id="hsStores" style="margin-top:8px"></div>
+    <input id="hsSearch" type="search" data-i18n-ph="searchMoves" placeholder="ابحث برقم الحركة أو اللوحة أو الاسم أو الصنف" autocapitalize="none" style="margin-top:10px">
+    <div id="hsList"></div>
+    <button class="ghost" id="btnHsPdf">🖨️ <span data-i18n="movesPdf">تقرير الحركات PDF</span></button>
+  </section>
+
+  <!-- the equipment and the filters each one takes -->
+  <section class="screen" id="scr-filters">
+    <div class="pane-d" data-i18n="filtersDesc">لكل معدة أو مركبة: الفلاتر التي تركب عليها (زيت، ديزل، هواء، فاصل ماء) وما في المخزن منها الآن.</div>
+    <input id="ftSearch" type="search" data-i18n-ph="searchEquip" placeholder="ابحث باللوحة أو النوع أو رقم الفلتر" autocapitalize="none">
+    <div class="chips" id="ftGroups" style="margin-top:10px"></div>
+    <div id="ftList"></div>
+  </section>
+  <!-- the accounts (admin only) -->
+  <section class="screen" id="scr-users">
+    <div class="pane-d" data-i18n="usersDesc">حسابات النظام: الأدمن يضيف المستخدمين ويحدد دور كل واحد ويوقفه أو يغيّر كلمة مروره.</div>
+    <button class="primary" id="btnUserNew" data-i18n="userNew">＋ مستخدم جديد</button>
+    <input id="usSearch" type="search" data-i18n-ph="usSearchPh" placeholder="ابحث بالاسم أو اسم المستخدم" autocapitalize="none" style="margin-top:12px">
+    <div class="chips" id="usRoles" style="margin-top:10px"></div>
+    <div id="usList"></div>
+  </section>
+</main>
+
+<nav id="nav" class="hidden">
+  <button data-s="stock"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v9l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v9"/></svg></span><span data-i18n="navStock">المخزون</span></button>
+  <button data-s="move"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></span><span data-i18n="navMove">حركة</span></button>
+  <button data-s="moves"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span data-i18n="navMoves">السجل</span></button>
+  <button data-s="filters"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v5M12 15v5M4 12h5M15 12h5"/></svg></span><span data-i18n="navFilters">الفلاتر</span></button>
+  <button data-s="users"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.6c2.6-.3 4.8 1.3 5.5 4.4"/></svg></span><span data-i18n="navUsers">المستخدمون</span></button>
+</nav>
+<div id="toast"></div>
+<div id="updateBar" class="hidden"><span id="updateText"></span><button id="btnUpdate"></button></div>
+<script src="app.js"></script>
+</body>
+</html>

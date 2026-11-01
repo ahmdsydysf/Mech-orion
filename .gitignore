@@ -1,0 +1,5 @@
+node_modules
+public/_preview*.html
+.DS_Store
+*.log
+.env*

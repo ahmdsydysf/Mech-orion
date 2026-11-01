@@ -1,0 +1,17 @@
+{
+  "name": "orion-mechanic-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Orion Contracting — the mechanic store (web + mobile PWA on Supabase)",
+  "scripts": {
+    "test": "node tools/db-test.mjs && node tools/app-test.js",
+    "test:db": "node tools/db-test.mjs",
+    "test:app": "node tools/app-test.js",
+    "preview": "node tools/preview.js",
+    "serve": "npx http-server public -p 8788 -c-1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "jsdom": "^24.1.0"
+  }
+}

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <style>
+      .o{stroke:#FFFFFF}.c1{stroke:#3B6CF0}.c2{stroke:#C08A55}
+      .w{fill:none;stroke-linecap:round;stroke-dasharray:6 8;animation:flow 2.4s linear infinite}
+      .c1.w{animation-duration:1.8s;animation-direction:reverse}.c2.w{animation-duration:1.3s}
+      @keyframes flow{to{stroke-dashoffset:-28}}
+      @media (prefers-reduced-motion:reduce){.w{animation:none;stroke-dasharray:none}}
+    </style>
+  </defs>
+  <circle class="o" cx="50" cy="50" r="42" fill="none" stroke-width="9"/>
+  <circle class="o w" cx="50" cy="50" r="42" stroke-width="3" opacity=".55"/>
+  <path class="c1" d="M69 33a24 24 0 1 0 0 34" fill="none" stroke-width="8"/>
+  <path class="c1 w" d="M69 33a24 24 0 1 0 0 34" stroke-width="2.5" opacity=".7"/>
+  <path class="c2" d="M60 41a11 11 0 1 0 0 18" fill="none" stroke-width="7"/>
+</svg>
