@@ -14,22 +14,22 @@ function mockScript() {
   return `<script>
 (function(){
 const Q = new URLSearchParams(location.search), ROLE = Q.get('role') || 'storekeeper', NO463 = Q.get('noschema') === '1';
-const NAMES = { storekeeper: 'Karim Store', mechanic: 'Mech One', admin: 'Ali Khan', viewer: 'The Viewer', stopped: 'Old Hand' };
+const NAMES = { storekeeper: 'Karim Store', mechanic: 'Mech One', admin: 'Ali Khan', manager: 'Mona Manager', viewer: 'The Viewer', stopped: 'Old Hand' };
 const ACTIVE = ROLE !== 'stopped', RROLE = ROLE === 'stopped' ? 'storekeeper' : ROLE;
-const EDIT = ACTIVE && ['storekeeper', 'admin'].includes(ROLE), ADMIN = ACTIVE && ROLE === 'admin';
+const EDIT = ACTIVE && ['storekeeper', 'manager', 'admin'].includes(ROLE), ADMIN = ACTIVE && ['admin', 'manager'].includes(ROLE), ISADM = ACTIVE && ROLE === 'admin';
 const READ = EDIT || (ACTIVE && ['mechanic', 'viewer'].includes(ROLE));
 const USERS = [{ id: '00000000-0000-0000-0000-00000000000a', name: 'Ali Khan', username: 'ali', role: 'admin', active: true, created_at: '2026-10-01T08:00:00Z', last_sign_in_at: '2026-11-01T06:00:00Z' },
   { id: '00000000-0000-0000-0000-00000000000b', name: 'Karim Store', username: 'karim', role: 'storekeeper', active: true, created_at: '2026-10-02T08:00:00Z', last_sign_in_at: null },
   { id: '00000000-0000-0000-0000-00000000000c', name: 'Mech One', username: 'mech1', role: 'mechanic', active: true, created_at: '2026-10-03T08:00:00Z', last_sign_in_at: null }];
 function adminFn(b) {
   if (!ADMIN) return { error: 'FORBIDDEN' };
-  const ME = USERS[0].id, admins = () => USERS.filter(u => u.role === 'admin' && u.active).length;
+  const ME = ISADM ? USERS[0].id : 'u-' + ROLE, admins = () => USERS.filter(u => u.role === 'admin' && u.active).length;
   if (b.action === 'ping') return { ok: true };
   if (b.action === 'create') { const un = String(b.username || '').toLowerCase(); if (!String(b.name || '').trim()) return { error: 'NAME_REQUIRED' };
     if (!/^[a-z0-9][a-z0-9._-]{1,31}$/.test(un)) return { error: 'USERNAME_INVALID' }; if (String(b.password || '').length < 8) return { error: 'PASSWORD_WEAK' };
-    if (USERS.some(u => u.username === un)) return { error: 'USERNAME_TAKEN' }; const id = '00000000-0000-0000-0000-' + String(++nid).padStart(12, '0');
+    if (b.role === 'admin' && !ISADM) return { error: 'ADMIN_ONLY' }; if (USERS.some(u => u.username === un)) return { error: 'USERNAME_TAKEN' }; const id = '00000000-0000-0000-0000-' + String(++nid).padStart(12, '0');
     USERS.push({ id, name: b.name.trim(), username: un, role: b.role, active: true, created_at: new Date().toISOString(), last_sign_in_at: null }); return { ok: true, id, username: un }; }
-  const u = USERS.find(x => x.id === b.id); if (!u) return { error: 'NOT_FOUND' };
+  const u = USERS.find(x => x.id === b.id); if (!u) return { error: 'NOT_FOUND' }; if ((u.role === 'admin' || b.role === 'admin') && !ISADM) return { error: 'ADMIN_ONLY' };
   if (b.action === 'update') { const loses = u.role === 'admin' && u.active && ((b.role && b.role !== 'admin') || b.active === false);
     if (u.id === ME && loses) return { error: 'SELF' }; if (loses && admins() <= 1) return { error: 'LAST_ADMIN' };
     if (b.password !== undefined && String(b.password).length < 8) return { error: 'PASSWORD_WEAK' };

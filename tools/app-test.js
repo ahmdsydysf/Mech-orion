@@ -168,6 +168,23 @@ const AR = /[؀-ۿ]/;
     check('… a second tap deletes', !db.USERS.some(u => u.username === 'karim') && !ur().some(r => /Karim Store/.test(txt(r))), ur().length);
     check('admin: no runtime errors', errors.length === 0, errors);
   }
+  // ---------------- the manager: everything but admin accounts ----------------
+  {
+    const B = await boot('manager'), { d, errors, wait, click, txt, nav, db, set, open } = B;
+    check('manager: five tabs, «users» last', B.tabs() === 'stock,move,moves,filters,users', B.tabs());
+    check('manager: the «stores» row', open('rowStores'), null);
+    nav('users'); await wait(80);
+    const ur = () => [...d.querySelectorAll('#usList .frow')];
+    const adm = ur().find(r => /Ali Khan/.test(txt(r)));
+    check('manager: the admin row locked (🔒, no ✎ / 🗑)', adm && /🔒/.test(txt(adm)) && !adm.querySelector('button[data-act]'), adm && txt(adm));
+    check('manager: other rows editable', !!ur().find(r => /Karim Store/.test(txt(r))).querySelector('[data-act="edit"]'), null);
+    click(d.getElementById('btnUserNew')); await wait(30);
+    const opts = [...d.getElementById('unRole').options].map(o => o.value);
+    check('manager: no «admin» in the role picker, «manager» there', !opts.includes('admin') && opts.includes('manager'), opts);
+    set('unName', 'Second Mgr'); set('unUser', 'mgr2'); set('unRole', 'manager'); click(d.getElementById('btnEditSave')); await wait(80);
+    check('manager: makes a manager account', db.USERS.some(u => u.username === 'mgr2' && u.role === 'manager'), db.USERS.map(u => u.username));
+    check('manager: no runtime errors', errors.length === 0, errors);
+  }
   // ---------------- readers ----------------
   for (const role of ['mechanic', 'viewer']) {
     const B = await boot(role), { d, errors, wait, click, txt, tabs, open } = B;

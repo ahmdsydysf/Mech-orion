@@ -55,12 +55,12 @@ const runBlock = async file => { const blk = fs.readFileSync(REPO + '/database/'
 // ---------- the schema twice ----------
 let r1 = await runFile('schema.sql'); let r2 = await runFile('schema.sql');
 check('schema.sql runs twice', !r1.err && !r2.err, [r1.err, r2.err]);
-for (const [k, r, n] of [['A', 'admin', 'Ali Admin'], ['V', 'viewer', 'The Viewer'], ['K', 'storekeeper', 'Karim Store'], ['C', 'mechanic', 'Mech One']]) await mk(k, r, n);
+for (const [k, r, n] of [['A', 'admin', 'Ali Admin'], ['V', 'viewer', 'The Viewer'], ['K', 'storekeeper', 'Karim Store'], ['C', 'mechanic', 'Mech One'], ['M', 'manager', 'Mona Manager']]) await mk(k, r, n);
 await as(null);
 check('one main store, not two', (await one(`select count(*)::int n from ms_stores`)).n === 1, null);
 await mk('Z', 'mechanic', 'Stopped'); await as(null); await db.exec(`update profiles set active = false where name = 'Stopped'`);
 await run(null, `insert into auth.users (id) values ('00000000-0000-0000-0000-0000000000aa')`);
-check('a fifth role is refused', /profiles_role_check/.test(await run(null, `insert into profiles (id, name, role) values ('00000000-0000-0000-0000-0000000000aa', 'x', 'manager')`)), null);
+check('a fifth role is refused', /profiles_role_check/.test(await run(null, `insert into profiles (id, name, role) values ('00000000-0000-0000-0000-0000000000aa', 'x', 'boss')`)), null);
 
 // ---------- the seed twice ----------
 let s1 = await runFile('seed.sql'); let s2 = await runFile('seed.sql');
@@ -164,6 +164,7 @@ check('ms_shelf is internal', !(await one(`select has_function_privilege('authen
 check('a mechanic reads only his own profile', (await val('C', `select count(*)::int from profiles`)) === 1, null);
 check('the admin reads every profile', (await val('A', `select count(*)::int from profiles`)) >= 5, null);
 check('nobody writes profiles from a page', /row-level security|permission/.test(await run('A', `update profiles set role = 'admin' where name = 'Mech One' returning id`)) || (await run('A', `update profiles set role = 'admin' where name = 'Mech One' returning id`)).length === 0, null);
+check('the manager: ms_user_list and ms_admin', Array.isArray(await run('M', `select * from ms_user_list()`)) && /true/.test(JSON.stringify(await run('M', `select ms_admin() as a`))) && /MS_REASON_REQUIRED/.test(await val('M', `select ms_void($1, ' ')`, [is.id])), null);
 check('ms_user_list: the admin only', Array.isArray(await run('A', `select * from ms_user_list()`)) && /MS_FORBIDDEN/.test(await run('K', `select * from ms_user_list()`)), null);
 check('ms_bootstrap: my profile', (await val('K', `select ms_bootstrap()->'profile'->>'role'`)) === 'storekeeper', null);
 check('ms_set_first_admin: refused once an admin exists, and internal', /MS_ADMIN_EXISTS/.test(await run(null, `select ms_set_first_admin('k@orioncc.com', 'x')`))

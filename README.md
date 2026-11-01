@@ -24,6 +24,7 @@ Standalone: its own Supabase project, its own site. It shares nothing with any o
 | role | can |
 |---|---|
 | admin | everything: items, stores, movements, cancel a movement, accounts |
+| manager | everything the admin does (stores, cancel a movement, accounts) — except an admin account: he can neither make one nor change, reset or delete it |
 | storekeeper | items, equipment, every movement (receive, issue, return, transfer, count) |
 | mechanic | read the stock, the history, the filters |
 | viewer | read only |
@@ -40,7 +41,7 @@ A stopped account (active = false) signs in to «no access». Sign-in is `userna
 npm install
 npm test            # the database in PGlite (57 checks) + the page in jsdom (65 checks)
 npm run preview     # writes public/_preview.html with Supabase mocked
-npm run serve       # then open http://localhost:8788/_preview.html?role=admin|storekeeper|mechanic|viewer|stopped
+npm run serve       # then open http://localhost:8788/_preview.html?role=admin|manager|storekeeper|mechanic|viewer|stopped
 ```
 The page has NO inline script (the CSP in `public/_headers` allows only `'self'` and the pinned supabase-js file); papers load `print.js`.
 Bump `public/version.json`, `VERSION` in `public/sw.js` and `APP_VERSION` in `public/app.js` together on every release.
