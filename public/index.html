@@ -334,6 +334,9 @@
   .kpill.k-issue{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
   .kpill.k-return{background:color-mix(in srgb,#0891B2 14%,transparent);color:#0891B2}
   .kpill.k-transfer{background:color-mix(in srgb,#7C3AED 14%,transparent);color:#7C3AED}
+  .kpill.r-dispatch{background:color-mix(in srgb,#EA580C 14%,transparent);color:#EA580C}
+  .kpill.r-back{background:color-mix(in srgb,#0891B2 14%,transparent);color:#0891B2}
+  .hint.route{margin-top:6px;font-weight:700;color:var(--ink)}
   .kpill.k-adjust{background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
   .frow.mv.k-receive,.frow.mv.k-return{--kc:var(--ok)}.frow.mv.k-issue{--kc:var(--warn)}.frow.mv.k-transfer{--kc:#7C3AED}.frow.mv.k-adjust{--kc:var(--primary)}
   .frow.void,.hrow.void{opacity:.55}.frow.void .fn .ltr,.hrow.void b.ltr{text-decoration:line-through}
@@ -449,7 +452,7 @@
         <div><label id="mvStoreL" data-i18n="mvStore">المخزن</label><select id="mvStore"></select></div>
         <div><label data-i18n="mvDate">التاريخ</label><input id="mvDate" type="date"></div>
       </div>
-      <div id="mvToBox" class="hidden"><label data-i18n="mvTo">إلى المخزن</label><select id="mvTo"></select></div>
+      <div id="mvToBox" class="hidden"><label data-i18n="mvTo">إلى المخزن</label><select id="mvTo"></select><div class="hint route hidden" id="mvRoute"></div></div>
       <div id="mvPlateBox" class="hidden">
         <label><span data-i18n="mvPlate">المركبة / المعدة (اللوحة)</span><span class="opt-t" data-i18n="optional">اختياري</span></label>
         <select id="mvPlate" data-ph="plateSearch" data-none="noPlateFound"></select>
@@ -491,6 +494,14 @@
     <div class="chips" id="ftGroups" style="margin-top:10px"></div>
     <div id="ftList"></div>
   </section>
+  <!-- the projects (sites): each one with its own store -->
+  <section class="screen" id="scr-projects">
+    <div class="pane-d" data-i18n="pjDesc">كل مشروع (موقع) له مخزن خاص به: اصرف له مواد من المخزن الرئيسي، انقل منه لمشروع آخر، أو أرجع المواد للمخزن الرئيسي.</div>
+    <button class="primary hidden" id="btnPjNew" data-i18n="pjNew">＋ مشروع جديد</button>
+    <input id="pjSearch" type="search" data-i18n-ph="pjSearch" placeholder="ابحث باسم المشروع أو الكود أو الموقع" autocapitalize="none" style="margin-top:12px">
+    <div class="chips" id="pjShow" style="margin-top:10px"></div>
+    <div id="pjList"></div>
+  </section>
   <!-- the accounts (admin only) -->
   <section class="screen" id="scr-users">
     <div class="pane-d" data-i18n="usersDesc">حسابات النظام: الأدمن يضيف المستخدمين ويحدد دور كل واحد ويوقفه أو يغيّر كلمة مروره.</div>
@@ -503,6 +514,7 @@
 
 <nav id="nav" class="hidden">
   <button data-s="stock"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v9l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v9"/></svg></span><span data-i18n="navStock">المخزون</span></button>
+  <button data-s="projects"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6M9 11h1M14 11h1"/></svg></span><span data-i18n="navProjects">المشاريع</span></button>
   <button data-s="move"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></span><span data-i18n="navMove">حركة</span></button>
   <button data-s="moves"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span data-i18n="navMoves">السجل</span></button>
   <button data-s="filters"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v5M12 15v5M4 12h5M15 12h5"/></svg></span><span data-i18n="navFilters">الفلاتر</span></button>

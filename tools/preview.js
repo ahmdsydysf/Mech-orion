@@ -41,7 +41,8 @@ const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Dub
 const key = s => String(s || '').toUpperCase().replace(/[\\s._\\/-]+/g, '');
 const err = m => ({ error: { message: m } });
 const notRun = { error: { code: 'PGRST205', message: "Could not find the table in the schema cache" } };
-const STORES = [{ id: 's1', name: 'Main store', active: true, sort: 1 }, { id: 's2', name: 'Site A', active: true, sort: 2 }];
+const STORES = [{ id: 's1', name: 'Main store', kind: 'main', active: true, sort: 1 }, { id: 's2', name: 'Site A', kind: 'project', code: 'PRJ-01', location: 'Dubai Marina', started_on: '2026-10-01', active: true, sort: 500 },
+  { id: 's3', name: 'Site B', kind: 'project', code: 'PRJ-02', location: null, active: true, sort: 500 }];
 let nid = 100, seq = 0;
 const IT = (code, name, category, unit, extra) => ({ id: 'i-' + code, code, name, category, unit, filter_type: null, part_no: null, min_qty: 0, shelf: null, active: true, note: null, ...extra });
 const ITEMS = [IT('MCH-0001', 'ANGLE GRINDER 4.5"', 'machine', 'pcs', { shelf: 'A-1' }), IT('MCH-0002', 'IMPACT DRILL', 'machine', 'pcs'), IT('TOL-0003', 'BOX SPANNER', 'tool', 'set'),
@@ -62,8 +63,8 @@ let SEEDING = true;
 function post(p) {
   if (!EDIT && !SEEDING) return err('FORBIDDEN');
   const k = p.kind; if (!['receive', 'issue', 'return', 'transfer', 'adjust'].includes(k)) return err('MS_KIND_INVALID');
-  const st = STORES.find(s => s.id === p.store_id); if (!st) return err('MS_STORE_REQUIRED');
-  if (k === 'transfer') { if (!p.to_store_id) return err('MS_TO_STORE_REQUIRED'); if (p.to_store_id === p.store_id) return err('MS_SAME_STORE'); }
+  const st = STORES.find(s => s.id === p.store_id); if (!st) return err('MS_STORE_REQUIRED'); if (!st.active) return err('MS_STORE_INACTIVE');
+  if (k === 'transfer') { if (!p.to_store_id) return err('MS_TO_STORE_REQUIRED'); if (p.to_store_id === p.store_id) return err('MS_SAME_STORE'); if (!(STORES.find(s => s.id === p.to_store_id) || {}).active) return err('MS_STORE_INACTIVE'); }
   const on = p.moved_on || today(); if (on > today()) return err('MS_DATE_FUTURE');
   let plate = null;
   if (k === 'issue' || k === 'return') { if (p.plate) { const f = PLATES.find(x => key(x.plate) === key(p.plate)); if (!f) return err('MS_PLATE_UNKNOWN:' + p.plate); plate = f.plate; }
@@ -121,6 +122,13 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
       const canW = tbl === 'ms_stores' ? ADMIN : EDIT; if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
       if (tbl === 'ms_items' && st.v && st.v.part_no) { const d = ITEMS.find(i => key(i.part_no) === key(st.v.part_no) && !(st.f[0] && i.id === st.f[0][1])); if (d) return res(err('MS_PART_DUP:' + d.code)); }
       if (tbl === 'ms_items' && st.v && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
+      if (tbl === 'ms_stores' && st.v && st.op !== 'delete') { const self = st.f[0] ? STORES.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || { kind: 'store', active: true }), ...st.v };
+        if ('code' in st.v) nx.code = st.v.code ? String(st.v.code).trim().toUpperCase() : null; if (nx.code) st.v.code = nx.code;
+        if ((self && self.kind === 'main' && (nx.kind !== 'main' || nx.active === false)) || (!self && nx.kind === 'main')) return res(err('MS_MAIN_STORE'));
+        if (STORES.some(x => x !== self && x.name.toLowerCase() === String(nx.name || '').trim().toLowerCase())) return res(err('MS_STORE_DUP'));
+        if (nx.code && STORES.some(x => x !== self && x.code && x.code.toUpperCase() === nx.code)) return res(err('MS_STORE_CODE_DUP'));
+        if (self && nx.kind === 'project' && self.active && nx.active === false && ITEMS.some(i => have(self.id, i.id) > 0)) return res(err('MS_PROJECT_HAS_STOCK'));
+        if (nx.kind === 'project') st.v.closed_on = nx.active === false ? (self && self.closed_on) || today() : null; }
       if (st.op === 'insert') { const row = { id: 'n' + (++nid), active: true, ...st.v };
         if (tbl === 'ms_items') { row.name = String(row.name).trim().toUpperCase(); row.code = { machine: 'MCH', tool: 'TOL', consumable: 'CON', oil: 'OIL', filter: 'FLT', spare: 'SPR' }[row.category] + '-' + String(nid).padStart(4, '0'); }
         T.push(row); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: tbl === 'ms_items' ? 'item' : 'store', row_id: row.id, action: 'add', snap: { ...row } }); return res({ data: { ...row } }); }
@@ -145,7 +153,10 @@ window.supabase = { createClient: () => ({
     if (n === 'ms_stock_list') return { data: stockList() };
     if (n === 'ms_plates') return { data: PLATES.map(x => ({ ...x })) };
     if (n === 'ms_history') return { data: history(a.p_item) };
-    if (n === 'ms_moves_in') return { data: movesIn(a.p_from, a.p_to) };
+    if (n === 'ms_moves_in') return { data: movesIn(a.p_from, a.p_to).filter(m => !a.p_store || m.store_id === a.p_store || m.to_store_id === a.p_store) };
+    if (n === 'ms_store_summary') return { data: STORES.map(s => { const mv = MOVES.filter(m => m.status === 'posted' && (m.store_id === s.id || m.to_store_id === s.id));
+      return { store_id: s.id, items: ITEMS.filter(i => have(s.id, i.id) !== 0).length, units: ITEMS.reduce((a, i) => a + have(s.id, i.id), 0), moves: mv.length,
+        last_move: mv.map(m => m.moved_on).sort().pop() || null, sent_in: mv.filter(m => m.kind === 'transfer' && m.to_store_id === s.id).length, sent_out: mv.filter(m => m.kind === 'transfer' && m.store_id === s.id).length }; }) };
     if (n === 'ms_stock_check') return { data: [] };
     if (n === 'ms_post') return post(a.p);
     if (n === 'ms_void') return voidMove(a.p_id, a.p_reason);

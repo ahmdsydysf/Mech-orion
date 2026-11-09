@@ -35,6 +35,10 @@ A stopped account (active = false) signs in to «no access». Sign-in is `userna
 - Stock changes only through movements (`ms_post`), all or nothing, never below zero. A movement is never edited; the admin cancels it
   (`ms_void`), which reverses it on the shelves. The FIRST count of a store is its opening stock (the sheets had no quantities).
 - An issue / a return names a plate (picked from the list) and/or a person. Part numbers are unique (spaces, dots and dashes aside).
+- Projects (sites): each project is a store of its own (`ms_stores.kind = 'project'`; one `main` store, never stopped). The admin /
+  manager makes, edits, closes and reopens a project on the «Projects» screen; the storekeeper sends it materials from the main store,
+  moves them to another project and returns them (each a transfer, `TRF-`, named by its route). A project closes only when its store
+  is empty, and a closed project takes nothing in. On an existing database: run `supabase/schema.sql` again (section 10 adds it).
 
 ## Development
 ```
