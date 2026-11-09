@@ -36,12 +36,12 @@ const AR = /[؀-ۿ]/;
   // ---------------- the storekeeper ----------------
   {
     const B = await boot('storekeeper'), { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, db } = B;
-    check('storekeeper: lands on the stock, four tabs', active() === 'scr-stock' && tabs() === 'stock,move,moves,filters', active() + ' ' + tabs());
+    check('storekeeper: lands on the stock, five tabs (projects second)', active() === 'scr-stock' && tabs() === 'stock,projects,move,moves,filters', active() + ' ' + tabs());
     const hero = txt(d.getElementById('skHero'));
     check('the hero: 11 items (the stopped one with nothing left out), 5 in stock, 1 below minimum, 6 at zero', /11\s*صنف/.test(hero) && /5\s*فيها رصيد/.test(hero) && /1\s*تحت الحد/.test(hero) && /6\s*رصيدها صفر/.test(hero), hero);
     const rows = () => [...d.querySelectorAll('#skList .frow')];
     check('the list: 12 rows, each with its code and quantity', rows().length === 12 && /MCH-0001/.test(txt(rows()[0])) && txt(rows()[0].querySelector('.qty')) === '4', rows().length + ' ' + txt(rows()[0]));
-    check('the store chips (two stores) and the category chips', d.querySelectorAll('#skStores .chip').length === 3 && /الفلاتر/.test(txt(d.getElementById('skCats'))), txt(d.getElementById('skStores')));
+    check('the store chips (the main store, two projects marked 🏗) and the category chips', d.querySelectorAll('#skStores .chip').length === 4 && /🏗 Site A/.test(txt(d.getElementById('skStores'))) && /الفلاتر/.test(txt(d.getElementById('skCats'))), txt(d.getElementById('skStores')));
     set('skSearch', 'fo3143'); await wait(20);
     check('search: «fo3143» finds FO-3143', rows().length === 1 && /FO-3143/.test(txt(rows()[0])), rows().map(r => txt(r)));
     set('skSearch', ''); click(d.querySelector('#skCats [data-v="low"]')); await wait(20);
@@ -123,6 +123,31 @@ const AR = /[؀-ۿ]/;
     set('ftSearch', 'foa2579'); await wait(20);
     check('search by a filter number finds GEN-05', d.querySelectorAll('#ftList .frow').length === 1 && /GEN-05/.test(txt(d.getElementById('ftList'))), txt(d.getElementById('ftList')).slice(0, 100));
     check('the storekeeper: no «stores» row in the account sheet, the log row', !open('rowStores') && open('rowLog'), null);
+    // the projects: send materials, move between projects, return everything
+    nav('projects'); await wait(80);
+    const pr = () => [...d.querySelectorAll('#pjList .frow')];
+    check('projects: the two open sites, code, location, what each holds; no «new project» for the storekeeper', pr().length === 2 && /PRJ-01/.test(txt(pr()[0])) && /Dubai Marina/.test(txt(pr()[0])) && /1 صنف/.test(txt(pr()[0])) && !open('btnPjNew'), pr().map(r => txt(r)));
+    click(pr()[0].querySelector('.fb')); await wait(80);
+    check('a project opened: its store, its movements, the send / move / return buttons, no close for the storekeeper', /ANGLE GRINDER/.test(txt(d.getElementById('editBody'))) && /TRF-000004/.test(txt(d.getElementById('pjMoves')))
+      && !!d.getElementById('pjGoSend') && !!d.getElementById('pjGoBackAll') && !d.getElementById('pjTogB'), txt(d.getElementById('editBody')).slice(0, 300));
+    click(d.getElementById('pjGoSend')); await wait(60);
+    check('«send materials»: a transfer from the main store to the project, the route said', active() === 'scr-move' && d.querySelector('#mvKind [data-k="transfer"]').classList.contains('on')
+      && d.getElementById('mvStore').value === 's1' && d.getElementById('mvTo').value === 's2' && /صرف مواد من Main store إلى المشروع Site A/.test(txt(d.getElementById('mvRoute'))), [d.getElementById('mvStore').value, d.getElementById('mvTo').value, txt(d.getElementById('mvRoute'))]);
+    set('mvAdd', 'i-CON-0005'); await wait(80); set(ins()[0], '10');
+    click(d.getElementById('btnMvSave')); await wait(100);
+    check('sent: 14 brake cleaners left in the main store, 10 at Site A', db.have('s1', 'i-CON-0005') === 14 && db.have('s2', 'i-CON-0005') === 10, [db.have('s1', 'i-CON-0005'), db.have('s2', 'i-CON-0005')]);
+    nav('projects'); await wait(80); click(pr()[0].querySelector('.fb')); await wait(80);
+    click(d.getElementById('pjGoMove')); await wait(60);
+    check('«move to another project»: from Site A to Site B', d.getElementById('mvStore').value === 's2' && d.getElementById('mvTo').value === 's3' && /من المشروع Site A إلى المشروع Site B/.test(txt(d.getElementById('mvRoute'))), [d.getElementById('mvStore').value, d.getElementById('mvTo').value]);
+    set('mvAdd', 'i-CON-0005'); await wait(80); set(ins()[0], '4'); click(d.getElementById('btnMvSave')); await wait(100);
+    check('moved: 6 at Site A, 4 at Site B', db.have('s2', 'i-CON-0005') === 6 && db.have('s3', 'i-CON-0005') === 4, [db.have('s2', 'i-CON-0005'), db.have('s3', 'i-CON-0005')]);
+    nav('projects'); await wait(80); click(pr()[0].querySelector('.fb')); await wait(80);
+    click(d.getElementById('pjGoBackAll')); await wait(60);
+    check('«return everything»: back to the main store, every item with its full quantity', d.getElementById('mvTo').value === 's1' && d.querySelectorAll('#mvLines .lrow').length === 2 && ins().map(x => x.value).sort().join() === '1,6', ins().map(x => x.value));
+    click(d.getElementById('btnMvSave')); await wait(100);
+    check('returned: Site A empty, the main store 20 cleaners and 4 grinders', db.have('s2', 'i-CON-0005') === 0 && db.have('s2', 'i-MCH-0001') === 0 && db.have('s1', 'i-CON-0005') === 20 && db.have('s1', 'i-MCH-0001') === 4, null);
+    nav('moves'); await wait(120);
+    check('the history names each route: to project, project to project, back to main', ['صرف لمشروع', 'نقل بين مشاريع', 'إرجاع للرئيسي'].every(w => txt(d.getElementById('hsList')).includes(w)), txt(d.getElementById('hsList')).slice(0, 300));
     check('storekeeper: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- the admin cancels ----------------
@@ -140,7 +165,7 @@ const AR = /[؀-ۿ]/;
     check('cancelled: the shelf back to 0, the row struck', db.have('s1', 'i-FLT-0009') === 0 && [...d.querySelectorAll('#hsList .frow.void')].length === 1, db.have('s1', 'i-FLT-0009'));
     check('admin: the «stores» row', open('rowStores'), null);
     // the accounts
-    check('admin: five tabs, «users» last', B.tabs() === 'stock,move,moves,filters,users', B.tabs());
+    check('admin: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
     nav('users'); await wait(80);
     const ur = () => [...d.querySelectorAll('#usList .frow')];
     check('users: three accounts, «you» on his own, no 🗑 on it', ur().length === 3 && /أنت|You/.test(txt(ur()[0])) && !ur()[0].querySelector('[data-act="del"]') && !!ur()[1].querySelector('[data-act="del"]'), ur().map(r => txt(r)));
@@ -166,12 +191,39 @@ const AR = /[؀-ۿ]/;
     check('🗑 asks first (nothing deleted)', db.USERS.some(u => u.username === 'karim'), null);
     click(del()); await wait(80);
     check('… a second tap deletes', !db.USERS.some(u => u.username === 'karim') && !ur().some(r => /Karim Store/.test(txt(r))), ur().length);
+    // the projects: make one, close it only empty, reopen
+    nav('projects'); await wait(80);
+    check('admin: «new project»', open('btnPjNew'), null);
+    click(d.getElementById('btnPjNew')); await wait(30);
+    set('pjName', 'Tower 9'); set('pjCode', 'prj-01'); click(d.getElementById('btnEditSave')); await wait(60);
+    check('a code taken → said in words', /الكود مستخدم/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
+    set('pjCode', 'prj-03'); set('pjLocation', 'Business Bay'); click(d.getElementById('btnEditSave')); await wait(80);
+    const nw = db.STORES.find(x => x.name === 'Tower 9');
+    check('a project made: kind project, code upper, in the list', nw && nw.kind === 'project' && nw.code === 'PRJ-03' && [...d.querySelectorAll('#pjList .frow')].some(r => /Tower 9/.test(txt(r))), nw);
+    click([...d.querySelectorAll('#pjList .frow')].find(r => /Site A/.test(txt(r))).querySelector('.fb')); await wait(80);
+    click(d.getElementById('pjGoSend')); await wait(60); set('mvAdd', 'i-MCH-0001'); await wait(80); set(d.querySelector('#mvLines .lqin'), '1'); click(d.getElementById('btnMvSave')); await wait(100);
+    nav('projects'); await wait(80);
+    click([...d.querySelectorAll('#pjList .frow')].find(r => /Site A/.test(txt(r))).querySelector('.fb')); await wait(80);
+    check('a project holding materials: the close hint', /لا يُغلق المشروع وفيه مواد/.test(txt(d.getElementById('editBody'))), null);
+    click(d.getElementById('pjTogB')); await wait(80);
+    check('closing it → refused in words, still open', /قبل الإغلاق/.test(txt(d.getElementById('editMsg'))) && db.STORES.find(x => x.id === 's2').active, txt(d.getElementById('editMsg')));
+    d.getElementById('editSheet').classList.add('hidden');
+    click([...d.querySelectorAll('#pjList .frow')].find(r => /Tower 9/.test(txt(r))).querySelector('.fb')); await wait(80);
+    click(d.getElementById('pjTogB')); await wait(100);
+    check('an empty project closes: under «closed», with its day', !db.STORES.find(x => x.name === 'Tower 9').active && ![...d.querySelectorAll('#pjList .frow')].some(r => /Tower 9/.test(txt(r))), null);
+    click(d.querySelector('#pjShow [data-v="closed"]')); await wait(30);
+    check('… listed under «closed»', [...d.querySelectorAll('#pjList .frow')].some(r => /Tower 9/.test(txt(r)) && /أُغلق/.test(txt(r))), txt(d.getElementById('pjList')));
+    click([...d.querySelectorAll('#pjList .frow')].find(r => /Tower 9/.test(txt(r))).querySelector('.fb')); await wait(80);
+    check('a closed project: no send / return buttons, «reopen»', !d.getElementById('pjGoSend') && /إعادة فتح/.test(txt(d.getElementById('pjTogB'))), null);
+    click(d.getElementById('pjTogB')); await wait(100);
+    check('reopened', db.STORES.find(x => x.name === 'Tower 9').active, null);
+    d.getElementById('editSheet').classList.add('hidden');
     check('admin: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- the manager: everything but admin accounts ----------------
   {
     const B = await boot('manager'), { d, errors, wait, click, txt, nav, db, set, open } = B;
-    check('manager: five tabs, «users» last', B.tabs() === 'stock,move,moves,filters,users', B.tabs());
+    check('manager: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
     check('manager: the «stores» row', open('rowStores'), null);
     nav('users'); await wait(80);
     const ur = () => [...d.querySelectorAll('#usList .frow')];
@@ -188,10 +240,13 @@ const AR = /[؀-ۿ]/;
   // ---------------- readers ----------------
   for (const role of ['mechanic', 'viewer']) {
     const B = await boot(role), { d, errors, wait, click, txt, tabs, open } = B;
-    check(role + ': three tabs, no «move»', tabs() === 'stock,moves,filters', tabs());
+    check(role + ': four tabs, no «move»', tabs() === 'stock,projects,moves,filters', tabs());
     check(role + ': no «add item»', !open('btnAddItem'), null);
     click([...d.querySelectorAll('#skList .frow')][0].querySelector('.fb')); await wait(60);
     check(role + ': an item opened shows no button that writes', !d.getElementById('iGoIssue') && !d.getElementById('iEditB') && !d.getElementById('iDelB') && /حركات الصنف/.test(txt(d.getElementById('editBody'))), null);
+    B.nav('projects'); await wait(80);
+    click([...d.querySelectorAll('#pjList .frow')][0].querySelector('.fb')); await wait(80);
+    check(role + ': a project opened shows its store and no button that writes', /مخزن المشروع/.test(txt(d.getElementById('editBody'))) && !d.getElementById('pjGoSend') && !d.getElementById('pjTogB') && !B.open('btnPjNew'), null);
     check(role + ': no runtime errors', errors.length === 0, errors);
   }
   {
@@ -209,8 +264,10 @@ const AR = /[؀-ۿ]/;
     check('not configured: the sign-in says config.js, the button disabled', d.getElementById('btnLogin').disabled && /config\.js/.test(d.getElementById('loginMsg').textContent), d.getElementById('loginMsg').textContent);
   }
   {
-    const B = await boot('storekeeper', { lang: 'en' }), { d, txt, errors } = B;
+    const B = await boot('storekeeper', { lang: 'en' }), { d, txt, errors, wait } = B;
     check('English: ltr, the hero and the tabs in English, no Arabic left on the stock screen', d.documentElement.dir === 'ltr' && /items/.test(txt(d.getElementById('skHero'))) && !AR.test(txt(d.getElementById('scr-stock'))) && !AR.test(txt(d.getElementById('nav'))), txt(d.getElementById('scr-stock')).match(/[؀-ۿ]+/g));
+    B.nav('projects'); await wait(80);
+    check('English: the projects screen in English', /Open/.test(txt(d.getElementById('pjShow'))) && /Site A/.test(txt(d.getElementById('pjList'))) && !AR.test(txt(d.getElementById('scr-projects'))), txt(d.getElementById('scr-projects')).match(/[؀-ۿ]+/g));
     check('English: no runtime errors', errors.length === 0, errors);
   }
   const bad = T.filter(x => !x.ok);

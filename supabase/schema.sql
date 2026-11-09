@@ -663,3 +663,109 @@ union all select 'filter links', (select count(*) from ms_fits)::text
 union all select 'accounts', (select count(*) from profiles)::text
 union all select 'admins', (select count(*) from profiles where role = 'admin')::text
 union all select 'managers', (select count(*) from profiles where role = 'manager')::text;
+
+-- ---------- 10. the projects (sites): each one a store of its own (9 Nov 2026) ----------
+-- The owner: «اضافة مواقع sites (projects) ولكل مشروع store خاص بيه و التحكم في ارسال مواد للمشروع هذا او نقل منه لاخر او الرجوع للmain store».
+-- ms_stores.kind: 'main' (one, never stopped, never another kind) · 'store' (another warehouse) · 'project' (a site and its store).
+-- Materials go out to a project, from one project to another and back to the main store as a transfer (ms_post kind 'transfer',
+-- numbered TRF-, all or nothing, never below zero); the page names the route from the two stores' kinds. A project is closed
+-- (active = false) only with its shelves empty — everything returned or moved first — and a closed project takes nothing in
+-- (ms_post says MS_STORE_INACTIVE; a cancel that would put stock back into it says MS_PROJECT_CLOSED). Admins / managers make,
+-- edit, close and reopen projects (the stores' RLS); the storekeepers move the materials.
+alter table ms_stores add column if not exists kind text not null default 'store';
+alter table ms_stores drop constraint if exists ms_stores_kind_check;
+alter table ms_stores add constraint ms_stores_kind_check check (kind in ('main', 'store', 'project'));
+alter table ms_stores add column if not exists code text;
+alter table ms_stores add column if not exists location text;
+alter table ms_stores add column if not exists started_on date;
+alter table ms_stores add column if not exists closed_on date;
+create unique index if not exists ms_stores_main_uq on ms_stores ((true)) where kind = 'main';
+create unique index if not exists ms_stores_code_uq on ms_stores (upper(code)) where code is not null;
+create index if not exists ms_stores_kind on ms_stores (kind, sort, name);
+
+create or replace function ms_stores_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  new.name := ms_clean(new.name);
+  if new.name is null then raise exception 'MS_NAME_REQUIRED'; end if;
+  if char_length(new.name) > 80 then raise exception 'MS_NAME_TOO_LONG'; end if;
+  if exists (select 1 from ms_stores s where lower(s.name) = lower(new.name) and s.id <> new.id) then raise exception 'MS_STORE_DUP'; end if;
+  new.note := ms_clean(new.note);
+  if char_length(coalesce(new.note, '')) > 300 then raise exception 'MS_NOTE_TOO_LONG'; end if;
+  new.active := coalesce(new.active, true); new.sort := coalesce(new.sort, 100);
+  -- the kind: one main store, always open, always the main
+  new.kind := coalesce(nullif(btrim(coalesce(new.kind, '')), ''), 'store');
+  if new.kind not in ('main', 'store', 'project') then raise exception 'MS_STORE_KIND_INVALID'; end if;
+  if tg_op = 'UPDATE' and old.kind = 'main' and new.kind <> 'main' then raise exception 'MS_MAIN_STORE'; end if;
+  if new.kind = 'main' and exists (select 1 from ms_stores s where s.kind = 'main' and s.id <> new.id) then raise exception 'MS_MAIN_STORE'; end if;
+  if new.kind = 'main' and not new.active then raise exception 'MS_MAIN_STORE'; end if;
+  -- the code (a project's short name on papers), the location
+  new.code := upper(ms_clean(new.code));
+  if char_length(coalesce(new.code, '')) > 20 then raise exception 'MS_CODE_TOO_LONG'; end if;
+  if new.code is not null and exists (select 1 from ms_stores s where upper(s.code) = new.code and s.id <> new.id) then raise exception 'MS_STORE_CODE_DUP'; end if;
+  new.location := ms_clean(new.location);
+  if char_length(coalesce(new.location, '')) > 120 then raise exception 'MS_LOCATION_TOO_LONG'; end if;
+  -- a project closes with its shelves empty; the day it closed is kept until it reopens
+  if new.kind = 'project' then
+    if not new.active and (tg_op = 'INSERT' or old.active or old.kind <> 'project')
+       and exists (select 1 from ms_stock s where s.store_id = new.id and s.qty <> 0) then raise exception 'MS_PROJECT_HAS_STOCK'; end if;
+    new.closed_on := case when new.active then null
+                          when tg_op = 'UPDATE' and not old.active and old.closed_on is not null then old.closed_on
+                          else (now() at time zone 'Asia/Dubai')::date end;
+  else
+    new.started_on := null; new.closed_on := null;
+  end if;
+  if tg_op = 'INSERT' then
+    new.created_by := coalesce(auth.uid(), new.created_by); new.created_by_name := ms_me_name(); new.created_at := now();
+  else
+    new.created_by := old.created_by; new.created_by_name := old.created_by_name; new.created_at := old.created_at;
+  end if;
+  new.updated_by_name := ms_me_name(); new.updated_at := now();
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_stores_before on ms_stores;
+create trigger trg_ms_stores_before before insert or update on ms_stores for each row execute function ms_stores_before_write();
+
+-- the main store: the first one (the «Main store» section 9 makes), once
+update ms_stores set kind = 'main'
+ where id = (select s.id from ms_stores s where s.active order by s.sort, s.created_at limit 1)
+   and not exists (select 1 from ms_stores s where s.kind = 'main');
+
+-- a closed project takes nothing in, whoever moves the shelf (ms_post checks first; this also stops a cancel) (internal)
+create or replace function ms_stock_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  if new.qty > coalesce(case when tg_op = 'UPDATE' then old.qty end, 0)
+     and exists (select 1 from ms_stores s where s.id = new.store_id and s.kind = 'project' and not s.active) then
+    raise exception 'MS_PROJECT_CLOSED';
+  end if;
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_stock_before on ms_stock;
+create trigger trg_ms_stock_before before insert or update on ms_stock for each row execute function ms_stock_before_write();
+
+-- each store (a project above all) in a row: how many items it holds, how many units, its movements, the last one
+create or replace function ms_store_summary()
+returns table(store_id uuid, items int, units numeric, moves int, last_move date, sent_in int, sent_out int)
+language sql stable security definer set search_path = public as $fn$
+  select s.id,
+         (select count(*)::int from ms_stock k where k.store_id = s.id and k.qty <> 0),
+         coalesce((select sum(k.qty) from ms_stock k where k.store_id = s.id), 0),
+         (select count(*)::int from ms_moves m where m.status = 'posted' and (m.store_id = s.id or m.to_store_id = s.id)),
+         (select max(m.moved_on) from ms_moves m where m.status = 'posted' and (m.store_id = s.id or m.to_store_id = s.id)),
+         (select count(*)::int from ms_moves m where m.status = 'posted' and m.kind = 'transfer' and m.to_store_id = s.id),
+         (select count(*)::int from ms_moves m where m.status = 'posted' and m.kind = 'transfer' and m.store_id = s.id)
+    from ms_stores s
+   where ms_reader()
+   order by s.sort, s.name;
+$fn$;
+
+grant execute on function ms_store_summary() to authenticated, service_role;
+revoke execute on function ms_store_summary() from public, anon;
+revoke execute on function ms_stock_before_write() from public, anon, authenticated;
+revoke execute on function ms_stores_before_write() from public, anon, authenticated;
+notify pgrst, 'reload schema';
+
+select 'main store' as item, (select name from ms_stores where kind = 'main') as n
+union all select 'projects', (select count(*) from ms_stores where kind = 'project')::text
+union all select 'open projects', (select count(*) from ms_stores where kind = 'project' and active)::text;

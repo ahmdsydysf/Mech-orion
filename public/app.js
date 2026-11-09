@@ -63,6 +63,19 @@ const I18N = {
     filtersDesc: "لكل معدة أو مركبة: الفلاتر التي تركب عليها (زيت، ديزل، هواء، فاصل ماء) وما في المخزن منها الآن.",
     searchEquip: "ابحث باللوحة أو النوع أو رقم الفلتر", noEquip: "لا معدات", equipN: "{n} معدة", filtersT: "فلاتر {n}",
     storesT: "المخازن", addStore: "＋ مخزن جديد", storeName: "اسم المخزن", storeSaved: "تم حفظ المخزن ✓", sStop: "⏸", sActivate: "▶", storeStopped: "موقوف",
+    navProjects: "المشاريع", pjDesc: "كل مشروع (موقع) له مخزن خاص به: اصرف له مواد من المخزن الرئيسي، انقل منه لمشروع آخر، أو أرجع المواد للمخزن الرئيسي.",
+    pjNew: "＋ مشروع جديد", pjNewT: "مشروع جديد", pjEditT: "تعديل المشروع", pjSearch: "ابحث باسم المشروع أو الكود أو الموقع", pjOpen: "جارية", pjClosed: "مغلقة", pjNone: "لا توجد مشاريع بعد",
+    pjName: "اسم المشروع", pjCode: "كود المشروع", pjLocation: "الموقع", pjStarted: "تاريخ البدء", pjNote: "ملاحظة", pjSaved: "تم حفظ المشروع ✓",
+    pjItemsN: "{n} صنف · {u} وحدة", pjEmpty: "لا مواد في المشروع", pjLast: "آخر حركة {d}", pjNoMoves: "لا حركات بعد", pjClosedOn: "أُغلق {d}", pjClosedB: "مغلق",
+    pjSend: "⬇ صرف مواد للمشروع", pjMove: "⇄ نقل لمشروع آخر", pjBack: "↩ إرجاع للمخزن الرئيسي", pjBackAll: "↩ إرجاع كل المواد", pjIssue: "⬆ صرف من مخزن الموقع",
+    pjEdit: "✎ تعديل", pjClose: "⏸ إغلاق المشروع", pjReopen: "▶ إعادة فتح", pjClosedT: "تم إغلاق المشروع ✓", pjReopenedT: "أُعيد فتح المشروع ✓",
+    pjCloseHint: "لا يُغلق المشروع وفيه مواد — أرجعها للمخزن الرئيسي أو انقلها لمشروع آخر أولًا.", pjStockT: "مخزن المشروع", pjMovesT: "حركات المشروع", pjPdf: "🖨️ جرد مخزن المشروع",
+    pjNoOther: "لا يوجد مشروع آخر مفتوح", pjNoStock: "لا مواد في المشروع لإرجاعها", pjMain: "الرئيسي", pjKind: "مشروع", pjMakeProject: "🏗", pjMadeProject: "صار مشروعًا ✓",
+    r_dispatch: "صرف لمشروع", r_between: "نقل بين مشاريع", r_back: "إرجاع للرئيسي",
+    rd_dispatch: "📦 صرف مواد من {a} إلى المشروع {b}", rd_between: "⇄ نقل مواد من المشروع {a} إلى المشروع {b}", rd_back: "↩ إرجاع مواد من المشروع {a} إلى {b}",
+    errMainStore: "المخزن الرئيسي واحد فقط، لا يُوقف ولا يتغير نوعه", errStoreCodeDup: "هذا الكود مستخدم لمخزن أو مشروع آخر", errCodeLong: "الكود 20 حرفًا على الأكثر",
+    errLocationLong: "الموقع 120 حرفًا على الأكثر", errProjectHasStock: "في المشروع مواد — أرجعها للمخزن الرئيسي أو انقلها لمشروع آخر قبل الإغلاق", errProjectClosed: "المشروع مغلق ولا يستقبل مواد — أعد فتحه أولًا",
+    lf_kind: "النوع", lf_code: "الكود", lf_location: "الموقع", lf_started_on: "البدء", lf_closed_on: "الإغلاق", lf_sort: "الترتيب",
     logTitle: "سجل تعديلات الأصناف والمخازن", logEmpty: "لا شيء في السجل بعد", lgAdd: "إضافة", lgEdit: "تعديل", lgDelete: "حذف", lg_item: "صنف", lg_store: "مخزن", lg_equipment: "معدة",
     lf_name: "الاسم", lf_category: "الفئة", lf_filter_type: "نوع الفلتر", lf_part_no: "رقم القطعة", lf_unit: "الوحدة", lf_min_qty: "الحد الأدنى", lf_shelf: "الرف", lf_active: "نشط", lf_note: "ملاحظة", lf_sort: "الترتيب",
     thCode: "الكود", thItem: "الصنف", thPart: "رقم القطعة", thQty: "الكمية", thUnit: "الوحدة", thShelf: "الرف", thMin: "الحد", thNo: "رقم", thKind: "النوع", thDate: "التاريخ", thTo: "إلى / من", thBy: "بواسطة",
@@ -129,6 +142,19 @@ const I18N = {
     filtersDesc: "For each machine or vehicle: the filters it takes (oil, fuel, air, water separator) and what the store holds of each now.",
     searchEquip: "Search by plate, type or filter number", noEquip: "No equipment", equipN: "{n} units", filtersT: "Filters of {n}",
     storesT: "Stores", addStore: "＋ New store", storeName: "Store name", storeSaved: "Store saved ✓", sStop: "⏸", sActivate: "▶", storeStopped: "Stopped",
+    navProjects: "Projects", pjDesc: "Every project (site) has its own store: send it materials from the main store, move them to another project, or return them to the main store.",
+    pjNew: "＋ New project", pjNewT: "New project", pjEditT: "Edit project", pjSearch: "Search by project name, code or location", pjOpen: "Open", pjClosed: "Closed", pjNone: "No projects yet",
+    pjName: "Project name", pjCode: "Project code", pjLocation: "Location", pjStarted: "Start date", pjNote: "Note", pjSaved: "Project saved ✓",
+    pjItemsN: "{n} items · {u} units", pjEmpty: "No materials on the project", pjLast: "Last move {d}", pjNoMoves: "No movements yet", pjClosedOn: "Closed {d}", pjClosedB: "Closed",
+    pjSend: "⬇ Send materials", pjMove: "⇄ Move to another project", pjBack: "↩ Return to main store", pjBackAll: "↩ Return everything", pjIssue: "⬆ Issue from the site store",
+    pjEdit: "✎ Edit", pjClose: "⏸ Close project", pjReopen: "▶ Reopen", pjClosedT: "Project closed ✓", pjReopenedT: "Project reopened ✓",
+    pjCloseHint: "A project holding materials cannot close — return them to the main store or move them to another project first.", pjStockT: "Project store", pjMovesT: "Project movements", pjPdf: "🖨️ Project stock PDF",
+    pjNoOther: "No other open project", pjNoStock: "Nothing on the project to return", pjMain: "Main", pjKind: "Project", pjMakeProject: "🏗", pjMadeProject: "Now a project ✓",
+    r_dispatch: "To project", r_between: "Project to project", r_back: "Back to main",
+    rd_dispatch: "📦 Materials from {a} to the project {b}", rd_between: "⇄ Materials from the project {a} to the project {b}", rd_back: "↩ Materials back from the project {a} to {b}",
+    errMainStore: "There is one main store: it is never stopped and never changes kind", errStoreCodeDup: "This code belongs to another store or project", errCodeLong: "The code is 20 characters at most",
+    errLocationLong: "The location is 120 characters at most", errProjectHasStock: "The project still holds materials — return them to the main store or move them to another project before closing", errProjectClosed: "The project is closed and takes nothing in — reopen it first",
+    lf_kind: "Kind", lf_code: "Code", lf_location: "Location", lf_started_on: "Start", lf_closed_on: "Closed", lf_sort: "Order",
     logTitle: "Items and stores change log", logEmpty: "Nothing in the log yet", lgAdd: "Added", lgEdit: "Changed", lgDelete: "Deleted", lg_item: "Item", lg_store: "Store", lg_equipment: "Equipment",
     lf_name: "Name", lf_category: "Category", lf_filter_type: "Filter type", lf_part_no: "Part no.", lf_unit: "Unit", lf_min_qty: "Minimum", lf_shelf: "Shelf", lf_active: "Active", lf_note: "Note", lf_sort: "Order",
     thCode: "Code", thItem: "Item", thPart: "Part no.", thQty: "Qty", thUnit: "Unit", thShelf: "Shelf", thMin: "Min", thNo: "No.", thKind: "Type", thDate: "Date", thTo: "To / from", thBy: "By",
@@ -156,14 +182,14 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.01-3';
+const APP_VERSION = '2026.11.09-1';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
 // admin: everything and the accounts; manager: the same, one step below — never an admin's account (the Edge Function says
 // ADMIN_ONLY); storekeeper: items and movements; mechanic and viewer read. The server says the same
 // (ms_editor / ms_admin / ms_reader in supabase/schema.sql), and a stopped account (profiles.active = false) reads nothing.
-const TABS = { admin: ['stock', 'move', 'moves', 'filters', 'users'], manager: ['stock', 'move', 'moves', 'filters', 'users'], storekeeper: ['stock', 'move', 'moves', 'filters'], mechanic: ['stock', 'moves', 'filters'], viewer: ['stock', 'moves', 'filters'] };
+const TABS = { admin: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], manager: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], storekeeper: ['stock', 'projects', 'move', 'moves', 'filters'], mechanic: ['stock', 'projects', 'moves', 'filters'], viewer: ['stock', 'projects', 'moves', 'filters'] };
 const ROLE_LIST = ['admin', 'manager', 'storekeeper', 'mechanic', 'viewer'];
 const canEdit = () => !!profile && profile.active !== false && ['storekeeper', 'manager', 'admin'].includes(profile.role);
 const canAdmin = () => !!profile && profile.active !== false && ['admin', 'manager'].includes(profile.role);
@@ -207,8 +233,9 @@ class StoreRepository {
   fits() { return this.#paged(() => this.#db.from('ms_fits').select('*').order('equipment_id').order('filter_type')); }
   async plates() { return (await this.#rpc('ms_plates')) ?? []; }
   async history(item) { return (await this.#rpc('ms_history', { p_item: item })) ?? []; }
-  async movesIn(a, b) { const out = []; for (let from = 0; ; from += 1000) { const { data, error } = await this.#db.rpc('ms_moves_in', { p_from: a, p_to: b }).range(from, from + 999); this.#chk(error); out.push(...(data || [])); if ((data || []).length < 1000) return out; } }
+  async movesIn(a, b, store) { const args = store ? { p_from: a, p_to: b, p_store: store } : { p_from: a, p_to: b }; const out = []; for (let from = 0; ; from += 1000) { const { data, error } = await this.#db.rpc('ms_moves_in', args).range(from, from + 999); this.#chk(error); out.push(...(data || [])); if ((data || []).length < 1000) return out; } }
   async check() { return (await this.#rpc('ms_stock_check')) ?? []; }
+  async storeSummary() { return (await this.#rpc('ms_store_summary')) ?? []; }
   post(p) { return this.#rpc('ms_post', { p }); }
   void(id, reason) { return this.#rpc('ms_void', { p_id: id, p_reason: reason }); }
   log() { return this.#rows(this.#db.from('ms_log').select('*').order('at', { ascending: false }).range(0, 199)); }
@@ -263,7 +290,8 @@ const errText = e => { const m = String(e?.message ?? e ?? ''), code = String(e?
     MS_NOTE_TOO_LONG: 'errNoteLong', MS_STORE_DUP: 'errStoreDup', MS_STORE_REQUIRED: 'errStoreReq', MS_TO_STORE_REQUIRED: 'errToStore', MS_SAME_STORE: 'errSameStore',
     MS_STORE_INACTIVE: 'errStoreInactive', MS_DATE_FUTURE: 'errDateFuture', MS_DATE_OLD: 'errDateOld', MS_WHO_REQUIRED: 'errWho', MS_LINES_REQUIRED: 'errLines',
     MS_TOO_MANY_LINES: 'errTooMany', MS_ITEM_UNKNOWN: 'errItemUnknown', MS_NOTHING_CHANGED: 'errNothing', MS_REASON_REQUIRED: 'errReason', MS_ALREADY_VOID: 'errAlreadyVoid',
-    MS_ITEM_IN_USE: 'errItemInUse', MS_STORE_IN_USE: 'errStoreInUse', MS_MOVE_UNKNOWN: 'errMoveUnknown' };
+    MS_ITEM_IN_USE: 'errItemInUse', MS_STORE_IN_USE: 'errStoreInUse', MS_MOVE_UNKNOWN: 'errMoveUnknown', MS_MAIN_STORE: 'errMainStore', MS_STORE_CODE_DUP: 'errStoreCodeDup',
+    MS_CODE_TOO_LONG: 'errCodeLong', MS_LOCATION_TOO_LONG: 'errLocationLong', MS_PROJECT_HAS_STOCK: 'errProjectHasStock', MS_PROJECT_CLOSED: 'errProjectClosed' };
   for (const k in M) if (m.includes(k)) return t(M[k]);
   if (/MS_FORBIDDEN|FORBIDDEN|row-level security|permission denied|not allowed/i.test(m)) return t('errForbidden');
   if (code === '23505' || /duplicate key|unique/i.test(m)) return t('errDup');
@@ -325,6 +353,7 @@ const SK = { store: 'all', cat: 'all', q: '', n: 80 };
 const MV = { kind: 'issue', lines: [] };               // the movement being written: its kind and its lines [{item_id, qty, counted}]
 const HS = { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [], seq: 0 };
 const FT = { q: '', grp: 'all' };
+const PJ = { q: '', show: 'open', sum: {}, seq: 0 };   // the projects screen: search, open / closed, ms_store_summary by store id
 const CATS = ['machine', 'tool', 'consumable', 'oil', 'filter', 'spare'];
 const UNITS = ['pcs', 'set', 'pair', 'roll', 'box', 'can', 'drum', 'litre', 'kg', 'm'];
 const FTYPES = ['oil', 'fuel', 'water_sep', 'air', 'cabin'];
@@ -337,6 +366,14 @@ const qtyTxt = (n, u) => `${fmtQ(n)} ${unitLbl(u || 'pcs')}`;
 const fmtQ = n => numF({ maximumFractionDigits: 2 }).format(Number(n || 0));
 const plateHtml = p => p ? `<span class="plate">${esc(p)}</span>` : '';
 const kindPill = k => `<span class="kpill k-${esc(k)}">${esc(t('k_' + k))}</span>`;
+// the projects: a project is a store of kind 'project'; the main store is the one of kind 'main' (the first one on an old database)
+const isProject = s => !!s && s.kind === 'project';
+const mainStore = () => STORES.find(s => s.kind === 'main') || STORES[0] || null;
+const storeLbl = s => s ? (isProject(s) ? '🏗 ' : '') + s.name : '—';
+// a transfer's route, from the two stores' kinds: to a project, project to project, back to the main store (null: store to store)
+const routeOf = (from, to) => { const a = storeOf(from), b = storeOf(to); if (!a || !b) return null;
+  if (isProject(b)) return isProject(a) ? 'between' : 'dispatch'; if (isProject(a)) return 'back'; return null; };
+const movePill = m => { const r = m.kind === 'transfer' ? routeOf(m.store_id, m.to_store_id) : null; return r ? `<span class="kpill k-transfer r-${r}">${esc(t('r_' + r))}</span>` : kindPill(m.kind); };
 // what a store holds of an item (the shelf), or all stores together
 const qtyIn = (it, st) => st && st !== 'all' ? Number((it.by_store || {})[st] || 0) : Number(it.qty || 0);
 async function loadAll() {
@@ -351,7 +388,7 @@ async function reloadStock() { STOCK = await repo.stock(); }
 function renderStock() {
   const st = SK.store;
   const act = STORES.filter(s => s.active);
-  $('skStores').innerHTML = [['all', t('allStores')], ...act.map(s => [s.id, s.name])].map(([v, l]) => `<button type="button" class="chip ${SK.store === v ? 'on' : ''}" data-v="${esc(v)}">${esc(l)}</button>`).join('');
+  $('skStores').innerHTML = [['all', t('allStores')], ...act.map(s => [s.id, storeLbl(s)])].map(([v, l]) => `<button type="button" class="chip ${SK.store === v ? 'on' : ''}" data-v="${esc(v)}">${esc(l)}</button>`).join('');
   $('skStores').classList.toggle('hidden', act.length < 2);
   const n = c => STOCK.filter(i => c === 'all' || (c === 'low' ? i.low : i.category === c)).length;
   $('skCats').innerHTML = ['all', ...CATS, 'low'].filter(c => c === 'all' || n(c)).map(c => `<button type="button" class="chip ${SK.cat === c ? 'on' : ''}" data-v="${c}">${esc(t('c_' + c))} <small>${n(c)}</small></button>`).join('');
@@ -437,7 +474,7 @@ async function openItem(id) {
     const h = await repo.history(id);
     if (!$('iHist')) return;
     $('iHist').innerHTML = h.length ? h.slice(0, 100).map(x => `<div class="hrow ${x.status === 'void' ? 'void' : ''}">
-      <div class="hb"><div>${kindPill(x.kind)} <b class="ltr">${esc(x.no)}</b> <span class="muted">${esc(dSlash(x.moved_on))}</span></div>
+      <div class="hb"><div>${x.kind === 'transfer' ? movePill({ kind: x.kind, store_id: Number(x.qty) < 0 ? x.store_id : x.other_store, to_store_id: Number(x.qty) < 0 ? x.other_store : x.store_id }) : kindPill(x.kind)} <b class="ltr">${esc(x.no)}</b> <span class="muted">${esc(dSlash(x.moved_on))}</span></div>
         <div class="muted">${esc([STORES.length > 1 ? storeName(x.store_id) : '', x.other_store ? '⇄ ' + storeName(x.other_store) : '', x.party || '', x.ref_no || ''].filter(Boolean).join(' · '))} ${plateHtml(x.plate)}</div></div>
       <div class="ha"><b class="${Number(x.qty) < 0 ? 'neg' : 'pos'}">${Number(x.qty) > 0 ? '+' : ''}${esc(fmtQ(x.qty))}</b><small class="muted">${esc(t('balAfter'))} ${esc(fmtQ(x.balance))}</small></div></div>`).join('')
       : `<div class="muted">${esc(t('noHistory'))}</div>`;
@@ -447,7 +484,7 @@ async function openItem(id) {
 /* ---------------- 6) حركة جديدة ---------------- */
 function storeOpts(sel, cur, skip) {
   const act = STORES.filter(s => s.active && s.id !== skip);
-  sel.innerHTML = act.map(s => `<option value="${esc(s.id)}" ${s.id === cur ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  sel.innerHTML = act.map(s => `<option value="${esc(s.id)}" data-sub="${esc(s.kind === 'main' ? t('pjMain') : isProject(s) ? [t('pjKind'), s.code, s.location].filter(Boolean).join(' · ') : '')}" ${s.id === cur ? 'selected' : ''}>${esc(storeLbl(s))}</option>`).join('');
   if (!act.some(s => s.id === cur) && act[0]) sel.value = act[0].id;
   Picker.attach(sel, 'mvStore');
 }
@@ -474,7 +511,12 @@ function setKind(k) {
   $('mvPartyL').textContent = t(k === 'receive' ? 'mvPartyReceive' : k === 'return' ? 'mvPartyReturn' : 'mvPartyIssue');
   $('mvRefL').textContent = t(k === 'receive' ? 'mvRefReceive' : k === 'issue' ? 'mvRefIssue' : 'mvRefOther');
   if (k === 'transfer') storeOpts($('mvTo'), $('mvTo').value, $('mvStore').value);
-  renderFits(); renderLines();
+  routeHint(); renderFits(); renderLines();
+}
+function routeHint() {
+  const r = MV.kind === 'transfer' ? routeOf($('mvStore').value, $('mvTo').value) : null;
+  $('mvRoute').textContent = r ? t('rd_' + r, { a: storeName($('mvStore').value), b: storeName($('mvTo').value) }) : '';
+  $('mvRoute').classList.toggle('hidden', !r);
 }
 function renderFits() {
   const p = $('mvPlate').value, box = $('mvFits');
@@ -500,7 +542,8 @@ function renderLines() {
 function addLine(id) { if (!id || MV.lines.some(l => l.item_id === id)) return; MV.lines.push({ item_id: id, qty: '', counted: '' }); renderLines(); renderFits();
   setTimeout(() => { const ins = document.querySelectorAll('#mvLines .lqin'); const el = ins[ins.length - 1]; if (el) el.focus(); }, 60); }
 $('mvKind').onclick = e => { const b = e.target.closest('button'); if (b) { setKind(b.dataset.k); msg('mvMsg', '', ''); } };
-$('mvStore').onchange = () => { if (MV.kind === 'transfer') storeOpts($('mvTo'), $('mvTo').value, $('mvStore').value); renderLines(); renderFits(); };
+$('mvStore').onchange = () => { if (MV.kind === 'transfer') storeOpts($('mvTo'), $('mvTo').value, $('mvStore').value); routeHint(); renderLines(); renderFits(); };
+$('mvTo').onchange = routeHint;
 $('mvPlate').onchange = renderFits;
 $('mvAdd').onchange = e => addLine(e.target.value);
 $('mvFits').onclick = e => { const b = e.target.closest('.fitchip'); if (!b) return; const id = b.dataset.id;
@@ -509,9 +552,13 @@ $('mvLines').oninput = e => { const r = e.target.closest('.lrow'); if (!r || !e.
   if (MV.kind === 'adjust') l.counted = e.target.value; else l.qty = e.target.value; };
 $('mvLines').addEventListener('change', e => { if (e.target.classList.contains('lqin')) { const pos = [...document.querySelectorAll('#mvLines .lqin')].indexOf(e.target); renderLines(); const el = document.querySelectorAll('#mvLines .lqin')[pos + 1]; if (el) el.focus(); } });
 $('mvLines').onclick = e => { const x = e.target.closest('.lx'); if (!x) return; MV.lines.splice(Number(x.closest('.lrow').dataset.ix), 1); renderLines(); renderFits(); };
-function startMove(kind, lines) {
+// a movement started from elsewhere (an item, a project): its kind, its lines, and the stores it goes from / to
+function startMove(kind, lines, st) {
   MV.lines = (lines || []).map(l => ({ item_id: l.item_id, qty: l.qty ?? '', counted: l.counted ?? '' }));
-  openTab('move', true); setKind(kind || MV.kind);
+  openTab('move', true);
+  if (st && st.from) storeOpts($('mvStore'), st.from);
+  if (st && st.to) storeOpts($('mvTo'), st.to, $('mvStore').value);
+  setKind(kind || MV.kind);
 }
 function renderMove() {
   storeOpts($('mvStore'), $('mvStore').value || (STORES.find(s => s.active) || {}).id); plateOpts();
@@ -534,7 +581,7 @@ $('btnMvSave').onclick = async () => {
   try {
     const r = await repo.post(p);
     MV.lines = []; ['mvParty', 'mvRef', 'mvNote'].forEach(id => { $(id).value = ''; }); $('mvPlate').value = ''; Picker.refresh($('mvPlate'));
-    await reloadStock(); renderLines(); renderFits(); HS.rows = []; msg('mvMsg', t('mvSaved', { no: r.no }), 'ok'); toast(t('mvSaved', { no: r.no }));
+    await reloadStock(); renderLines(); renderFits(); HS.rows = []; PJ.loaded = false; msg('mvMsg', t('mvSaved', { no: r.no }), 'ok'); toast(t('mvSaved', { no: r.no }));
   } catch (e) { msg('mvMsg', errText(e), 'err'); } finally { busy($('btnMvSave'), false); }
 };
 
@@ -560,7 +607,7 @@ function moveRows() {
 function moveRow(m) {
   const ls = m.lines || [];
   return `<div class="frow mv k-${esc(m.kind)} ${m.status === 'void' ? 'void' : ''}" data-id="${esc(m.id)}"><div class="fb">
-    <div class="fn">${kindPill(m.kind)} <span class="ltr">${esc(m.no)}</span> ${m.status === 'void' ? `<span class="pill err">${esc(t('voidB'))}</span>` : ''}</div>
+    <div class="fn">${movePill(m)} <span class="ltr">${esc(m.no)}</span> ${m.status === 'void' ? `<span class="pill err">${esc(t('voidB'))}</span>` : ''}</div>
     <div class="fs">${esc(dSlash(m.moved_on))}${STORES.length > 1 ? ' · ' + esc(storeName(m.store_id)) + (m.to_store_id ? ' ⇄ ' + esc(storeName(m.to_store_id)) : '') : ''} ${plateHtml(m.plate)} ${m.party ? '· ' + esc(m.party) : ''}</div>
     <div class="fx">${ls.slice(0, 4).map(l => `${esc(l.name)} <b class="ltr ${Number(l.qty) < 0 ? 'neg' : 'pos'}">${Number(l.qty) > 0 ? '+' : ''}${esc(fmtQ(l.qty))}</b>`).join(' · ')}${ls.length > 4 ? ` · +${ls.length - 4}` : ''}</div></div>
     <div class="fa"><small class="muted">${esc(m.by_name || '')}</small></div></div>`;
@@ -575,10 +622,11 @@ $('hsKinds').onclick = e => { const b = e.target.closest('.chip'); if (!b) retur
 $('hsStores').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; HS.store = b.dataset.v; renderMoves(); };
 $('hsSearch').oninput = e => { HS.q = e.target.value; renderMoveList(); };
 $('hsList').onclick = e => { const r = e.target.closest('.frow'); if (r) openMove(r.dataset.id); };
-function openMove(id) {
-  const m = HS.rows.find(x => x.id === id); if (!m) return;
+function openMove(id, rows) {
+  const m = (rows || HS.rows).find(x => x.id === id); if (!m) return;
   const ls = m.lines || [];
-  const body = `<div class="pinfo"><div><small>${esc(t('thKind'))}</small><b>${esc(t('k_' + m.kind))}</b></div><div><small>${esc(t('thDate'))}</small><b>${esc(dSlash(m.moved_on))}</b></div>
+  const rt = m.kind === 'transfer' ? routeOf(m.store_id, m.to_store_id) : null;
+  const body = `<div class="pinfo"><div><small>${esc(t('thKind'))}</small><b>${esc(rt ? t('r_' + rt) : t('k_' + m.kind))}</b></div><div><small>${esc(t('thDate'))}</small><b>${esc(dSlash(m.moved_on))}</b></div>
     <div><small>${esc(t(m.kind === 'transfer' ? 'mvFrom' : 'mvStore'))}</small><b>${esc(storeName(m.store_id))}</b></div>${m.to_store_id ? `<div><small>${esc(t('mvTo'))}</small><b>${esc(storeName(m.to_store_id))}</b></div>` : ''}
     ${m.plate ? `<div><small>${esc(t('mvPlate'))}</small><b>${plateHtml(m.plate)}</b></div>` : ''}${m.party ? `<div><small>${esc(t(m.kind === 'receive' ? 'mvPartyReceive' : m.kind === 'return' ? 'mvPartyReturn' : 'mvPartyIssue'))}</small><b>${esc(m.party)}</b></div>` : ''}
     ${m.ref_no ? `<div><small>${esc(t(m.kind === 'receive' ? 'mvRefReceive' : m.kind === 'issue' ? 'mvRefIssue' : 'mvRefOther'))}</small><b class="ltr">${esc(m.ref_no)}</b></div>` : ''}
@@ -594,7 +642,7 @@ function openMove(id) {
   $('mPrint').onclick = () => movePdf(m);
   if ($('mVoid')) $('mVoid').onclick = () => Edit.open(t('voidQ'), `<div class="warnbox">${esc(t('voidD'))}</div><input id="vReason" maxlength="300" placeholder="${esc(t('reasonPh'))}" style="margin-top:10px">`, async () => {
     const r = $('vReason').value.trim(); if (!r) throw new Error(t('errReason'));
-    await repo.void(m.id, r); await reloadStock(); await renderMoves(true); toast(t('voided')); return false;
+    await repo.void(m.id, r); await reloadStock(); HS.rows = []; if (rows) { PJ.loaded = false; renderProjects(); } else await renderMoves(true); toast(t('voided')); return false;
   }, t('voidYes'), 'danger');
 }
 
@@ -621,17 +669,103 @@ $('ftGroups').onclick = e => { const b = e.target.closest('.chip'); if (!b) retu
 $('ftSearch').oninput = e => { FT.q = e.target.value; renderFilterList(); };
 $('ftList').onclick = e => { const c = e.target.closest('.fitchip'); if (c) openItem(c.dataset.id); };
 
+/* ---------------- 8b) المشاريع (المواقع): لكل مشروع مخزنه ---------------- */
+// A project is a store of kind 'project' (ms_stores): the admins / managers make, edit, close and reopen it (the stores' RLS), the
+// storekeepers send it materials from the main store, move them to another project and return them — each a transfer through
+// ms_post. A project closes only with its shelves empty (the server says MS_PROJECT_HAS_STOCK); a closed one takes nothing in.
+const projects = () => STORES.filter(isProject);
+const pjHeld = id => STOCK.filter(i => qtyIn(i, id) > 0);
+async function loadSummary() {
+  const seq = ++PJ.seq;
+  try { const rows = await repo.storeSummary(); if (seq !== PJ.seq) return; PJ.sum = Object.fromEntries(rows.map(r => [r.store_id, r])); PJ.loaded = true; renderProjectList(); } catch { /* the list shows without it */ }
+}
+function renderProjects() {
+  const all = projects(), n = v => all.filter(s => v === 'open' ? s.active : !s.active).length;
+  $('btnPjNew').classList.toggle('hidden', !canAdmin());
+  $('pjShow').innerHTML = ['open', 'closed'].map(v => `<button type="button" class="chip ${PJ.show === v ? 'on' : ''}" data-v="${v}">${esc(t(v === 'open' ? 'pjOpen' : 'pjClosed'))} <small>${n(v)}</small></button>`).join('');
+  renderProjectList();
+  if (!PJ.loaded) loadSummary();
+}
+function renderProjectList() {
+  const q = PJ.q.trim().toLowerCase(), k = nkey(q);
+  const rows = projects().filter(s => (PJ.show === 'open' ? s.active : !s.active)
+    && (!q || s.name.toLowerCase().includes(q) || (s.location || '').toLowerCase().includes(q) || (k && nkey(s.code).includes(k))));
+  $('pjList').innerHTML = rows.length ? rows.map(s => { const held = pjHeld(s.id), units = held.reduce((a, i) => a + qtyIn(i, s.id), 0), sm = PJ.sum[s.id];
+    return `<div class="frow pj ${s.active ? '' : 'off'}" data-id="${esc(s.id)}"><div class="fb"><div class="fn">🏗 ${esc(s.name)}</div>
+      <div class="fs">${s.code ? `<span class="rec">${esc(s.code)}</span>` : ''}${s.location ? `<span class="muted">📍 ${esc(s.location)}</span>` : ''}${s.active ? '' : `<span class="pill mute">${esc(s.closed_on ? t('pjClosedOn', { d: dSlash(s.closed_on) }) : t('pjClosedB'))}</span>`}</div>
+      <div class="fx">${esc(held.length ? t('pjItemsN', { n: fmtInt(held.length), u: fmtQ(units) }) : t('pjEmpty'))}${sm ? ' · ' + esc(sm.last_move ? t('pjLast', { d: dSlash(sm.last_move) }) : t('pjNoMoves')) : ''}</div></div>
+      <div class="fa"><span class="qty">${fmtInt(held.length)}</span><small class="muted">${esc(t('ppItems'))}</small></div></div>`; }).join('')
+    : `<div class="empty">${esc(t(projects().length ? 'noMatch' : 'pjNone'))}</div>`;
+}
+$('pjShow').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; PJ.show = b.dataset.v; renderProjects(); };
+$('pjSearch').oninput = e => { PJ.q = e.target.value; renderProjectList(); };
+$('pjList').onclick = e => { const r = e.target.closest('.frow'); if (r) openProject(r.dataset.id); };
+$('btnPjNew').onclick = () => { if (canAdmin()) projectSheet(null); };
+function projectSheet(s) {
+  Edit.open(s ? t('pjEditT') : t('pjNewT'), `<label for="pjName">${esc(t('pjName'))}</label><input id="pjName" maxlength="80" autocomplete="off" value="${esc(s?.name || '')}">
+    <div class="row"><div><label for="pjCode">${esc(t('pjCode'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="pjCode" class="ltr" maxlength="20" autocapitalize="characters" autocomplete="off" value="${esc(s?.code || '')}"></div>
+      <div><label for="pjStarted">${esc(t('pjStarted'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="pjStarted" type="date" value="${esc(s?.started_on || '')}"></div></div>
+    <label for="pjLocation">${esc(t('pjLocation'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="pjLocation" maxlength="120" autocomplete="off" value="${esc(s?.location || '')}">
+    <label for="pjNote">${esc(t('pjNote'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="pjNote" maxlength="300" autocomplete="off" value="${esc(s?.note || '')}">`, async () => {
+    const row = { name: $('pjName').value, code: $('pjCode').value || null, location: $('pjLocation').value || null, started_on: $('pjStarted').value || null, note: $('pjNote').value || null };
+    if (!row.name.trim()) throw new Error(t('errNameReq'));
+    if (s) await repo.updStore(s.id, row); else await repo.addStore({ ...row, kind: 'project', sort: 500 });
+    STORES = await repo.stores(); renderProjects(); toast(t('pjSaved')); return false;
+  });
+}
+async function openProject(id) {
+  const s = storeOf(id); if (!isProject(s)) return;
+  const held = pjHeld(id), main = mainStore(), others = projects().filter(x => x.active && x.id !== id), ed = canEdit() && s.active;
+  const body = `<div class="pinfo">${s.code ? `<div><small>${esc(t('pjCode'))}</small><b class="ltr">${esc(s.code)}</b></div>` : ''}${s.location ? `<div><small>${esc(t('pjLocation'))}</small><b>${esc(s.location)}</b></div>` : ''}
+      ${s.started_on ? `<div><small>${esc(t('pjStarted'))}</small><b>${esc(dSlash(s.started_on))}</b></div>` : ''}<div><small>${esc(t('ppItems'))}</small><b>${esc(fmtInt(held.length))}</b></div>
+      ${s.active ? '' : `<div><small>${esc(t('pjClosedB'))}</small><b>${esc(dSlash(s.closed_on))}</b></div>`}</div>
+    ${s.note ? `<div class="infobox">${esc(s.note)}</div>` : ''}
+    ${ed ? `<button type="button" class="primary" id="pjGoSend">${esc(t('pjSend'))}</button>
+      <div class="row2b"><button type="button" class="ghost" id="pjGoMove">${esc(t('pjMove'))}</button><button type="button" class="ghost" id="pjGoBack">${esc(t('pjBack'))}</button></div>
+      <div class="row2b"><button type="button" class="ghost" id="pjGoBackAll">${esc(t('pjBackAll'))}</button><button type="button" class="ghost" id="pjGoIssue">${esc(t('pjIssue'))}</button></div>` : ''}
+    ${canAdmin() ? `<div class="row2b"><button type="button" class="ghost" id="pjEditB">${esc(t('pjEdit'))}</button><button type="button" class="ghost" id="pjTogB">${esc(t(s.active ? 'pjClose' : 'pjReopen'))}</button></div>
+      ${s.active && held.length ? `<div class="hint">${esc(t('pjCloseHint'))}</div>` : ''}` : ''}
+    <div class="lhead"><span>${esc(t('pjStockT'))}</span><span class="n">${held.length}</span></div>
+    ${held.length ? `<div class="card" style="margin-top:6px">${held.map(i => `<div class="kv"><span>${esc(i.name)} <small class="muted ltr">${esc(i.code)}</small></span><b>${esc(qtyTxt(qtyIn(i, id), i.unit))}</b></div>`).join('')}</div>
+      <button type="button" class="ghost" id="pjPdfB">${esc(t('pjPdf'))}</button>` : `<div class="muted">${esc(t('pjEmpty'))}</div>`}
+    <div class="lhead"><span>${esc(t('pjMovesT'))}</span></div><div id="pjMoves">${skeleton(3)}</div>`;
+  Edit.open('🏗 ' + s.name, body, null);
+  const go = (kind, lines, st) => { Edit.close(); startMove(kind, lines, st); };
+  if ($('pjGoSend')) {
+    $('pjGoSend').onclick = () => go('transfer', [], { from: main?.id, to: id });
+    $('pjGoMove').onclick = () => { if (!others.length) return toast(t('pjNoOther')); go('transfer', [], { from: id, to: others[0].id }); };
+    $('pjGoBack').onclick = () => go('transfer', [], { from: id, to: main?.id });
+    $('pjGoBackAll').onclick = () => { if (!held.length) return toast(t('pjNoStock')); go('transfer', held.map(i => ({ item_id: i.item_id, qty: String(qtyIn(i, id)) })), { from: id, to: main?.id }); };
+    $('pjGoIssue').onclick = () => go('issue', [], { from: id });
+  }
+  if ($('pjEditB')) {
+    $('pjEditB').onclick = () => projectSheet(s);
+    $('pjTogB').onclick = async () => { busy($('pjTogB'), true);
+      try { await repo.updStore(id, { active: !s.active }); STORES = await repo.stores(); renderProjects(); toast(t(s.active ? 'pjClosedT' : 'pjReopenedT')); Edit.close(); }
+      catch (e) { msg('editMsg', errText(e), 'err'); } finally { if ($('pjTogB')) busy($('pjTogB'), false); } };
+  }
+  if ($('pjPdfB')) $('pjPdfB').onclick = () => stockPdf(id, held);
+  try {
+    const rows = await repo.movesIn('2020-01-01', dubaiToday(), id);
+    if (!$('pjMoves') || $('editTitle').textContent !== '🏗 ' + s.name) return;
+    $('pjMoves').innerHTML = rows.length ? rows.slice(0, 50).map(moveRow).join('') : `<div class="muted">${esc(t('pjNoMoves'))}</div>`;
+    $('pjMoves').onclick = e => { const r = e.target.closest('.frow'); if (r) openMove(r.dataset.id, rows); };
+  } catch (e) { if ($('pjMoves')) $('pjMoves').innerHTML = `<div class="msg err">${esc(errText(e))}</div>`; }
+}
+
 /* ---------------- 9) المخازن والسجل ---------------- */
 function storesSheet() {
   openSheet(false);
-  const html = () => STORES.map(s => `<div class="kv srow" data-id="${esc(s.id)}"><span>${esc(s.name)} ${s.active ? '' : `<span class="pill mute">${esc(t('storeStopped'))}</span>`}</span>
-    <span><button type="button" class="btn-sm sEdit">✎</button> <button type="button" class="btn-sm sTog">${esc(t(s.active ? 'sStop' : 'sActivate'))}</button></span></div>`).join('')
+  // the warehouses only (a project is made, edited and closed on the projects screen); a store may become a project (🏗)
+  const html = () => STORES.filter(s => !isProject(s)).map(s => `<div class="kv srow" data-id="${esc(s.id)}"><span>${esc(s.name)} ${s.kind === 'main' ? `<span class="pill ok">${esc(t('pjMain'))}</span>` : ''}${s.active ? '' : `<span class="pill mute">${esc(t('storeStopped'))}</span>`}</span>
+    <span><button type="button" class="btn-sm sEdit">✎</button>${s.kind === 'main' ? '' : ` <button type="button" class="btn-sm sTog">${esc(t(s.active ? 'sStop' : 'sActivate'))}</button> <button type="button" class="btn-sm sProj" title="${esc(t('pjKind'))}">${esc(t('pjMakeProject'))}</button>`}</span></div>`).join('')
     + `<label for="sNew">${esc(t('storeName'))}</label><input id="sNew" maxlength="80" autocomplete="off">`;
   Edit.open(t('storesT'), html(), async () => { const n = $('sNew').value.trim(); if (!n) return false; await repo.addStore({ name: n, sort: 100 + STORES.length }); STORES = await repo.stores(); toast(t('storeSaved')); storesSheet(); return 'keep'; }, t('addStore'));
   $('editBody').onclick = async e => { const r = e.target.closest('.srow'); if (!r) return; const s = storeOf(r.dataset.id); if (!s) return;
     try {
       if (e.target.closest('.sTog')) { await repo.updStore(s.id, { active: !s.active }); }
       else if (e.target.closest('.sEdit')) { const n = prompt(t('storeName'), s.name); if (!n || !n.trim()) return; await repo.updStore(s.id, { name: n }); }
+      else if (e.target.closest('.sProj')) { await repo.updStore(s.id, { kind: 'project', sort: 500 }); toast(t('pjMadeProject')); }
       else return;
       STORES = await repo.stores(); storesSheet();
     } catch (er) { msg('editMsg', errText(er), 'err'); } };
@@ -688,7 +822,8 @@ function movePdf(m) {
   const meta = [[t('thDate'), dSlash(m.moved_on)], [t(m.kind === 'transfer' ? 'mvFrom' : 'mvStore'), storeName(m.store_id)], m.to_store_id ? [t('mvTo'), storeName(m.to_store_id)] : null,
     m.plate ? [t('mvPlate'), m.plate] : null, m.party ? [t(m.kind === 'receive' ? 'mvPartyReceive' : m.kind === 'return' ? 'mvPartyReturn' : 'mvPartyIssue'), m.party] : null,
     m.ref_no ? [t(m.kind === 'receive' ? 'mvRefReceive' : m.kind === 'issue' ? 'mvRefIssue' : 'mvRefOther'), m.ref_no] : null, [t('thBy'), m.by_name || '']].filter(Boolean);
-  const html = paperDoc(m.no) + `<div class="pp">${ppBand(t('ppMove', { k: t('k_' + m.kind) }) + (m.status === 'void' ? ' — ' + t('voidB') : ''), CO, t('thNo'), m.no)}
+  const rt = m.kind === 'transfer' ? routeOf(m.store_id, m.to_store_id) : null;
+  const html = paperDoc(m.no) + `<div class="pp">${ppBand(t('ppMove', { k: rt ? t('r_' + rt) : t('k_' + m.kind) }) + (m.status === 'void' ? ' — ' + t('voidB') : ''), CO, t('thNo'), m.no)}
     <div class="meta">${meta.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</div>${m.note ? `<p>${esc(m.note)}</p>` : ''}
     <table class="${m.status === 'void' ? 'void' : ''}"><thead><tr><th>#</th><th>${esc(t('thCode'))}</th><th>${esc(t('thItem'))}</th>${adj ? `<th class="num">${esc(t('countedL'))}</th>` : ''}<th class="num">${esc(t('thQty'))}</th><th>${esc(t('thUnit'))}</th></tr></thead>
     <tbody>${ls.map((l, ix) => `<tr><td>${ix + 1}</td><td class="ltr">${esc(l.code)}</td><td>${esc(l.name)}</td>${adj ? `<td class="num">${esc(fmtQ(l.counted))}</td>` : ''}<td class="num ${Number(l.qty) < 0 ? 'neg' : 'pos'}">${adj && Number(l.qty) > 0 ? '+' : ''}${esc(fmtQ(adj ? l.qty : Math.abs(l.qty)))}</td><td>${esc(unitLbl(l.unit))}</td></tr>`).join('')}</tbody></table>
@@ -696,15 +831,16 @@ function movePdf(m) {
     ${ppFoot()}</div>` + printEnd();
   openPrint(html);
 }
-$('btnSkPdf').onclick = () => {
-  const st = SK.store, rows = stockRows();
-  const html = paperDoc(t('ppStock')) + `<div class="pp">${ppBand(t('ppStock'), (st === 'all' ? t('allStores') : storeName(st)) + ' · ' + CO, t('thDate'), dSlash(dubaiToday()))}
+$('btnSkPdf').onclick = () => stockPdf(SK.store, stockRows());
+// the stock paper of a store (or of all of them): the rows given, by category, a blank column to count on
+function stockPdf(st, rows) {
+  const html = paperDoc(t('ppStock')) + `<div class="pp">${ppBand(t('ppStock'), (st === 'all' ? t('allStores') : storeName(st) + (storeOf(st)?.code ? ' (' + storeOf(st).code + ')' : '')) + ' · ' + CO, t('thDate'), dSlash(dubaiToday()))}
     <div class="cards"><div class="card"><div class="k">${esc(t('ppItems'))}</div><div class="v">${fmtInt(rows.length)}</div></div><div class="card"><div class="k">${esc(t('ppUnits'))}</div><div class="v">${fmtInt(rows.filter(i => qtyIn(i, st) > 0).length)}</div></div><div class="card"><div class="k">${esc(t('ppLow'))}</div><div class="v">${fmtInt(rows.filter(i => i.low).length)}</div></div></div>
     <table><thead><tr><th>${esc(t('thCode'))}</th><th>${esc(t('thItem'))}</th><th>${esc(t('thShelf'))}</th><th class="num">${esc(t('thQty'))}</th><th>${esc(t('thUnit'))}</th><th class="num">${esc(t('countedL'))}</th></tr></thead>
     <tbody>${CATS.map(c => { const g = rows.filter(i => i.category === c); return g.length ? `<tr class="grp"><td colspan="6">${esc(t('c_' + c))} (${g.length})</td></tr>` + g.map(i => `<tr><td class="ltr">${esc(i.code)}</td><td>${esc(i.name)}</td><td>${esc(i.shelf || '')}</td><td class="num">${esc(fmtQ(qtyIn(i, st)))}</td><td>${esc(unitLbl(i.unit))}</td><td class="num"><span class="blank"></span></td></tr>`).join('') : ''; }).join('')}</tbody></table>
     <div class="sigs"><div class="sig"><small>${esc(t('sigStore'))}</small><b>&nbsp;</b><i></i></div><div class="sig"><small>${esc(t('sigApprove'))}</small><b>&nbsp;</b><i></i></div></div>${ppFoot()}</div>` + printEnd();
   openPrint(html);
-};
+}
 $('btnHsPdf').onclick = () => {
   const rows = moveRows();
   const html = paperDoc(t('ppMoves')) + `<div class="pp">${ppBand(t('ppMoves'), CO, t('thDate'), t('ppPeriod', { a: dSlash(HS.from), b: dSlash(HS.to) }))}
@@ -825,10 +961,10 @@ function openTab(id, keep) {
   if (!can(id)) id = 'stock';
   show(id);
   if (id === 'stock') renderStock(); else if (id === 'move') { if (!keep) renderMove(); else { storeOpts($('mvStore'), $('mvStore').value || (STORES.find(s => s.active) || {}).id); plateOpts(); if (!$('mvDate').value) $('mvDate').value = dubaiToday(); } }
-  else if (id === 'moves') renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') loadUsers();
+  else if (id === 'moves') renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') loadUsers(); else if (id === 'projects') { PJ.loaded = false; renderProjects(); }
 }
 async function rerender() { const a = document.querySelector('.screen.active'); const id = a ? a.id.replace('scr-', '') : 'stock';
-  if (id === 'stock') renderStock(); else if (id === 'move') renderMove(); else if (id === 'moves') await renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') renderUsers(); }
+  if (id === 'stock') renderStock(); else if (id === 'move') renderMove(); else if (id === 'moves') await renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') renderUsers(); else if (id === 'projects') renderProjects(); }
 async function refresh() { try { await loadAll(); } catch { return; } HS.rows = []; await rerender(); }
 async function enter(user) {
   userId = user.id; let boot;
@@ -854,9 +990,9 @@ async function enter(user) {
 }
 function leave() {
   bootSeq++; HS.seq++; profile = null; userId = null; loaded = false; STORES = []; STOCK = []; EQUIP = []; FITS = []; PLATES = [];
-  Object.assign(SK, { store: 'all', cat: 'all', q: '', n: 80 }); Object.assign(MV, { kind: 'issue', lines: [] }); Object.assign(HS, { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [] }); Object.assign(FT, { q: '', grp: 'all' }); Object.assign(US, { rows: [], q: '', role: 'all', del: null, seq: US.seq + 1 });
-  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'usRoles', 'usList', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
-  ['skSearch', 'hsSearch', 'ftSearch', 'usSearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
+  Object.assign(SK, { store: 'all', cat: 'all', q: '', n: 80 }); Object.assign(MV, { kind: 'issue', lines: [] }); Object.assign(HS, { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [] }); Object.assign(FT, { q: '', grp: 'all' }); Object.assign(PJ, { q: '', show: 'open', sum: {}, loaded: false, seq: PJ.seq + 1 }); Object.assign(US, { rows: [], q: '', role: 'all', del: null, seq: US.seq + 1 });
+  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'pjShow', 'pjList', 'usRoles', 'usList', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
+  ['skSearch', 'hsSearch', 'ftSearch', 'pjSearch', 'usSearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
   Edit.close(); openSheet(false); $('btnMenu').classList.add('hidden'); $('lang').classList.remove('hidden'); $('who').textContent = ''; $('nav').classList.add('hidden'); show('login');
 }
 

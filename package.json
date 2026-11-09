@@ -11,7 +11,7 @@
     "serve": "npx http-server public -p 8788 -c-1"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.2.17",
+    "@electric-sql/pglite": "^0.3.0",
     "jsdom": "^24.1.0"
   }
 }

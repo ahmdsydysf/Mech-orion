@@ -170,5 +170,42 @@ check('ms_bootstrap: my profile', (await val('K', `select ms_bootstrap()->'profi
 check('ms_set_first_admin: refused once an admin exists, and internal', /MS_ADMIN_EXISTS/.test(await run(null, `select ms_set_first_admin('k@orioncc.com', 'x')`))
   && !(await one(`select has_function_privilege('authenticated', 'ms_set_first_admin(text,text)', 'execute') x`)).x, null);
 
+// ---------- the projects (sites): each one a store of its own ----------
+check('the main store is marked once, and it is the first', (await one(`select count(*)::int n, min(name) nm from ms_stores where kind = 'main'`)).nm === 'Main store'
+  && (await one(`select kind from ms_stores where id = $1`, [STORE])).kind === 'main', null);
+check('a second main store → MS_MAIN_STORE', /MS_MAIN_STORE/.test(await run('A', `insert into ms_stores (name, kind) values ('Main two', 'main')`)), null);
+check('the main store is never stopped nor made a project', /MS_MAIN_STORE/.test(await run('A', `update ms_stores set active = false where id = $1`, [STORE]))
+  && /MS_MAIN_STORE/.test(await run('A', `update ms_stores set kind = 'project' where id = $1`, [STORE])), null);
+check('a storekeeper cannot make a project', /row-level security/.test(await run('K', `insert into ms_stores (name, kind) values ('Tower 9', 'project')`)), null);
+const P1 = await val('M', `insert into ms_stores (name, kind, code, location, started_on, sort) values (' Al Barsha   Villas ', 'project', ' prj-01 ', ' Dubai ', '2026-11-01', 500) returning id`);
+const P2 = await val('A', `insert into ms_stores (name, kind, code, sort) values ('Tower 9', 'project', 'PRJ-02', 500) returning id`);
+const pr = await one(`select name, code, location, kind, closed_on from ms_stores where id = $1`, [P1]);
+check('a manager makes a project: name and code cleaned, its own store', pr.name === 'Al Barsha Villas' && pr.code === 'PRJ-01' && pr.location === 'Dubai' && pr.kind === 'project' && pr.closed_on === null, pr);
+check('the same code another way → MS_STORE_CODE_DUP', /MS_STORE_CODE_DUP/.test(await run('A', `insert into ms_stores (name, kind, code) values ('Other', 'project', 'prj-01')`)), null);
+const so = await post('K', { kind: 'transfer', store_id: STORE, to_store_id: P1, lines: [{ item_id: GR, qty: 2 }, { item_id: OIL, qty: 4 }] });
+check('materials sent to a project: off the main store, on the project\'s shelves', so && so.ok && /^TRF-/.test(so.no) && await sh(GR) === 2 && await sh(GR, P1) === 2 && await sh(OIL, P1) === 4, so);
+check('more than the main store holds → MS_NOT_ENOUGH, nothing sent', /MS_NOT_ENOUGH/.test(await post('K', { kind: 'transfer', store_id: STORE, to_store_id: P1, lines: [{ item_id: GR, qty: 50 }] })) && await sh(GR, P1) === 2, null);
+const pp = await post('K', { kind: 'transfer', store_id: P1, to_store_id: P2, lines: [{ item_id: OIL, qty: 1.5 }] });
+check('from one project to another', pp && pp.ok && await sh(OIL, P1) === 2.5 && await sh(OIL, P2) === 1.5, pp);
+const isP = await post('K', { kind: 'issue', store_id: P1, plate: '74522', party: 'Site mech', lines: [{ item_id: OIL, qty: 0.5 }] });
+check('an issue on the site, from the project\'s own store', isP && isP.ok && await sh(OIL, P1) === 2, isP);
+check('closing a project that still holds materials → MS_PROJECT_HAS_STOCK', /MS_PROJECT_HAS_STOCK/.test(await run('A', `update ms_stores set active = false where id = $1`, [P1])), null);
+const bk = await post('K', { kind: 'transfer', store_id: P1, to_store_id: STORE, lines: [{ item_id: GR, qty: 2 }, { item_id: OIL, qty: 2 }] });
+check('everything back to the main store: the project empty', bk && bk.ok && await sh(GR, P1) === 0 && await sh(OIL, P1) === 0 && await sh(GR) === 4, bk);
+const cl = await run('A', `update ms_stores set active = false where id = $1 returning closed_on`, [P1]);
+check('… then it closes, the day kept', Array.isArray(cl) && cl.length === 1 && cl[0].closed_on !== null, cl);
+check('a closed project takes nothing in → MS_STORE_INACTIVE', /MS_STORE_INACTIVE/.test(await post('K', { kind: 'transfer', store_id: STORE, to_store_id: P1, lines: [{ item_id: GR, qty: 1 }] })), null);
+check('cancelling the return would refill a closed project → MS_PROJECT_CLOSED, nothing moved', /MS_PROJECT_CLOSED/.test(await val('A', `select ms_void($1, 'oops')`, [bk.id])) && await sh(GR) === 4, null);
+const ro = await run('A', `update ms_stores set active = true where id = $1 returning closed_on`, [P1]);
+check('a project reopens, its closing day cleared', Array.isArray(ro) && ro[0].closed_on === null, ro);
+const sm = await run('V', `select * from ms_store_summary() where store_id in ($1, $2) order by store_id = $1 desc`, [P1, P2]);
+check('ms_store_summary (a viewer reads): each project\'s items, units, movements', sm.length === 2 && sm[0].items === 0 && sm[0].moves === 4 && sm[0].sent_in === 1 && sm[0].sent_out === 2
+  && sm[1].items === 1 && Number(sm[1].units) === 1.5, sm);
+check('the stock still matches its movements', (await run('A', `select * from ms_stock_check()`)).length === 0, null);
+check('ms_stock_before_write is internal', !(await one(`select has_function_privilege('authenticated', 'ms_stock_before_write()', 'execute') x`)).x, null);
+const r3 = await runFile('schema.sql');
+check('schema.sql runs again over the projects: one main, the projects kept', !r3.err && (await one(`select count(*)::int n from ms_stores where kind = 'main'`)).n === 1
+  && (await one(`select count(*)::int n from ms_stores where kind = 'project'`)).n === 2, r3.err);
+
 console.log(`\n${T.filter(Boolean).length} of ${T.length} passed`);
 process.exit(T.every(Boolean) ? 0 : 1);

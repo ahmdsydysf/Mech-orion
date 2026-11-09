@@ -1,5 +1,5 @@
 // The shell from the network first (4 s), the copy kept when the signal is weak or gone. Supabase and the CDN are never cached here.
-const VERSION = '2026.11.01-3';
+const VERSION = '2026.11.09-1';
 const CACHE = 'mech-' + VERSION;
 const SHELL = ['./', 'app.js', 'theme.js', 'config.js', 'print.js', 'manifest.webmanifest', 'logo.png', 'mark.svg', 'icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });
