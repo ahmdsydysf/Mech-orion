@@ -5,7 +5,8 @@ orion-diesel project (the owner, 1 Nov 2026). Work on `main`.
 - `public/` is the whole site (Cloudflare Pages, output dir `public`, no build). `index.html` markup + CSS, `app.js` the script
   (I18N ar/en, `StoreRepository` — the only code that talks to Supabase —, the screens), `config.js` the Supabase URL / anon key,
   `theme.js`, `print.js` (the papers' script), `sw.js`, `_headers` (hash-free CSP: no inline script, no on*= attribute, ever).
-- `supabase/schema.sql` — the whole schema, idempotent; append changes at the end. Roles live in `profiles` (admin, manager — the admin's powers but never over an admin account (ADMIN_ONLY) —, storekeeper,
+- `supabase/schema.sql` — the whole schema, idempotent; append changes at the end. Roles live in `profiles` (admin = «سوبر أدمن» on screen, manager — the admin's powers but never over an admin account (ADMIN_ONLY) —, deputy = «أدمن» —
+  the manager's powers but never over a manager or admin account (MANAGER_ONLY) —, storekeeper,
   mechanic, viewer, active). RLS everywhere; stock is written only by `ms_post` / `ms_void`. `seed.sql` — the owner's item sheets.
 - `supabase/functions/admin-users` — the only way accounts change (service role). Only an active admin; never himself, never the last admin.
 - Tests: `npm test` (tools/db-test.mjs in PGlite over schema + seed; tools/app-test.js in jsdom over tools/preview.js's mock).

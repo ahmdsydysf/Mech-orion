@@ -3,7 +3,8 @@
 -- Then run seed.sql (the items, the equipment and its filters), then make the first admin (README, step 4).
 --
 -- Who: profiles.role — admin (everything, the users too) · manager (everything an admin does, one step below him: he never makes,
--- changes or removes an admin account) · storekeeper (receives, issues, returns, transfers, counts, adds items) ·
+-- changes or removes an admin account) · deputy («أدمن» on screen, the admin being «سوبر أدمن»: everything a manager does, one
+-- more step below: he never makes, changes or removes an admin or a manager account) · storekeeper (receives, issues, returns, transfers, counts, adds items) ·
 -- mechanic (reads the stock and the filters of a plate) · viewer (reads everything, writes nothing). A stopped account (active =
 -- false) reads nothing. The accounts are made and changed only by the Edge Function admin-users (service role): a page never
 -- writes profiles.
@@ -20,9 +21,9 @@ create table if not exists profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
--- the roles (named, so a re-run of this file replaces it — 'manager' added 1 Nov 2026)
+-- the roles (named, so a re-run of this file replaces it — 'manager' added 1 Nov 2026, 'deputy' 9 Nov 2026)
 alter table profiles drop constraint if exists profiles_role_check;
-alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'storekeeper', 'mechanic', 'viewer'));
+alter table profiles add constraint profiles_role_check check (role in ('admin', 'manager', 'deputy', 'storekeeper', 'mechanic', 'viewer'));
 alter table profiles enable row level security;
 -- no insert / update / delete policy: the Edge Function (service role) writes accounts
 
@@ -49,10 +50,10 @@ $fn$;
 create or replace function ms_user_list() returns table(id uuid, name text, username text, role text, active boolean, created_at timestamptz, last_sign_in_at timestamptz)
 language plpgsql stable security definer set search_path = public, auth as $fn$
 begin
-  if not exists (select 1 from profiles me where me.id = auth.uid() and me.role in ('admin', 'manager') and me.active) then raise exception 'MS_FORBIDDEN'; end if;
+  if not exists (select 1 from profiles me where me.id = auth.uid() and me.role in ('admin', 'manager', 'deputy') and me.active) then raise exception 'MS_FORBIDDEN'; end if;
   return query select p.id, p.name, p.username, p.role, p.active, p.created_at, u.last_sign_in_at
     from profiles p left join auth.users u on u.id = p.id
-   order by case p.role when 'admin' then 1 when 'manager' then 2 when 'storekeeper' then 3 when 'mechanic' then 4 else 5 end, lower(p.name);
+   order by case p.role when 'admin' then 1 when 'manager' then 2 when 'deputy' then 3 when 'storekeeper' then 4 when 'mechanic' then 5 else 6 end, lower(p.name);
 end $fn$;
 
 -- THE FIRST ADMIN: create the user in Authentication → Users (email = username@your-domain, a password), then run
@@ -73,15 +74,15 @@ end $fn$;
 -- ---------- who (the STORED role) ----------
 create or replace function ms_editor() returns boolean
 language sql stable security definer set search_path = public as $fn$
-  select coalesce((select p.role in ('storekeeper', 'manager', 'admin') and p.active from profiles p where p.id = auth.uid()), false);
+  select coalesce((select p.role in ('storekeeper', 'deputy', 'manager', 'admin') and p.active from profiles p where p.id = auth.uid()), false);
 $fn$;
 create or replace function ms_admin() returns boolean
 language sql stable security definer set search_path = public as $fn$
-  select coalesce((select p.role in ('admin', 'manager') and p.active from profiles p where p.id = auth.uid()), false);
+  select coalesce((select p.role in ('admin', 'manager', 'deputy') and p.active from profiles p where p.id = auth.uid()), false);
 $fn$;
 create or replace function ms_reader() returns boolean
 language sql stable security definer set search_path = public as $fn$
-  select coalesce((select p.role in ('storekeeper', 'mechanic', 'manager', 'admin', 'viewer') and p.active
+  select coalesce((select p.role in ('storekeeper', 'mechanic', 'deputy', 'manager', 'admin', 'viewer') and p.active
                      from profiles p where p.id = auth.uid()), false);
 $fn$;
 -- the name stamped on a row (internal)
@@ -662,7 +663,8 @@ union all select 'equipment', (select count(*) from ms_equipment)::text
 union all select 'filter links', (select count(*) from ms_fits)::text
 union all select 'accounts', (select count(*) from profiles)::text
 union all select 'admins', (select count(*) from profiles where role = 'admin')::text
-union all select 'managers', (select count(*) from profiles where role = 'manager')::text;
+union all select 'managers', (select count(*) from profiles where role = 'manager')::text
+union all select 'deputies', (select count(*) from profiles where role = 'deputy')::text;
 
 -- ---------- 10. the projects (sites): each one a store of its own (9 Nov 2026) ----------
 -- The owner: «اضافة مواقع sites (projects) ولكل مشروع store خاص بيه و التحكم في ارسال مواد للمشروع هذا او نقل منه لاخر او الرجوع للmain store».
