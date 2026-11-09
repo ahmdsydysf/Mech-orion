@@ -10,16 +10,16 @@ const I18N = {
     usName: "الاسم", usUser: "اسم المستخدم (بالإنجليزية)", usUserHint: "حروف إنجليزية صغيرة وأرقام و . _ - — سيدخل به: {u}", usPass: "كلمة المرور (8 أحرف على الأقل)", usGen: "🎲 توليد",
     usRole: "الدور", usActiveLbl: "الحساب فعّال", usEdit: "تعديل المستخدم", usNewPass: "كلمة مرور جديدة", usSetPass: "حفظ كلمة المرور", usDel: "حذف المستخدم",
     usDelQ: "اضغط مرة أخرى لحذف {n} نهائيًا", usCreated: "تم إنشاء الحساب — أعطه هذه البيانات (لن تظهر مرة أخرى)", usPassSet: "تم تغيير كلمة المرور — أعطه هذه البيانات",
-    usCred: "بيانات الدخول", usCopy: "نسخ", usCopied: "تم النسخ ✓", usRoleHelp: "الأدمن: كل شيء والمستخدمون · المدير: كل الصلاحيات ما عدا حسابات الأدمن · أمين المخزن: الأصناف والحركات · الميكانيكي والمشاهد: اطلاع فقط",
+    usCred: "بيانات الدخول", usCopy: "نسخ", usCopied: "تم النسخ ✓", usRoleHelp: "السوبر أدمن: كل شيء والمستخدمون · المدير: كل الصلاحيات ما عدا حسابات السوبر أدمن · الأدمن: كل الصلاحيات ما عدا حسابات المدير والسوبر أدمن · أمين المخزن: الأصناف والحركات · الميكانيكي والمشاهد: اطلاع فقط",
     errUserTaken: "اسم المستخدم هذا مستخدم لحساب آخر", errUserBad: "اسم المستخدم: حروف إنجليزية صغيرة وأرقام و . _ - من 2 إلى 32", errPassWeak: "كلمة المرور 8 أحرف على الأقل",
-    errLastAdmin: "لا يمكن — يجب أن يبقى أدمن واحد فعّال على الأقل", errAdminOnly: "حسابات الأدمن يتحكم فيها الأدمن فقط", errSelf: "لا يمكنك حذف حسابك أو إيقافه أو إنزال دورك", errFnMissing: "دالة admin-users غير منشورة على Supabase — انشرها أولًا",
+    errLastAdmin: "لا يمكن — يجب أن يبقى سوبر أدمن واحد فعّال على الأقل", errAdminOnly: "حسابات السوبر أدمن يتحكم فيها السوبر أدمن فقط", errManagerOnly: "حسابات المدير يتحكم فيها المدير والسوبر أدمن فقط", errSelf: "لا يمكنك حذف حسابك أو إيقافه أو إنزال دورك", errFnMissing: "دالة admin-users غير منشورة على Supabase — انشرها أولًا",
     notConfigured: "التطبيق غير مربوط بقاعدة بيانات بعد — املأ public/config.js (رابط Supabase والمفتاح العام).",
     appTitle: "مخزن الورشة",
     language: "اللغة", darkMode: "الوضع الداكن", changePass: "تغيير كلمة المرور", logRow: "🕘 سجل تعديلات الأصناف", storesRow: "🏬 المخازن",  logout: "خروج", saveChanges: "حفظ", saved: "تم الحفظ ✓",
     username: "اسم المستخدم", phUser: "اكتب اسم المستخدم", loginUserHint: "اسم المستخدم بالإنجليزية كما أعطاك الأدمن — ليس اسمك بالعربي",
     password: "كلمة المرور", phPass: "اكتب كلمة السر", login: "دخول", loginHint: "سجّل الدخول للمتابعة",
     noAccessTitle: "لا يمكن لهذا الحساب الدخول", noAccessHint: "هذا الحساب موقوف أو بلا صلاحية — اطلب من الأدمن تفعيله.",
-    admin: "أدمن", manager: "مدير", storekeeper: "أمين المخزن", mechanic: "ميكانيكي", viewer: "مشاهد (اطلاع فقط)",
+    admin: "سوبر أدمن", manager: "مدير", deputy: "أدمن", storekeeper: "أمين المخزن", mechanic: "ميكانيكي", viewer: "مشاهد (اطلاع فقط)",
     errLogin: "تعذّر الدخول", errProfile: "لا يوجد ملف لهذا الحساب", errPassMatch: "كلمتا المرور غير متطابقتين أو أقل من 8 أحرف", errPopup: "اسمح بالنوافذ المنبثقة لهذه الصفحة ثم أعد المحاولة",
     errForbidden: "غير مسموح لهذا الحساب", errNet: "لا يوجد اتصال بالإنترنت", errDup: "مسجّل من قبل", errRun463: "قاعدة البيانات غير مجهّزة بعد — شغّل supabase/schema.sql في Supabase أولًا",
     errNameReq: "اكتب الاسم", errNameLong: "الاسم طويل جدًا", errCategory: "اختر الفئة", errUnit: "اختر الوحدة", errMin: "الحد الأدنى غير صحيح", errPartDup: "رقم القطعة هذا مسجّل من قبل على الصنف {c}",
@@ -89,16 +89,16 @@ const I18N = {
     usName: "Name", usUser: "Username (English)", usUserHint: "Lower-case letters, digits and . _ - — signs in as: {u}", usPass: "Password (8 characters at least)", usGen: "🎲 Generate",
     usRole: "Role", usActiveLbl: "Account active", usEdit: "Edit user", usNewPass: "New password", usSetPass: "Save password", usDel: "Delete user",
     usDelQ: "Tap again to delete {n} for good", usCreated: "Account created — give them these details (shown once)", usPassSet: "Password changed — give them these details",
-    usCred: "Sign-in details", usCopy: "Copy", usCopied: "Copied ✓", usRoleHelp: "Admin: everything and the users · Manager: everything but the admin accounts · Storekeeper: items and movements · Mechanic and viewer: read only",
+    usCred: "Sign-in details", usCopy: "Copy", usCopied: "Copied ✓", usRoleHelp: "Super admin: everything and the users · Manager: everything but the super admin accounts · Admin: everything but the manager and super admin accounts · Storekeeper: items and movements · Mechanic and viewer: read only",
     errUserTaken: "That username belongs to another account", errUserBad: "Username: lower-case letters, digits and . _ -, 2 to 32", errPassWeak: "The password needs 8 characters at least",
-    errLastAdmin: "Not possible — at least one active admin must remain", errAdminOnly: "Only an admin manages admin accounts", errSelf: "You cannot delete, stop or demote your own account", errFnMissing: "The admin-users function is not deployed on Supabase — deploy it first",
+    errLastAdmin: "Not possible — at least one active super admin must remain", errAdminOnly: "Only a super admin manages super admin accounts", errManagerOnly: "Only a manager or a super admin manages manager accounts", errSelf: "You cannot delete, stop or demote your own account", errFnMissing: "The admin-users function is not deployed on Supabase — deploy it first",
     notConfigured: "The app is not connected to a database yet — fill in public/config.js (the Supabase URL and the public key).",
     appTitle: "Mechanic Store",
     language: "Language", darkMode: "Dark mode", changePass: "Change password", logRow: "🕘 Items change log", storesRow: "🏬 Stores",  logout: "Sign out", saveChanges: "Save", saved: "Saved ✓",
     username: "Username", phUser: "Type your username", loginUserHint: "The English username the admin gave you — not your Arabic name",
     password: "Password", phPass: "Type your password", login: "Sign in", loginHint: "Sign in to continue",
     noAccessTitle: "This account cannot sign in here", noAccessHint: "This account is stopped or has no role — ask the admin to turn it on.",
-    admin: "Admin", manager: "Manager", storekeeper: "Storekeeper", mechanic: "Mechanic", viewer: "Viewer (read only)",
+    admin: "Super admin", manager: "Manager", deputy: "Admin", storekeeper: "Storekeeper", mechanic: "Mechanic", viewer: "Viewer (read only)",
     errLogin: "Could not sign in", errProfile: "This account has no profile", errPassMatch: "The passwords differ or are shorter than 8 characters", errPopup: "Allow pop-ups for this page and try again",
     errForbidden: "Not allowed for this account", errNet: "No internet connection", errDup: "Already recorded", errRun463: "The database is not set up yet — run supabase/schema.sql in Supabase first",
     errNameReq: "Type the name", errNameLong: "The name is too long", errCategory: "Choose the category", errUnit: "Choose the unit", errMin: "Invalid minimum", errPartDup: "This part number is already item {c}",
@@ -182,21 +182,24 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.09-1';
+const APP_VERSION = '2026.11.09-2';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
-// admin: everything and the accounts; manager: the same, one step below — never an admin's account (the Edge Function says
-// ADMIN_ONLY); storekeeper: items and movements; mechanic and viewer read. The server says the same
+// admin («super admin» on screen): everything and the accounts; manager: the same, one step below — never an admin's account
+// (the Edge Function says ADMIN_ONLY); deputy («admin» on screen): the same, one more step below — never an admin's nor a
+// manager's account (MANAGER_ONLY); storekeeper: items and movements; mechanic and viewer read. The server says the same
 // (ms_editor / ms_admin / ms_reader in supabase/schema.sql), and a stopped account (profiles.active = false) reads nothing.
-const TABS = { admin: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], manager: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], storekeeper: ['stock', 'projects', 'move', 'moves', 'filters'], mechanic: ['stock', 'projects', 'moves', 'filters'], viewer: ['stock', 'projects', 'moves', 'filters'] };
-const ROLE_LIST = ['admin', 'manager', 'storekeeper', 'mechanic', 'viewer'];
-const canEdit = () => !!profile && profile.active !== false && ['storekeeper', 'manager', 'admin'].includes(profile.role);
-const canAdmin = () => !!profile && profile.active !== false && ['admin', 'manager'].includes(profile.role);
-const isAdminRole = () => !!profile && profile.active !== false && profile.role === 'admin';
-// a manager may touch every account but an admin's, and never gives the admin role
-const canTouch = u => isAdminRole() || u.role !== 'admin';
-const roleOpts = () => ROLE_LIST.filter(r => r !== 'admin' || isAdminRole());
+const TABS = { admin: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], manager: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], deputy: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], storekeeper: ['stock', 'projects', 'move', 'moves', 'filters'], mechanic: ['stock', 'projects', 'moves', 'filters'], viewer: ['stock', 'projects', 'moves', 'filters'] };
+const ROLE_LIST = ['admin', 'manager', 'deputy', 'storekeeper', 'mechanic', 'viewer'];
+const canEdit = () => !!profile && profile.active !== false && ['storekeeper', 'deputy', 'manager', 'admin'].includes(profile.role);
+const canAdmin = () => !!profile && profile.active !== false && ['admin', 'manager', 'deputy'].includes(profile.role);
+// the roles above mine: I never touch such an account nor give such a role (a manager: the admin; a deputy: the admin, the manager)
+const ABOVE = { admin: [], manager: ['admin'], deputy: ['admin', 'manager'] };
+const above = () => (profile && ABOVE[profile.role]) || ROLE_LIST;
+const canTouch = u => !above().includes(u.role);
+const lockedMsg = u => t(u.role === 'admin' ? 'errAdminOnly' : 'errManagerOnly');
+const roleOpts = () => ROLE_LIST.filter(r => !above().includes(r));
 const can = id => !!profile && profile.active !== false && (TABS[profile.role] || []).includes(id);
 
 /* ---------------- 2) طبقة البيانات (Supabase فقط هنا) ---------------- */
@@ -858,7 +861,7 @@ const userOk = u => /^[a-z0-9][a-z0-9._-]{1,31}$/.test(u);
 const genPass = () => { const a = 'abcdefghjkmnpqrstuvwxyz', d = '23456789', r = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
   let s = ''; for (let i = 0; i < 6; i++) s += a[r(a.length)]; for (let i = 0; i < 4; i++) s += d[r(d.length)]; return s.charAt(0).toUpperCase() + s.slice(1); };
 const usErr = e => { const m = String(e?.message ?? e ?? '');
-  const M = { USERNAME_TAKEN: 'errUserTaken', USERNAME_INVALID: 'errUserBad', PASSWORD_WEAK: 'errPassWeak', LAST_ADMIN: 'errLastAdmin', SELF: 'errSelf', ADMIN_ONLY: 'errAdminOnly', FN_MISSING: 'errFnMissing', ROLE_INVALID: 'errForbidden', NAME_REQUIRED: 'errNameReq' };
+  const M = { USERNAME_TAKEN: 'errUserTaken', USERNAME_INVALID: 'errUserBad', PASSWORD_WEAK: 'errPassWeak', LAST_ADMIN: 'errLastAdmin', SELF: 'errSelf', ADMIN_ONLY: 'errAdminOnly', MANAGER_ONLY: 'errManagerOnly', FN_MISSING: 'errFnMissing', ROLE_INVALID: 'errForbidden', NAME_REQUIRED: 'errNameReq' };
   for (const k in M) if (m.includes(k)) return t(M[k]);
   return errText(e); };
 async function loadUsers() {
@@ -877,7 +880,7 @@ function renderUserList() {
   const rows = US.rows.filter(u => (US.role === 'all' || (US.role === 'stopped' ? !u.active : u.role === US.role)) && (!q || (u.name || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q)));
   $('usList').innerHTML = rows.length ? rows.map(u => { const me = u.id === userId;
     return `<div class="frow ${u.active ? '' : 'off'}" data-id="${esc(u.id)}"><div class="fb" data-act="edit"><div class="fn">${esc(u.name || '—')}${me ? ` <span class="pill mute">${esc(t('usYou'))}</span>` : ''}</div>
-      <div class="fs"><span class="pill ${u.role === 'admin' ? 'err' : u.role === 'manager' ? 'warn' : u.role === 'storekeeper' ? 'ok' : 'mute'}">${esc(t(u.role))}</span>${u.active ? '' : `<span class="pill mute">⏸ ${esc(t('usStopped'))}</span>`}<span class="ltr muted">${esc(u.username || '')}</span></div>
+      <div class="fs"><span class="pill ${u.role === 'admin' ? 'err' : u.role === 'manager' || u.role === 'deputy' ? 'warn' : u.role === 'storekeeper' ? 'ok' : 'mute'}">${esc(t(u.role))}</span>${u.active ? '' : `<span class="pill mute">⏸ ${esc(t('usStopped'))}</span>`}<span class="ltr muted">${esc(u.username || '')}</span></div>
       <div class="fx">${esc(t('usLast'))}: ${u.last_sign_in_at ? esc(fmtDT(u.last_sign_in_at)) : esc(t('usNever'))}</div></div>
       <div class="fa"><div class="acts">${canTouch(u) ? `<button type="button" class="btn-sm" data-act="edit">✎</button><button type="button" class="btn-sm" data-act="pass">🔑</button>${me ? '' : `<button type="button" class="btn-sm" data-act="del">🗑</button>`}` : `<span class="pill mute">🔒</span>`}</div></div></div>`; }).join('')
     : `<div class="empty">${esc(t('usNone'))}</div>`;
@@ -934,7 +937,7 @@ $('btnUserNew').onclick = () => { if (canAdmin()) userNewSheet(); };
 $('usSearch').oninput = e => { US.q = e.target.value; renderUserList(); };
 $('usRoles').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; US.role = b.dataset.v; renderUsers(); };
 $('usList').onclick = e => { const a = e.target.closest('[data-act]'), row = e.target.closest('.frow'); if (!a || !row || !canAdmin()) return;
-  const u = US.rows.find(x => x.id === row.dataset.id); if (!u) return; if (!canTouch(u)) { toast(t('errAdminOnly')); return; }
+  const u = US.rows.find(x => x.id === row.dataset.id); if (!u) return; if (!canTouch(u)) { toast(lockedMsg(u)); return; }
   if (a.dataset.act === 'edit') userEditSheet(u); else if (a.dataset.act === 'pass') userPassSheet(u); else if (a.dataset.act === 'del') userDelete(u, a); };
 
 /* ---------------- 11) الحساب، الجلسة ---------------- */

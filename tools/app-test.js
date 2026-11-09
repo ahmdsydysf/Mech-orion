@@ -168,7 +168,7 @@ const AR = /[؀-ۿ]/;
     check('admin: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
     nav('users'); await wait(80);
     const ur = () => [...d.querySelectorAll('#usList .frow')];
-    check('users: three accounts, «you» on his own, no 🗑 on it', ur().length === 3 && /أنت|You/.test(txt(ur()[0])) && !ur()[0].querySelector('[data-act="del"]') && !!ur()[1].querySelector('[data-act="del"]'), ur().map(r => txt(r)));
+    check('users: four accounts, «you» on his own, no 🗑 on it', ur().length === 4 && /أنت|You/.test(txt(ur()[0])) && !ur()[0].querySelector('[data-act="del"]') && !!ur()[1].querySelector('[data-act="del"]'), ur().map(r => txt(r)));
     click(d.getElementById('btnUserNew')); await wait(30);
     check('a new account: a password made for him, the role picker', d.getElementById('unPass').value.length >= 8 && !!d.getElementById('unRole'), null);
     set('unName', 'New Keeper'); set('unUser', 'Karim'); set('unRole', 'storekeeper'); click(d.getElementById('btnEditSave')); await wait(60);
@@ -236,6 +236,25 @@ const AR = /[؀-ۿ]/;
     set('unName', 'Second Mgr'); set('unUser', 'mgr2'); set('unRole', 'manager'); click(d.getElementById('btnEditSave')); await wait(80);
     check('manager: makes a manager account', db.USERS.some(u => u.username === 'mgr2' && u.role === 'manager'), db.USERS.map(u => u.username));
     check('manager: no runtime errors', errors.length === 0, errors);
+  }
+  // ---------------- the deputy («أدمن»): everything but the manager and admin accounts ----------------
+  {
+    const B = await boot('deputy'), { d, errors, wait, click, txt, nav, db, set, open } = B;
+    check('deputy: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
+    check('deputy: the «stores» row', open('rowStores'), null);
+    check('deputy: shown as «أدمن», the admin as «سوبر أدمن»', /أدمن/.test(txt(d.getElementById('who'))) && !/سوبر/.test(txt(d.getElementById('who'))), txt(d.getElementById('who')));
+    nav('users'); await wait(80);
+    const ur = () => [...d.querySelectorAll('#usList .frow')];
+    const adm = ur().find(r => /Ali Khan/.test(txt(r))), mgr = ur().find(r => /Omar Boss/.test(txt(r)));
+    check('deputy: the super admin row locked', adm && /سوبر أدمن/.test(txt(adm)) && /🔒/.test(txt(adm)) && !adm.querySelector('button[data-act]'), adm && txt(adm));
+    check('deputy: the manager row locked', mgr && /🔒/.test(txt(mgr)) && !mgr.querySelector('button[data-act]'), mgr && txt(mgr));
+    check('deputy: other rows editable', !!ur().find(r => /Karim Store/.test(txt(r))).querySelector('[data-act="edit"]'), null);
+    click(d.getElementById('btnUserNew')); await wait(30);
+    const opts = [...d.getElementById('unRole').options].map(o => o.value);
+    check('deputy: no «admin» nor «manager» in the role picker, «deputy» there', !opts.includes('admin') && !opts.includes('manager') && opts.includes('deputy'), opts);
+    set('unName', 'Second Dep'); set('unUser', 'dep2'); set('unRole', 'deputy'); click(d.getElementById('btnEditSave')); await wait(80);
+    check('deputy: makes a deputy account', db.USERS.some(u => u.username === 'dep2' && u.role === 'deputy'), db.USERS.map(u => u.username));
+    check('deputy: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- readers ----------------
   for (const role of ['mechanic', 'viewer']) {

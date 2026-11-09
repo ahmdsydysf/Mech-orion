@@ -8,8 +8,9 @@
 //      { action: 'delete', id }
 //      { action: 'ping' }
 // Answers 200 { ok: true, ... } or 200 { error: CODE } — FORBIDDEN, USERNAME_INVALID, USERNAME_TAKEN, PASSWORD_WEAK, ROLE_INVALID,
-// NAME_REQUIRED, NOT_FOUND, SELF, LAST_ADMIN, ADMIN_ONLY, BAD_REQUEST. Only an ACTIVE admin or manager may call it; a manager
-// never makes an admin, nor changes or removes an admin's account (ADMIN_ONLY).
+// NAME_REQUIRED, NOT_FOUND, SELF, LAST_ADMIN, ADMIN_ONLY, MANAGER_ONLY, BAD_REQUEST. Only an ACTIVE admin, manager or deputy may
+// call it; a manager never makes an admin, nor changes or removes an admin's account (ADMIN_ONLY); a deputy («أدمن» on screen)
+// neither, nor a manager's (MANAGER_ONLY).
 import { createClient } from 'npm:@supabase/supabase-js@2.116.0';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
@@ -17,7 +18,10 @@ const ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DOMAIN = (Deno.env.get('USER_DOMAIN') || 'orioncc.com').toLowerCase();
 const ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || '').split(',').map(s => s.trim()).filter(Boolean);
-const ROLES = ['admin', 'manager', 'storekeeper', 'mechanic', 'viewer'];
+const ROLES = ['admin', 'manager', 'deputy', 'storekeeper', 'mechanic', 'viewer'];
+// the roles above each account manager: he never gives such a role nor touches such an account
+const ABOVE: Record<string, string[]> = { admin: [], manager: ['admin'], deputy: ['admin', 'manager'] };
+const lockedErr = (role: string) => role === 'admin' ? 'ADMIN_ONLY' : 'MANAGER_ONLY';
 
 const cors = (origin: string | null) => ({
   'Access-Control-Allow-Origin': !ORIGINS.length ? '*' : (origin && ORIGINS.includes(origin) ? origin : ORIGINS[0]),
@@ -45,8 +49,8 @@ Deno.serve(async (req) => {
   if (whoErr || !who?.user) return json({ error: 'FORBIDDEN' }, 401);
   const me = who.user.id;
   const { data: mine } = await admin.from('profiles').select('role, active').eq('id', me).maybeSingle();
-  if (!mine || !['admin', 'manager'].includes(mine.role) || !mine.active) return json({ error: 'FORBIDDEN' }, 403);
-  const isAdmin = mine.role === 'admin';
+  if (!mine || !Object.hasOwn(ABOVE, mine.role) || !mine.active) return json({ error: 'FORBIDDEN' }, 403);
+  const above = ABOVE[mine.role];
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: 'BAD_REQUEST' }, 400); }
@@ -69,7 +73,7 @@ Deno.serve(async (req) => {
       if (!userOk(username)) return json({ error: 'USERNAME_INVALID' });
       if (password.length < 8) return json({ error: 'PASSWORD_WEAK' });
       if (!ROLES.includes(role)) return json({ error: 'ROLE_INVALID' });
-      if (role === 'admin' && !isAdmin) return json({ error: 'ADMIN_ONLY' });
+      if (above.includes(role)) return json({ error: lockedErr(role) });
       const email = `${username}@${DOMAIN}`;
       const { data: made, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { name } });
       if (error || !made?.user) {
@@ -85,12 +89,12 @@ Deno.serve(async (req) => {
     if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'BAD_REQUEST' });
     const { data: target } = await admin.from('profiles').select('id, role, active, username').eq('id', id).maybeSingle();
     if (!target) return json({ error: 'NOT_FOUND' });
-    if (target.role === 'admin' && !isAdmin) return json({ error: 'ADMIN_ONLY' });
+    if (above.includes(target.role)) return json({ error: lockedErr(target.role) });
 
     if (action === 'update') {
       const patch: Record<string, unknown> = {};
       if (body.name !== undefined) { const n = String(body.name).trim().slice(0, 80); if (!n) return json({ error: 'NAME_REQUIRED' }); patch.name = n; }
-      if (body.role !== undefined) { const r = String(body.role); if (!ROLES.includes(r)) return json({ error: 'ROLE_INVALID' }); if (r === 'admin' && !isAdmin) return json({ error: 'ADMIN_ONLY' }); patch.role = r; }
+      if (body.role !== undefined) { const r = String(body.role); if (!ROLES.includes(r)) return json({ error: 'ROLE_INVALID' }); if (above.includes(r)) return json({ error: lockedErr(r) }); patch.role = r; }
       if (body.active !== undefined) patch.active = !!body.active;
       const losesAdmin = target.role === 'admin' && target.active && ((patch.role !== undefined && patch.role !== 'admin') || patch.active === false);
       if (id === me && losesAdmin) return json({ error: 'SELF' });
