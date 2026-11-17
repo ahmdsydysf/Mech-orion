@@ -771,3 +771,251 @@ notify pgrst, 'reload schema';
 select 'main store' as item, (select name from ms_stores where kind = 'main') as n
 union all select 'projects', (select count(*) from ms_stores where kind = 'project')::text
 union all select 'open projects', (select count(*) from ms_stores where kind = 'project' and active)::text;
+
+-- ---------- 11. the equipment at the sites, the maintenance job cards (17 Nov 2026) ----------
+-- The owner: «اريد تضمين ورفع بيانات شييت الاكسيل وايضا اريد ان اضيف خاصيه في النظام لاستخراج تقرير وتخزينه مثل ال pdf … بستايل تاني خالص».
+-- ms_site_equipment — the machines and tools each site holds (the sheet «SITE EQUIPMENT UPDATED 2026»: supabase/site-equipment.sql,
+--   made by tools/equipment-import.py; src = «tab!cell» keeps a re-run from doubling a line). A site is a store (a project, as a rule).
+--   It is a register, not stock: it never moves ms_stock. The editors write it, the admins delete.
+-- ms_job_cards — the workshop's job card (fleet maintenance, oils & filters), numbered JC-000001 …: the vehicle or the machine, in and
+--   out, the reading and the fuel, the safety checks, the oils and the filters, the work, the diagnosis, the parts, the names that
+--   sign. The mechanics and the editors write it (a mechanic his own cards only), the admins delete. The stored card is the record;
+--   the page prints it on Orion's own paper (and saves it as PDF) from it at any time.
+
+-- who writes a job card: a mechanic, a storekeeper, the admins (internal to RLS)
+create or replace function ms_jobber() returns boolean
+language sql stable security definer set search_path = public as $fn$
+  select coalesce((select p.role in ('mechanic', 'storekeeper', 'deputy', 'manager', 'admin') and p.active from profiles p where p.id = auth.uid()), false);
+$fn$;
+
+create table if not exists ms_site_equipment (
+  id uuid primary key default gen_random_uuid(),
+  store_id uuid not null references ms_stores(id),
+  section text check (section in ('civil', 'mep')),
+  name text not null check (char_length(name) between 1 and 120),
+  ref text check (char_length(ref) <= 40),                     -- plate, number, size: «110kv», «G-0407», «TL-4»
+  qty numeric(12,2) check (qty >= 0),
+  sent_on date,
+  tag text check (tag in ('new', 'extra', 'returned', 'rent', 'balance')),
+  remarks text check (char_length(remarks) <= 200),
+  received_by text check (char_length(received_by) <= 80),
+  src text,
+  sort int not null default 0,
+  created_by uuid default auth.uid(),
+  created_by_name text,
+  created_at timestamptz not null default now(),
+  updated_by_name text,
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists ms_site_equipment_src on ms_site_equipment (src);
+create index if not exists ms_site_equipment_store on ms_site_equipment (store_id, sent_on desc nulls last, sort);
+alter table ms_site_equipment enable row level security;
+
+create or replace function ms_site_equipment_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  new.name := ms_clean(new.name);
+  if new.name is null then raise exception 'MS_NAME_REQUIRED'; end if;
+  if char_length(new.name) > 120 then raise exception 'MS_NAME_TOO_LONG'; end if;
+  if new.store_id is null or not exists (select 1 from ms_stores s where s.id = new.store_id) then raise exception 'MS_STORE_REQUIRED'; end if;
+  new.ref := ms_clean(new.ref); new.remarks := ms_clean(new.remarks); new.received_by := ms_clean(new.received_by);
+  new.section := nullif(lower(btrim(coalesce(new.section, ''))), ''); new.tag := nullif(lower(btrim(coalesce(new.tag, ''))), '');
+  if char_length(coalesce(new.ref, '')) > 40 then raise exception 'MS_REF_TOO_LONG'; end if;
+  if char_length(coalesce(new.remarks, '')) > 200 then raise exception 'MS_NOTE_TOO_LONG'; end if;
+  if char_length(coalesce(new.received_by, '')) > 80 then raise exception 'MS_NAME_TOO_LONG'; end if;
+  if new.qty is not null and new.qty < 0 then raise exception 'MS_QTY_INVALID:%', new.name; end if;
+  if new.sent_on > (now() at time zone 'Asia/Dubai')::date then raise exception 'MS_DATE_FUTURE'; end if;
+  new.sort := coalesce(new.sort, 0);
+  if tg_op = 'INSERT' then
+    new.created_by := coalesce(auth.uid(), new.created_by); new.created_by_name := ms_me_name(); new.created_at := now();
+  else
+    new.src := old.src; new.created_by := old.created_by; new.created_by_name := old.created_by_name; new.created_at := old.created_at;
+  end if;
+  new.updated_by_name := ms_me_name(); new.updated_at := now();
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_site_equipment_before on ms_site_equipment;
+create trigger trg_ms_site_equipment_before before insert or update on ms_site_equipment for each row execute function ms_site_equipment_before_write();
+
+create sequence if not exists ms_job_no_seq;
+create table if not exists ms_job_cards (
+  id uuid primary key default gen_random_uuid(),
+  seq bigint not null,                                          -- the trigger numbers it (JC- + seq)
+  no text not null,
+  status text not null default 'open' check (status in ('open', 'done')),
+  store_id uuid references ms_stores(id),
+  equipment_id uuid references ms_equipment(id) on delete set null,
+  site_equipment_id uuid references ms_site_equipment(id) on delete set null,
+  plate text check (char_length(plate) <= 30),
+  make_model text check (char_length(make_model) <= 80),
+  eq_type text check (char_length(eq_type) <= 80),
+  driver text check (char_length(driver) <= 80),
+  in_on date not null default ((now() at time zone 'Asia/Dubai')::date),
+  in_time time,
+  out_on date,
+  out_time time,
+  reading numeric(12,1) check (reading >= 0),
+  reading_unit text check (reading_unit in ('km', 'hr')),
+  fuel smallint check (fuel in (0, 25, 50, 75, 100)),
+  checks jsonb not null default '{}'::jsonb,                    -- {"tyres": "ok", "brakes": "bad", …}
+  oils jsonb not null default '[]'::jsonb,                      -- [{"type": "hydraulic", "qty": 20, "note": "…"}]
+  filters jsonb not null default '[]'::jsonb,                   -- [{"type": "air", "part_no": "FOA-2579", "action": "change"}]
+  work text[] not null default '{}',                            -- mechanical, electrical, hydraulic, routine, field
+  diagnosis text check (char_length(diagnosis) <= 2000),
+  parts text check (char_length(parts) <= 2000),
+  final_notes text check (char_length(final_notes) <= 1000),
+  mechanic text check (char_length(mechanic) <= 80),
+  fleet_officer text check (char_length(fleet_officer) <= 80),
+  supervisor text check (char_length(supervisor) <= 80),
+  created_by uuid default auth.uid(),
+  created_by_name text,
+  created_at timestamptz not null default now(),
+  updated_by_name text,
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists ms_job_cards_no on ms_job_cards (no);
+create index if not exists ms_job_cards_seq on ms_job_cards (seq desc);
+create index if not exists ms_job_cards_plate on ms_job_cards (plate_key(plate));
+alter table ms_job_cards enable row level security;
+
+create or replace function ms_job_cards_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare e jsonb; k text; v_today date := (now() at time zone 'Asia/Dubai')::date;
+begin
+  new.plate := plate_clean(new.plate);
+  new.make_model := ms_clean(new.make_model); new.eq_type := ms_clean(new.eq_type); new.driver := ms_clean(new.driver);
+  new.diagnosis := nullif(btrim(coalesce(new.diagnosis, '')), ''); new.parts := nullif(btrim(coalesce(new.parts, '')), '');
+  new.final_notes := nullif(btrim(coalesce(new.final_notes, '')), '');
+  new.mechanic := ms_clean(new.mechanic); new.fleet_officer := ms_clean(new.fleet_officer); new.supervisor := ms_clean(new.supervisor);
+  -- what is being worked on: a plate, a make / model, or one of the registers
+  if new.plate is null and new.make_model is null and new.equipment_id is null and new.site_equipment_id is null then raise exception 'MS_JOB_WHAT_REQUIRED'; end if;
+  if char_length(coalesce(new.plate, '')) > 30 then raise exception 'MS_PLATE_TOO_LONG'; end if;
+  if greatest(char_length(coalesce(new.make_model, '')), char_length(coalesce(new.eq_type, '')), char_length(coalesce(new.driver, '')),
+              char_length(coalesce(new.mechanic, '')), char_length(coalesce(new.fleet_officer, '')), char_length(coalesce(new.supervisor, ''))) > 80 then
+    raise exception 'MS_NAME_TOO_LONG'; end if;
+  if char_length(coalesce(new.diagnosis, '')) > 2000 or char_length(coalesce(new.parts, '')) > 2000 or char_length(coalesce(new.final_notes, '')) > 1000 then
+    raise exception 'MS_NOTE_TOO_LONG'; end if;
+  new.in_on := coalesce(new.in_on, v_today);
+  if new.in_on > v_today or new.out_on > v_today then raise exception 'MS_DATE_FUTURE'; end if;
+  if new.in_on < date '2020-01-01' then raise exception 'MS_DATE_OLD'; end if;
+  if new.out_on is not null and (new.out_on < new.in_on or (new.out_on = new.in_on and new.out_time < new.in_time)) then raise exception 'MS_OUT_BEFORE_IN'; end if;
+  if new.reading is not null and new.reading < 0 then raise exception 'MS_READING_INVALID'; end if;
+  new.reading_unit := case when new.reading is null then null else coalesce(new.reading_unit, 'km') end;
+  -- the safety checks, the oils, the filters, the work: only the known keys, the known values
+  new.checks := coalesce(new.checks, '{}'::jsonb); new.oils := coalesce(new.oils, '[]'::jsonb); new.filters := coalesce(new.filters, '[]'::jsonb);
+  if jsonb_typeof(new.checks) <> 'object' or jsonb_typeof(new.oils) <> 'array' or jsonb_typeof(new.filters) <> 'array' then raise exception 'MS_JOB_INVALID'; end if;
+  for k in select jsonb_object_keys(new.checks) loop
+    if k not in ('tyres', 'brakes', 'lights', 'horn', 'mirrors', 'seatbelt', 'extinguisher', 'leaks') or (new.checks->>k) not in ('ok', 'bad') then raise exception 'MS_JOB_INVALID'; end if;
+  end loop;
+  for e in select * from jsonb_array_elements(new.oils) loop
+    if jsonb_typeof(e) <> 'object' or (e->>'type') is null or (e->>'type') not in ('hydraulic', 'diesel_engine', 'petrol_engine', 'gear', 'coolant')
+       or ((e->>'qty') is not null and ((e->>'qty') !~ '^\d+(\.\d+)?$' or (e->>'qty')::numeric > 10000)) or char_length(coalesce(e->>'note', '')) > 120 then
+      raise exception 'MS_JOB_INVALID'; end if;
+  end loop;
+  for e in select * from jsonb_array_elements(new.filters) loop
+    if jsonb_typeof(e) <> 'object' or (e->>'type') is null or (e->>'type') not in ('hydraulic', 'oil', 'fuel', 'air', 'cabin')
+       or coalesce(e->>'action', 'change') not in ('change', 'clean') or char_length(coalesce(e->>'part_no', '')) > 40 then
+      raise exception 'MS_JOB_INVALID'; end if;
+  end loop;
+  new.work := coalesce(new.work, '{}');
+  if not (new.work <@ array['mechanical', 'electrical', 'hydraulic', 'routine', 'field']) then raise exception 'MS_JOB_INVALID'; end if;
+  if new.store_id is not null and not exists (select 1 from ms_stores s where s.id = new.store_id) then raise exception 'MS_STORE_REQUIRED'; end if;
+  new.status := coalesce(new.status, 'open');
+  -- the number and the stamps
+  if tg_op = 'INSERT' then
+    new.seq := nextval('ms_job_no_seq'); new.no := 'JC-' || lpad(new.seq::text, 6, '0');
+    new.created_by := coalesce(auth.uid(), new.created_by); new.created_by_name := ms_me_name(); new.created_at := now();
+  else
+    new.seq := old.seq; new.no := old.no; new.created_by := old.created_by; new.created_by_name := old.created_by_name; new.created_at := old.created_at;
+  end if;
+  new.updated_by_name := ms_me_name(); new.updated_at := now();
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_job_cards_before on ms_job_cards;
+create trigger trg_ms_job_cards_before before insert or update on ms_job_cards for each row execute function ms_job_cards_before_write();
+
+-- the log: the site equipment and the job cards too
+alter table ms_log drop constraint if exists ms_log_tbl_check;
+alter table ms_log add constraint ms_log_tbl_check check (tbl in ('item', 'store', 'equipment', 'site_equipment', 'job_card'));
+create or replace function ms_log_row() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare o jsonb; n jsonb; ch jsonb := '{}'::jsonb; k text;
+        v_tbl text := case tg_table_name when 'ms_items' then 'item' when 'ms_stores' then 'store' when 'ms_site_equipment' then 'site_equipment'
+                                         when 'ms_job_cards' then 'job_card' else 'equipment' end;
+        v_role text := (select p.role from profiles p where p.id = auth.uid());
+        v_skip text[] := array['updated_at', 'updated_by_name', 'created_at', 'created_by', 'created_by_name'];
+begin
+  if tg_op = 'INSERT' then
+    insert into ms_log (by_id, by_name, by_role, tbl, row_id, action, snap) values (auth.uid(), ms_me_name(), v_role, v_tbl, new.id, 'add', to_jsonb(new) - 'created_by');
+    return null;
+  end if;
+  if tg_op = 'DELETE' then
+    insert into ms_log (by_id, by_name, by_role, tbl, row_id, action, snap) values (auth.uid(), ms_me_name(), v_role, v_tbl, old.id, 'delete', to_jsonb(old) - 'created_by');
+    return null;
+  end if;
+  o := to_jsonb(old); n := to_jsonb(new);
+  for k in select jsonb_object_keys(n) loop
+    if not (k = any(v_skip)) and (o->k) is distinct from (n->k) then ch := ch || jsonb_build_object(k, jsonb_build_array(o->k, n->k)); end if;
+  end loop;
+  if ch <> '{}'::jsonb then
+    insert into ms_log (by_id, by_name, by_role, tbl, row_id, action, changes, snap) values (auth.uid(), ms_me_name(), v_role, v_tbl, new.id, 'edit', ch, n - 'created_by');
+  end if;
+  return null;
+end $fn$;
+drop trigger if exists trg_ms_site_equipment_log on ms_site_equipment;
+create trigger trg_ms_site_equipment_log after insert or update or delete on ms_site_equipment for each row execute function ms_log_row();
+drop trigger if exists trg_ms_job_cards_log on ms_job_cards;
+create trigger trg_ms_job_cards_log after insert or update or delete on ms_job_cards for each row execute function ms_log_row();
+
+-- a store that holds site equipment or has job cards stays too: stop it instead
+create or replace function ms_before_delete() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  if tg_table_name = 'ms_items' then
+    if exists (select 1 from ms_move_lines l where l.item_id = old.id) or exists (select 1 from ms_stock s where s.item_id = old.id and s.qty <> 0) then
+      raise exception 'MS_ITEM_IN_USE'; end if;
+    delete from ms_stock where item_id = old.id;
+  else
+    if exists (select 1 from ms_moves m where m.store_id = old.id or m.to_store_id = old.id)
+       or exists (select 1 from ms_stock s where s.store_id = old.id and s.qty <> 0)
+       or exists (select 1 from ms_site_equipment e where e.store_id = old.id)
+       or exists (select 1 from ms_job_cards j where j.store_id = old.id) then raise exception 'MS_STORE_IN_USE'; end if;
+    delete from ms_stock where store_id = old.id;
+  end if;
+  return old;
+end $fn$;
+
+-- who reads, who writes
+drop policy if exists "ms site equipment read" on ms_site_equipment;
+create policy "ms site equipment read" on ms_site_equipment for select to authenticated using ((select ms_reader()));
+drop policy if exists "ms site equipment insert" on ms_site_equipment;
+create policy "ms site equipment insert" on ms_site_equipment for insert to authenticated with check ((select ms_editor()));
+drop policy if exists "ms site equipment update" on ms_site_equipment;
+create policy "ms site equipment update" on ms_site_equipment for update to authenticated using ((select ms_editor())) with check ((select ms_editor()));
+drop policy if exists "ms site equipment delete" on ms_site_equipment;
+create policy "ms site equipment delete" on ms_site_equipment for delete to authenticated using ((select ms_admin()));
+drop policy if exists "ms job cards read" on ms_job_cards;
+create policy "ms job cards read" on ms_job_cards for select to authenticated using ((select ms_reader()));
+drop policy if exists "ms job cards insert" on ms_job_cards;
+create policy "ms job cards insert" on ms_job_cards for insert to authenticated with check ((select ms_jobber()));
+drop policy if exists "ms job cards update" on ms_job_cards;
+create policy "ms job cards update" on ms_job_cards for update to authenticated
+  using ((select ms_editor()) or ((select ms_jobber()) and created_by = (select auth.uid())))
+  with check ((select ms_editor()) or ((select ms_jobber()) and created_by = (select auth.uid())));
+drop policy if exists "ms job cards delete" on ms_job_cards;
+create policy "ms job cards delete" on ms_job_cards for delete to authenticated using ((select ms_admin()));
+
+grant select, insert, update, delete on ms_site_equipment, ms_job_cards to authenticated, service_role;
+revoke all on ms_site_equipment, ms_job_cards from anon;
+grant usage, select on sequence ms_job_no_seq to authenticated, service_role;
+revoke all on sequence ms_job_no_seq from anon;
+grant execute on function ms_jobber() to authenticated, service_role;
+revoke execute on function ms_jobber() from public, anon;
+revoke execute on function ms_site_equipment_before_write() from public, anon, authenticated;
+revoke execute on function ms_job_cards_before_write() from public, anon, authenticated;
+revoke execute on function ms_log_row() from public, anon, authenticated;
+revoke execute on function ms_before_delete() from public, anon, authenticated;
+notify pgrst, 'reload schema';
+
+select 'site equipment lines' as item, (select count(*) from ms_site_equipment)::text as n
+union all select 'job cards', (select count(*) from ms_job_cards)::text;

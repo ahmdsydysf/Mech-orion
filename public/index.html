@@ -362,6 +362,29 @@
   .lg{padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.55}
   nav button.hidden{display:none}
   .chk{display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:700}.chk input{width:auto;height:auto;margin:0}
+  /* ---------- the maintenance: job cards, site equipment (17 Nov 2026) ---------- */
+  #jbPane button{flex:1 1 0}
+  .jsec{display:flex;align-items:center;gap:8px;margin:20px 0 2px;font-family:var(--font-head)}
+  .jsec span{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--brand);color:#A3E635;font:900 11px var(--font-mark);display:grid;place-items:center}
+  html[data-theme="dark"] .jsec span{background:#A3E635;color:#1A2E05}
+  .jsec b{font-size:14.5px;font-weight:900}.jsec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .segment.fuel{direction:ltr}.segment.fuel button{flex:1 1 0;height:42px;font-size:16px;font-weight:900}
+  .ckgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .ckc{display:flex;align-items:center;gap:8px;min-height:42px;padding:6px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:700 13px var(--font-head);text-align:start;cursor:pointer}
+  .ckc i{flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:1.6px solid var(--line);display:grid;place-items:center;font-style:normal;font-weight:900}
+  .ckc.ok{border-color:color-mix(in srgb,var(--ok) 50%,var(--line))}.ckc.ok i{background:var(--ok);border-color:var(--ok);color:#fff}
+  .ckc.bad{border-color:color-mix(in srgb,var(--err) 50%,var(--line));background:var(--err-bg)}.ckc.bad i{background:var(--err);border-color:var(--err);color:#fff}
+  .jline{display:grid;grid-template-columns:minmax(0,1.25fr) 74px minmax(0,1fr);gap:6px;align-items:center;margin-top:6px}
+  .jline>span{font:700 12.5px var(--font-head);line-height:1.3}.jline input,.jline select{padding:10px;font-size:14px}
+  .chips.wrap{flex-wrap:wrap;overflow:visible}
+  textarea{resize:vertical;line-height:1.6}
+  .frow.job{--kc:var(--warn)}.frow.job.done{--kc:var(--ok)}
+  .frow.se{--kc:var(--line)}.frow.se .qty{font-size:18px}
+  .kpill.tg-new{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+  .kpill.tg-extra{background:color-mix(in srgb,var(--drv) 14%,transparent);color:var(--drv)}
+  .kpill.tg-returned{background:var(--surface2);color:var(--muted)}
+  .kpill.tg-rent{background:color-mix(in srgb,var(--emp) 14%,transparent);color:var(--emp)}
+  .kpill.tg-balance{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
 </style>
 </head>
 <body>
@@ -502,6 +525,24 @@
     <div class="chips" id="pjShow" style="margin-top:10px"></div>
     <div id="pjList"></div>
   </section>
+  <!-- the maintenance: the job cards, the equipment at the sites -->
+  <section class="screen" id="scr-jobs">
+    <div class="segment kind" id="jbPane"><button type="button" data-p="cards"><span data-i18n="jbCardsP">🔧 كروت الصيانة</span></button><button type="button" data-p="equip"><span data-i18n="jbEquipP">🏗 معدات المواقع</span></button></div>
+    <div id="jbCards">
+      <div class="pane-d" data-i18n="jbDesc" style="margin-top:10px">كارت عمل لكل دخول معدة أو مركبة للورشة.</div>
+      <button class="primary hidden" id="btnJbNew" data-i18n="jbNew">＋ كارت صيانة جديد</button>
+      <input id="jbSearch" type="search" data-i18n-ph="jbSearch" placeholder="ابحث برقم الكارت أو اللوحة أو المعدة أو السائق" autocapitalize="none" style="margin-top:12px">
+      <div class="chips" id="jbShow" style="margin-top:10px"></div>
+      <div id="jbList"></div>
+    </div>
+    <div id="jbEquip" class="hidden">
+      <div class="pane-d" data-i18n="seDesc" style="margin-top:10px">المعدات والعُدد الموجودة في كل موقع.</div>
+      <input id="seSearch" type="search" data-i18n-ph="seSearch" placeholder="ابحث باسم المعدة أو الرقم أو المستلم" autocapitalize="none">
+      <div class="chips" id="seSites" style="margin-top:10px"></div>
+      <div id="seList"></div>
+      <div class="row2b"><button class="ghost hidden" id="btnSeAdd" data-i18n="seAdd">＋ إضافة معدة لموقع</button><button class="ghost hidden" id="btnSePdf" data-i18n="sePdf">🖨️ كشف معدات الموقع PDF</button></div>
+    </div>
+  </section>
   <!-- the accounts (admin only) -->
   <section class="screen" id="scr-users">
     <div class="pane-d" data-i18n="usersDesc">حسابات النظام: الأدمن يضيف المستخدمين ويحدد دور كل واحد ويوقفه أو يغيّر كلمة مروره.</div>
@@ -518,6 +559,7 @@
   <button data-s="move"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg></span><span data-i18n="navMove">حركة</span></button>
   <button data-s="moves"><span class="ico"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span data-i18n="navMoves">السجل</span></button>
   <button data-s="filters"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v5M12 15v5M4 12h5M15 12h5"/></svg></span><span data-i18n="navFilters">الفلاتر</span></button>
+  <button data-s="jobs"><span class="ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.4 2.4-2.1-.6-.6-2.1z"/></svg></span><span data-i18n="navJobs">الصيانة</span></button>
   <button data-s="users"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16 14.6c2.6-.3 4.8 1.3 5.5 4.4"/></svg></span><span data-i18n="navUsers">المستخدمون</span></button>
 </nav>
 <div id="toast"></div>

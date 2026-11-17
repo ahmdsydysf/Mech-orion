@@ -36,7 +36,7 @@ const AR = /[؀-ۿ]/;
   // ---------------- the storekeeper ----------------
   {
     const B = await boot('storekeeper'), { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, db } = B;
-    check('storekeeper: lands on the stock, five tabs (projects second)', active() === 'scr-stock' && tabs() === 'stock,projects,move,moves,filters', active() + ' ' + tabs());
+    check('storekeeper: lands on the stock, six tabs (projects second, maintenance last)', active() === 'scr-stock' && tabs() === 'stock,projects,move,moves,filters,jobs', active() + ' ' + tabs());
     const hero = txt(d.getElementById('skHero'));
     check('the hero: 11 items (the stopped one with nothing left out), 5 in stock, 1 below minimum, 6 at zero', /11\s*صنف/.test(hero) && /5\s*فيها رصيد/.test(hero) && /1\s*تحت الحد/.test(hero) && /6\s*رصيدها صفر/.test(hero), hero);
     const rows = () => [...d.querySelectorAll('#skList .frow')];
@@ -148,11 +148,65 @@ const AR = /[؀-ۿ]/;
     check('returned: Site A empty, the main store 20 cleaners and 4 grinders', db.have('s2', 'i-CON-0005') === 0 && db.have('s2', 'i-MCH-0001') === 0 && db.have('s1', 'i-CON-0005') === 20 && db.have('s1', 'i-MCH-0001') === 4, null);
     nav('moves'); await wait(120);
     check('the history names each route: to project, project to project, back to main', ['صرف لمشروع', 'نقل بين مشاريع', 'إرجاع للرئيسي'].every(w => txt(d.getElementById('hsList')).includes(w)), txt(d.getElementById('hsList')).slice(0, 300));
+    // the maintenance: the job cards and the site equipment (17 Nov 2026)
+    nav('jobs'); await wait(80);
+    const jr = () => [...d.querySelectorAll('#jbList .frow')];
+    check('maintenance: the open job card, its plate, its work, «new card» for the storekeeper', active() === 'scr-jobs' && jr().length === 1 && /JC-000001/.test(txt(jr()[0])) && /74522/.test(txt(jr()[0])) && /صيانة دورية/.test(txt(jr()[0])) && open('btnJbNew'), jr().map(r => txt(r)));
+    click(jr()[0].querySelector('.fb')); await wait(40);
+    check('a card opened: plate, make, oils, filters, diagnosis; print, edit, close, issue the filters; no delete for the storekeeper', /Bobcat S650/.test(txt(d.getElementById('editBody'))) && /FOA-2579/.test(txt(d.getElementById('editBody')))
+      && /Hydraulic hose leaking/.test(txt(d.getElementById('editBody'))) && !!d.getElementById('jbPrintB') && !!d.getElementById('jbEditB') && !!d.getElementById('jbTogB') && !!d.getElementById('jbIssueB') && !d.getElementById('jbDelB'), txt(d.getElementById('editBody')).slice(0, 300));
+    click(d.getElementById('jbIssueB')); await wait(80);
+    check('«issue the filters»: a new issue with the card\'s stocked filters, its plate, the card number as the reference', active() === 'scr-move' && d.querySelector('#mvKind [data-k="issue"]').classList.contains('on')
+      && d.querySelectorAll('#mvLines .lrow').length === 2 && d.getElementById('mvPlate').value === '74522' && d.getElementById('mvRef').value === 'JC-000001' && d.getElementById('mvStore').value === 's2', [d.querySelectorAll('#mvLines .lrow').length, d.getElementById('mvPlate').value, d.getElementById('mvRef').value]);
+    nav('jobs'); await wait(60); click(d.getElementById('btnJbNew')); await wait(40);
+    check('a new card: the eight sections, the eight safety checks, five oils, five filters', d.querySelectorAll('#editBody .jsec').length === 8 && d.querySelectorAll('#jfChecks .ckc').length === 8 && d.querySelectorAll('#editBody [id^="jo_"]').length === 5 && d.querySelectorAll('#editBody [id^="jp_"]').length === 5, d.querySelectorAll('#editBody .jsec').length);
+    click(d.getElementById('btnEditSave')); await wait(40);
+    check('nothing to work on → said in words', /اكتب رقم اللوحة أو الماركة والموديل/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
+    set('jfPlate', '52676'); set('jfMake', 'Bobcat S450'); set('jfDriver', 'Anil'); set('jfReading', '880'); set('jfSite', 's3');
+    click(d.querySelector('#jfFuel [data-v="75"]')); click(d.querySelector('#jfChecks [data-k="tyres"]')); click(d.querySelector('#jfChecks [data-k="horn"]')); click(d.querySelector('#jfChecks [data-k="horn"]'));
+    set('jo_hydraulic', '12'); set('jo_diesel_engine', '9.5'); set('jn_diesel_engine', '15W-40'); set('jp_air', 'foa-2579'); set('ja_air', 'clean'); set('jp_oil', 'FO-3143');
+    click(d.querySelector('#jfWork [data-v="routine"]')); click(d.querySelector('#jfWork [data-v="electrical"]')); set('jfDiag', 'Horn not working'); set('jfMech', 'Mech One');
+    click(d.getElementById('btnEditSave')); await wait(100);
+    const j2 = db.JOBS.find(c => c.no === 'JC-000002');
+    check('saved as JC-000002: the plate, the fuel, the checks, the oils, the filters (part upper, action), the work', !!j2 && j2.plate === '52676' && j2.fuel === 75 && j2.checks.tyres === 'ok' && j2.checks.horn === 'bad'
+      && j2.oils.length === 2 && j2.oils[1].qty === 9.5 && j2.oils[1].note === '15W-40' && j2.filters.find(f => f.type === 'air').part_no === 'FOA-2579' && j2.filters.find(f => f.type === 'air').action === 'clean'
+      && j2.filters.find(f => f.type === 'oil').action === 'change' && j2.work.join() === 'electrical,routine' && j2.equipment_id === 'e2' && j2.store_id === 's3' && j2.reading === 880, j2);
+    check('… and opened after saving', /JC-000002/.test(txt(d.getElementById('editTitle'))) && !!d.getElementById('jbPrintB'), txt(d.getElementById('editTitle')));
+    const pn = printed.length; click(d.getElementById('jbPrintB')); await wait(20);
+    const pj = printed[pn] || '';
+    check('the job card\'s paper: Orion\'s own (jc), its number, both languages, the fuel gauge, the ticks, the filters, the policy, the print script', /class="jc"/.test(pj) && /JC-000002/.test(pj) && /كارت عمل صيانة/.test(pj) && /Job card/.test(pj)
+      && (pj.match(/class="on /g) || []).length === 4 && /class="ck ok"/.test(pj) && /class="ck bad"/.test(pj) && /FOA-2579/.test(pj) && /act clean/.test(pj) && /تعليمات الصيانة الداخلية/.test(pj) && /<script src="print.js"><\/script>/.test(pj) && !/onclick=/.test(pj), pj.slice(0, 200));
+    click(d.getElementById('jbTogB')); await wait(60);
+    check('closing the card: done, the day out filled', j2.status === 'done' && !!j2.out_on, [j2.status, j2.out_on]);
+    // the site equipment
+    click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="equip"]')); await wait(60);
+    const sr = () => [...d.querySelectorAll('#seList .frow')];
+    check('site equipment: every site\'s lines under its name, the returned one marked', sr().length === 4 && /Site A/.test(txt(d.getElementById('seList'))) && /110kv/.test(txt(d.getElementById('seList'))) && d.querySelectorAll('#seList .frow.off').length === 1, sr().map(r => txt(r)));
+    click(d.querySelector('#seSites [data-v="s2"]')); await wait(20);
+    check('a site chip: its three lines, the sheet button', sr().length === 3 && open('btnSePdf'), sr().length);
+    const pn2 = printed.length; click(d.getElementById('btnSePdf')); await wait(20);
+    check('the site\'s equipment sheet: its lines by section', /كشف معدات الموقع/.test(printed[pn2] || '') && /heat gun/.test(printed[pn2] || '') && /MEP/.test(printed[pn2] || ''), (printed[pn2] || '').slice(0, 100));
+    click(d.getElementById('btnSeAdd')); await wait(30);
+    set('seName', 'Plate Compactor'); set('seQty', '2'); set('seTag', 'new'); click(d.getElementById('btnEditSave')); await wait(60);
+    check('a line added to the site', db.SITE_EQ.some(r => r.name === 'Plate Compactor' && r.store_id === 's2' && r.qty === 2 && r.tag === 'new') && sr().length === 4, db.SITE_EQ.map(r => r.name));
+    click(sr().find(r => /110kv/.test(txt(r))).querySelector('.fb')); await wait(30);
+    check('a line opened: its form, a job card button, no delete for the storekeeper', d.getElementById('seName').value === 'Generator' && !!d.getElementById('seJobB') && !d.getElementById('seDelB'), null);
+    click(d.getElementById('seJobB')); await wait(30);
+    check('… its job card: linked, the site and the machine filled in', /مرتبط بمعدة الموقع/.test(txt(d.getElementById('editBody'))) && d.getElementById('jfSite').value === 's2' && d.getElementById('jfMake').value === 'Generator 110kv', d.getElementById('jfMake').value);
+    click(d.getElementById('btnEditSave')); await wait(80);
+    check('saved as JC-000003, tied to the line', db.JOBS.some(c => c.no === 'JC-000003' && c.site_equipment_id === 'se1'), db.JOBS.map(c => c.no));
+    nav('projects'); await wait(80); click(pr()[1].querySelector('.fb')); await wait(80); click(d.getElementById('pjEquipB')); await wait(60);
+    check('a project\'s «site equipment» opens its lines', active() === 'scr-jobs' && d.querySelector('#seSites .chip.on')?.dataset.v === 's3' && sr().length === 1 && /TL-4/.test(txt(d.getElementById('seList'))), [active(), sr().length]);
     check('storekeeper: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- the admin cancels ----------------
   {
     const B = await boot('admin'), { d, errors, wait, click, txt, nav, db, set, open } = B;
+    nav('jobs'); await wait(80); click(d.querySelector('#jbList .frow .fb')); await wait(40);
+    click(d.getElementById('jbDelB')); await wait(10);
+    check('admin: a job card\'s delete asks a second tap', db.JOBS.length === 1 && /اضغط مرة أخرى/.test(txt(d.getElementById('jbDelB'))), txt(d.getElementById('jbDelB')));
+    click(d.getElementById('jbDelB')); await wait(60);
+    check('… then it is gone', db.JOBS.length === 0 && /لا كروت صيانة بعد/.test(txt(d.getElementById('jbList'))), db.JOBS.length);
     // make a movement first
     nav('move'); await wait(30); click(d.querySelector('#mvKind [data-k="receive"]')); await wait(10);
     set('mvAdd', 'i-FLT-0009'); await wait(60); set(d.querySelector('#mvLines .lqin'), '4'); click(d.getElementById('btnMvSave')); await wait(80);
@@ -165,7 +219,7 @@ const AR = /[؀-ۿ]/;
     check('cancelled: the shelf back to 0, the row struck', db.have('s1', 'i-FLT-0009') === 0 && [...d.querySelectorAll('#hsList .frow.void')].length === 1, db.have('s1', 'i-FLT-0009'));
     check('admin: the «stores» row', open('rowStores'), null);
     // the accounts
-    check('admin: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
+    check('admin: seven tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,jobs,users', B.tabs());
     nav('users'); await wait(80);
     const ur = () => [...d.querySelectorAll('#usList .frow')];
     check('users: four accounts, «you» on his own, no 🗑 on it', ur().length === 4 && /أنت|You/.test(txt(ur()[0])) && !ur()[0].querySelector('[data-act="del"]') && !!ur()[1].querySelector('[data-act="del"]'), ur().map(r => txt(r)));
@@ -223,7 +277,7 @@ const AR = /[؀-ۿ]/;
   // ---------------- the manager: everything but admin accounts ----------------
   {
     const B = await boot('manager'), { d, errors, wait, click, txt, nav, db, set, open } = B;
-    check('manager: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
+    check('manager: seven tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,jobs,users', B.tabs());
     check('manager: the «stores» row', open('rowStores'), null);
     nav('users'); await wait(80);
     const ur = () => [...d.querySelectorAll('#usList .frow')];
@@ -240,7 +294,7 @@ const AR = /[؀-ۿ]/;
   // ---------------- the deputy («أدمن»): everything but the manager and admin accounts ----------------
   {
     const B = await boot('deputy'), { d, errors, wait, click, txt, nav, db, set, open } = B;
-    check('deputy: six tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,users', B.tabs());
+    check('deputy: seven tabs, «users» last', B.tabs() === 'stock,projects,move,moves,filters,jobs,users', B.tabs());
     check('deputy: the «stores» row', open('rowStores'), null);
     check('deputy: shown as «أدمن», the admin as «سوبر أدمن»', /أدمن/.test(txt(d.getElementById('who'))) && !/سوبر/.test(txt(d.getElementById('who'))), txt(d.getElementById('who')));
     nav('users'); await wait(80);
@@ -259,10 +313,20 @@ const AR = /[؀-ۿ]/;
   // ---------------- readers ----------------
   for (const role of ['mechanic', 'viewer']) {
     const B = await boot(role), { d, errors, wait, click, txt, tabs, open } = B;
-    check(role + ': four tabs, no «move»', tabs() === 'stock,projects,moves,filters', tabs());
+    check(role + ': five tabs, no «move»', tabs() === 'stock,projects,moves,filters,jobs', tabs());
     check(role + ': no «add item»', !open('btnAddItem'), null);
     click([...d.querySelectorAll('#skList .frow')][0].querySelector('.fb')); await wait(60);
     check(role + ': an item opened shows no button that writes', !d.getElementById('iGoIssue') && !d.getElementById('iEditB') && !d.getElementById('iDelB') && /حركات الصنف/.test(txt(d.getElementById('editBody'))), null);
+    B.nav('projects'); await wait(80);
+    click([...d.querySelectorAll('#pjList .frow')][0].querySelector('.fb')); await wait(80);
+    B.nav('jobs'); await wait(80);
+    check(role + ': the job cards read; «new card» for the mechanic only', /JC-000001/.test(txt(d.getElementById('jbList'))) && open('btnJbNew') === (role === 'mechanic'), open('btnJbNew'));
+    click(d.querySelector('#jbList .frow .fb')); await wait(40);
+    check(role + ': the card opened: print for all, edit for its mechanic only, never issue nor delete', !!d.getElementById('jbPrintB') && !!d.getElementById('jbEditB') === (role === 'mechanic') && !d.getElementById('jbIssueB') && !d.getElementById('jbDelB'), null);
+    if (role === 'mechanic') { click(d.getElementById('jbEditB')); await wait(30); B.set('jfOutOn', '2026-11-16'); click(d.getElementById('btnEditSave')); await wait(80);
+      check('mechanic: edits his own card', B.db.JOBS[0].out_on === '2026-11-16', B.db.JOBS[0].out_on); }
+    click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="equip"]')); await wait(60);
+    check(role + ': the site equipment read, nothing to add', d.querySelectorAll('#seList .frow').length === 4 && !open('btnSeAdd'), null);
     B.nav('projects'); await wait(80);
     click([...d.querySelectorAll('#pjList .frow')][0].querySelector('.fb')); await wait(80);
     check(role + ': a project opened shows its store and no button that writes', /مخزن المشروع/.test(txt(d.getElementById('editBody'))) && !d.getElementById('pjGoSend') && !d.getElementById('pjTogB') && !B.open('btnPjNew'), null);
@@ -287,6 +351,10 @@ const AR = /[؀-ۿ]/;
     check('English: ltr, the hero and the tabs in English, no Arabic left on the stock screen', d.documentElement.dir === 'ltr' && /items/.test(txt(d.getElementById('skHero'))) && !AR.test(txt(d.getElementById('scr-stock'))) && !AR.test(txt(d.getElementById('nav'))), txt(d.getElementById('scr-stock')).match(/[؀-ۿ]+/g));
     B.nav('projects'); await wait(80);
     check('English: the projects screen in English', /Open/.test(txt(d.getElementById('pjShow'))) && /Site A/.test(txt(d.getElementById('pjList'))) && !AR.test(txt(d.getElementById('scr-projects'))), txt(d.getElementById('scr-projects')).match(/[؀-ۿ]+/g));
+    B.nav('jobs'); await wait(80);
+    check('English: the maintenance screen in English', /Job cards/.test(txt(d.getElementById('jbPane'))) && /Routine service/.test(txt(d.getElementById('jbList'))) && !AR.test(txt(d.getElementById('scr-jobs'))), txt(d.getElementById('scr-jobs')).match(/[؀-ۿ]+/g));
+    B.click(d.querySelector('#jbList .frow .fb')); await wait(40); const pn = B.printed.length; B.click(d.getElementById('jbPrintB')); await wait(20);
+    check('English: the paper in English first, Arabic under it', /dir="ltr"/.test(B.printed[pn] || '') && /<h1>Job card<\/h1>/.test(B.printed[pn] || '') && /كارت عمل صيانة/.test(B.printed[pn] || ''), (B.printed[pn] || '').slice(0, 120));
     check('English: no runtime errors', errors.length === 0, errors);
   }
   const bad = T.filter(x => !x.ok);

@@ -57,6 +57,18 @@ const EQUIP = [{ id: 'e1', grp: 'Bobcat', plate: '74522', name: null, active: tr
 const FITS = [{ equipment_id: 'e1', filter_type: 'oil', item_id: 'i-FLT-0008' }, { equipment_id: 'e1', filter_type: 'oil', item_id: 'i-FLT-0009' }, { equipment_id: 'e1', filter_type: 'fuel', item_id: 'i-FLT-0010' },
   { equipment_id: 'e2', filter_type: 'oil', item_id: 'i-FLT-0008' }, { equipment_id: 'e3', filter_type: 'air', item_id: 'i-FLT-0011' }];
 const PLATES = [{ plate: '52676', src: 'store', info: 'Bobcat' }, { plate: '74522', src: 'store', info: 'Bobcat' }, { plate: 'RAK 1234', src: 'diesel', info: 'Pickup' }];
+// the equipment at the sites and the job cards (17 Nov 2026)
+const ME_ID = ROLE === 'admin' ? USERS[0].id : 'u-' + ROLE, JOB = ACTIVE && ['mechanic', 'storekeeper', 'deputy', 'manager', 'admin'].includes(ROLE);
+const SITE_EQ = [{ id: 'se1', store_id: 's2', section: 'civil', name: 'Generator', ref: '110kv', qty: 1, sent_on: '2026-10-05', tag: 'extra', remarks: null, received_by: 'hamid', sort: 3 },
+  { id: 'se2', store_id: 's2', section: 'civil', name: 'grinder 9"(wulf)', ref: null, qty: 2, sent_on: '2026-11-05', tag: 'new', remarks: null, received_by: null, sort: 4 },
+  { id: 'se3', store_id: 's2', section: 'mep', name: 'heat gun', ref: null, qty: 1, sent_on: '2026-06-16', tag: 'returned', remarks: 'back to store', received_by: null, sort: 5 },
+  { id: 'se4', store_id: 's3', section: null, name: 'Tower Light', ref: 'TL-4', qty: 1, sent_on: null, tag: null, remarks: null, received_by: null, sort: 3 }];
+let jseq = 1;
+const JOBS = [{ id: 'j1', seq: 1, no: 'JC-000001', status: 'open', store_id: 's2', equipment_id: 'e1', site_equipment_id: null, plate: '74522', make_model: 'Bobcat S650', eq_type: 'Skid steer', driver: 'Ravi',
+  in_on: '2026-11-15', in_time: '08:30:00', out_on: null, out_time: null, reading: 1520.5, reading_unit: 'hr', fuel: 50, checks: { tyres: 'ok', brakes: 'bad' },
+  oils: [{ type: 'hydraulic', qty: 20 }], filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
+  diagnosis: 'Hydraulic hose leaking', parts: 'Hose 1/2"', final_notes: null, mechanic: 'Mech One', fleet_officer: null, supervisor: null,
+  created_by: 'u-mechanic', created_by_name: 'Mech One', created_at: '2026-11-15T05:00:00Z' }];
 const STOCK = new Map();          // store|item → qty
 const MOVES = [], LINES = [], LOG = [];
 const sk = (s, i) => s + '|' + i, have = (s, i) => STOCK.get(sk(s, i)) || 0;
@@ -113,15 +125,16 @@ post.call(null, { kind: 'adjust', store_id: 's1', lines: [{ item_id: 'i-MCH-0001
 SEEDING = false;
 const SAVED_ROLE = ROLE;
 const thenable = (fn) => { const st = {}; const o = { range(a, b) { st.range = [a, b]; return o; }, then(res, rej) { try { const r = fn(); if (r && r.data && Array.isArray(r.data) && st.range) r.data = r.data.slice(st.range[0], st.range[1] + 1); res(r); } catch (e) { (rej || (() => {}))(e); } } }; return o; };
-const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: STORES, ms_items: ITEMS, ms_equipment: EQUIP, ms_fits: FITS, ms_log: LOG }[tbl] || [];
+const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: STORES, ms_items: ITEMS, ms_equipment: EQUIP, ms_fits: FITS, ms_log: LOG, ms_site_equipment: SITE_EQ, ms_job_cards: JOBS }[tbl] || [];
+  const LT = { ms_items: 'item', ms_stores: 'store', ms_site_equipment: 'site_equipment', ms_job_cards: 'job_card' }[tbl] || 'equipment';
   const o = { select() { return o; }, order() { return o; }, eq(k, v) { st.f.push([k, v]); return o; }, range(a, b) { st.range = [a, b]; return o; }, limit() { return o; }, single() { st.single = true; return o; },
     insert(v) { st.op = 'insert'; st.v = { ...v }; return o; }, update(v) { st.op = 'update'; st.v = { ...v }; return o; }, delete() { st.op = 'delete'; return o; },
     then(res, rej) { try {
       window.__calls.push({ tbl, op: st.op, f: st.f, v: st.v });
       if (NO463 && /^ms_/.test(tbl)) return res(notRun);
       const hit = r => st.f.every(([k, v]) => r[k] === v);
-      if (st.op === 'select') { if (!READ) return res({ data: [] }); let out = T.filter(hit).map(r => ({ ...r })); if (st.range) out = out.slice(st.range[0], st.range[1] + 1); return res({ data: st.single ? out[0] : out }); }
-      const canW = tbl === 'ms_stores' ? ADMIN : EDIT; if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
+      if (st.op === 'select') { if (!READ) return res({ data: [] }); let out = T.filter(hit).map(r => ({ ...r })); if (tbl === 'ms_job_cards') out.sort((a, b) => b.seq - a.seq); if (st.range) out = out.slice(st.range[0], st.range[1] + 1); return res({ data: st.single ? out[0] : out }); }
+      const canW = tbl === 'ms_stores' ? ADMIN : tbl === 'ms_job_cards' ? JOB : EDIT; if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
       if (tbl === 'ms_items' && st.v && st.v.part_no) { const d = ITEMS.find(i => key(i.part_no) === key(st.v.part_no) && !(st.f[0] && i.id === st.f[0][1])); if (d) return res(err('MS_PART_DUP:' + d.code)); }
       if (tbl === 'ms_items' && st.v && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
       if (tbl === 'ms_stores' && st.v && st.op !== 'delete') { const self = st.f[0] ? STORES.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || { kind: 'store', active: true }), ...st.v };
@@ -131,16 +144,23 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
         if (nx.code && STORES.some(x => x !== self && x.code && x.code.toUpperCase() === nx.code)) return res(err('MS_STORE_CODE_DUP'));
         if (self && nx.kind === 'project' && self.active && nx.active === false && ITEMS.some(i => have(self.id, i.id) > 0)) return res(err('MS_PROJECT_HAS_STOCK'));
         if (nx.kind === 'project') st.v.closed_on = nx.active === false ? (self && self.closed_on) || today() : null; }
-      if (st.op === 'insert') { const row = { id: 'n' + (++nid), active: true, ...st.v };
+      if (tbl === 'ms_job_cards' && st.op === 'update' && !EDIT) st.f.push(['created_by', ME_ID]);     // a mechanic: his own cards only
+      if (tbl === 'ms_job_cards' && st.v && st.op !== 'delete') { const self = st.f[0] ? JOBS.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || {}), ...st.v };
+        if (!nx.plate && !nx.make_model && !nx.site_equipment_id && !nx.equipment_id) return res(err('MS_JOB_WHAT_REQUIRED'));
+        if (nx.out_on && nx.out_on < nx.in_on) return res(err('MS_OUT_BEFORE_IN'));
+        if (st.op === 'insert') Object.assign(st.v, { seq: ++jseq, no: 'JC-' + String(jseq).padStart(6, '0'), created_by: ME_ID, created_by_name: NAMES[ROLE], created_at: new Date().toISOString(), status: st.v.status || 'open' });
+        else ['seq', 'no', 'created_by', 'created_by_name', 'created_at'].forEach(k => delete st.v[k]); }
+      if (tbl === 'ms_site_equipment' && st.v && st.op !== 'delete' && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
+      if (st.op === 'insert') { const row = { id: 'n' + (++nid), ...(tbl === 'ms_job_cards' || tbl === 'ms_site_equipment' ? {} : { active: true }), ...st.v };
         if (tbl === 'ms_items') { row.name = String(row.name).trim().toUpperCase(); row.code = { machine: 'MCH', tool: 'TOL', consumable: 'CON', oil: 'OIL', filter: 'FLT', spare: 'SPR' }[row.category] + '-' + String(nid).padStart(4, '0'); }
-        T.push(row); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: tbl === 'ms_items' ? 'item' : 'store', row_id: row.id, action: 'add', snap: { ...row } }); return res({ data: { ...row } }); }
+        T.push(row); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: row.id, action: 'add', snap: { ...row } }); return res({ data: { ...row } }); }
       if (st.op === 'update') { const l = T.filter(hit); l.forEach(r => { const ch = {}; Object.keys(st.v).forEach(k => { if (r[k] !== st.v[k]) ch[k] = [r[k], st.v[k]]; }); Object.assign(r, st.v);
-        if (tbl === 'ms_items') r.name = String(r.name).trim().toUpperCase(); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: tbl === 'ms_items' ? 'item' : 'store', row_id: r.id, action: 'edit', changes: ch, snap: { ...r } }); });
+        if (tbl === 'ms_items') r.name = String(r.name).trim().toUpperCase(); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: r.id, action: 'edit', changes: ch, snap: { ...r } }); });
         return res({ data: l.map(r => ({ ...r })) }); }
       if (st.op === 'delete') { const l = T.filter(hit); if (tbl === 'ms_items' && l.some(i => LINES.some(x => x.item_id === i.id))) return res(err('MS_ITEM_IN_USE')); l.forEach(r => T.splice(T.indexOf(r), 1)); return res({ data: l.map(r => ({ id: r.id })) }); }
       return res({});
     } catch (e) { (rej || (() => {}))(e); } } }; return o; };
-window.__db = { STORES, ITEMS, MOVES, LINES, STOCK, USERS, have };
+window.__db = { STORES, ITEMS, MOVES, LINES, STOCK, USERS, have, SITE_EQ, JOBS };
 window.__calls = [];
 window.supabase = { createClient: () => ({
   auth: { onAuthStateChange(cb) { setTimeout(() => cb('SIGNED_IN', { user: { id: SAVED_ROLE === 'admin' ? USERS[0].id : 'u-' + SAVED_ROLE } }), 10); }, signOut: async () => { window.__calls.push({ rpc: 'signOut' }); return {}; }, updateUser: async () => ({}), signInWithPassword: async () => ({}) },
