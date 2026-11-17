@@ -1190,21 +1190,22 @@ $('btnHsPdf').onclick = () => {
 
 // THE JOB CARD'S PAPER — Orion's own: an oil-black head on a hazard stripe, the card number on lime, numbered sections, every label in
 // both languages (the workshop reads both), the fuel as a gauge, the checks as ticks, the oils and the filters side by side.
-const JC_CSS = `.jc{--k:#0D0F0C;--l:#A3E635;--ld:#4D7C0F;--g:#F4F6F0;--ln:#D9DED2;--mu:#5B6356;font:10.5px/1.4 Tajawal,Arial,sans-serif;color:#111;position:relative}
+const JC_CSS = `@page{size:A4 portrait;margin:11mm 12mm}@media screen{.jc{padding:11mm 12mm}}
+.jc{--k:#0D0F0C;--l:#A3E635;--ld:#4D7C0F;--g:#F4F6F0;--ln:#D9DED2;--mu:#5B6356;font:10.5px/1.4 Tajawal,Arial,sans-serif;color:#111;position:relative}
 .jc *{box-sizing:border-box}.jc .ltr{direction:ltr;unicode-bidi:isolate}
 .jc .l2{display:block;font:700 8px Poppins,Arial,sans-serif;letter-spacing:.4px;color:var(--mu);text-transform:uppercase}
 .jc .hd{display:grid;grid-template-columns:auto 1fr auto;background:var(--k);color:#fff;border-radius:14px;overflow:hidden;position:relative}
 .jc .hd::after{content:"";position:absolute;inset:auto 0 0 0;height:6px;background:repeating-linear-gradient(135deg,var(--l) 0 10px,var(--k) 10px 20px)}
-.jc .hd .lg{padding:14px 16px 20px;display:flex;align-items:center;border-inline-end:1px solid rgba(255,255,255,.14)}.jc .hd .lg img{height:34px;filter:brightness(0) invert(1)}
+.jc .hd .lg{padding:12px 16px 18px;display:flex;align-items:center;border-inline-end:1px solid rgba(255,255,255,.14)}.jc .hd .lg img{height:34px;filter:brightness(0) invert(1)}
 .jc .hd .tt{padding:11px 16px 20px}.jc .hd .tt .k{font:800 8.5px Poppins,Arial,sans-serif;letter-spacing:2.5px;color:var(--l)}
 .jc .hd .tt h1{margin:1px 0 0;font:900 19px Cairo,Arial,sans-serif;line-height:1.2}.jc .hd .tt .s{font-size:9.5px;opacity:.8}.jc .hd .tt .l2{color:rgba(255,255,255,.6)}
 .jc .hd .no{background:var(--l);color:var(--k);padding:10px 18px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:132px}
 .jc .hd .no small{font:800 8px Poppins,Arial,sans-serif;letter-spacing:1.5px}.jc .hd .no b{font:900 19px Poppins,Arial,sans-serif;direction:ltr}
 .jc .hd .no i{font-style:normal;margin-top:4px;font:800 9px Cairo,Arial,sans-serif;background:var(--k);color:var(--l);padding:1px 10px;border-radius:999px}
-.jc .strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:10px 0 2px}
+.jc .strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:8px 0 0}
 .jc .tile{border:1px solid var(--ln);border-top:3px solid var(--k);border-radius:9px;padding:4px 8px 5px;background:var(--g);min-width:0}
 .jc .tile small{display:block;font:800 9px Cairo,Arial,sans-serif;color:var(--mu)}.jc .tile b{display:block;font:900 11.5px Cairo,Arial,sans-serif;overflow-wrap:anywhere}
-.jc .sec{display:flex;align-items:center;gap:8px;margin:11px 0 6px;break-after:avoid}
+.jc .sec{display:flex;align-items:center;gap:8px;margin:8px 0 5px;break-after:avoid}
 .jc .sec .n{flex:0 0 auto;width:23px;height:23px;border-radius:7px;background:var(--k);color:var(--l);font:900 10.5px Poppins,Arial,sans-serif;display:grid;place-items:center}
 .jc .sec .t{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}.jc .sec .t b{font:900 12.5px Cairo,Arial,sans-serif}.jc .sec .t .l2{display:inline}
 .jc .sec::after{content:"";flex:1;height:1.5px;background:var(--ln)}
@@ -1231,14 +1232,14 @@ const JC_CSS = `.jc{--k:#0D0F0C;--l:#A3E635;--ld:#4D7C0F;--g:#F4F6F0;--ln:#D9DED
 .jc .wk{display:flex;align-items:center;gap:6px;padding:4px 11px 4px 9px;border-radius:999px;border:1.5px solid var(--ln);font:800 10px Cairo,Arial,sans-serif;color:var(--mu)}
 .jc .wk i{width:11px;height:11px;border-radius:50%;border:1.5px solid currentColor}.jc .wk .l2{display:inline;font-size:7.5px}
 .jc .wk.on{background:var(--k);border-color:var(--k);color:#fff}.jc .wk.on i{background:var(--l);border-color:var(--l)}.jc .wk.on .l2{color:rgba(255,255,255,.6)}
-.jc .box{border:1px solid var(--ln);border-radius:10px;padding:5px 8px;min-height:60px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:18px;background:repeating-linear-gradient(transparent 0 17px,#ECEFE7 17px 18px)}
+.jc .box{border:1px solid var(--ln);border-radius:10px;padding:5px 8px;min-height:50px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:18px;background:repeating-linear-gradient(transparent 0 17px,#ECEFE7 17px 18px)}
 .jc .box .bh{display:block;font:900 10.5px Cairo,Arial,sans-serif;line-height:1.3;margin-bottom:2px}
 .jc .sigs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .jc .sg{border:1px solid var(--ln);border-radius:10px;padding:5px 8px 6px 12px;position:relative;overflow:hidden}
 .jc .sg::before{content:"";position:absolute;top:0;bottom:0;inset-inline-start:0;width:4px;background:var(--l)}
 .jc .sg small{font:800 9px Cairo,Arial,sans-serif;color:var(--mu)}.jc .sg b{display:block;font:900 11px Cairo,Arial,sans-serif;min-height:16px}
-.jc .sg .ln{display:flex;gap:10px;margin-top:16px;font-size:8px;color:var(--mu)}.jc .sg .ln span{flex:1;border-top:1px solid #9CA39A;padding-top:2px}
-.jc .pol{margin-top:10px;padding:6px 10px;border-radius:10px;background:var(--g);border-inline-start:4px solid var(--k);font-size:9px;line-height:1.5}
+.jc .sg .ln{display:flex;gap:10px;margin-top:12px;font-size:8px;color:var(--mu)}.jc .sg .ln span{flex:1;border-top:1px solid #9CA39A;padding-top:2px}
+.jc .pol{margin-top:8px;padding:6px 10px;border-radius:10px;background:var(--g);border-inline-start:4px solid var(--k);font-size:9px;line-height:1.5}
 .jc .pol b{font:900 10px Cairo,Arial,sans-serif}.jc .pol ol{margin:2px 0 0;padding-inline-start:16px}
 .jc .ft{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:2px solid var(--k);font-size:8.5px;color:var(--mu)}.jc .ft b{color:#111}
 .jc .stamp{position:absolute;top:96px;inset-inline-end:150px;transform:rotate(-9deg);border:2.5px solid #15803D;color:#15803D;font:900 13px Poppins,Arial,sans-serif;padding:1px 10px;border-radius:8px;letter-spacing:2px;opacity:.85;background:rgba(255,255,255,.7)}`;
