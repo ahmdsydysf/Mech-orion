@@ -102,7 +102,7 @@ const I18N = {
     pol1: "يبلغ السائق / المشغل قسم الصيانة فور ظهور أي عطل أو تسريب.", pol2: "تُستلم المعدة وتُسلَّم من وإلى الورشة بتوقيع السائق ومسؤول الحركة.",
     pol3: "لا صيانة ولا تعديل خارج ورش الشركة إلا بإذن خطي من مهندس الصيانة والأسطول.", sigDate: "التاريخ", sigSign: "التوقيع",
     seDesc: "المعدات والعُدد الموجودة في كل موقع (من شيت SITE EQUIPMENT) — للمتابعة، ولفتح كارت صيانة لأي معدة منها.", seSearch: "ابحث باسم المعدة أو الرقم أو المستلم",
-    seAll: "كل المواقع", seNone: "لا معدات مسجلة", seAdd: "＋ إضافة معدة لموقع", sePdf: "🖨️ كشف معدات الموقع PDF", seNewT: "معدة جديدة في موقع", seEditT: "تعديل المعدة",
+    seAll: "كل المواقع", seNone: "لا معدات مسجلة", seAdd: "＋ إضافة معدة لموقع", sePdf: "🖨️ كشف معدات الموقع PDF", printLangT: "🖨️ لغة الورقة", ppKick: "مخزن الميكانيكا", jcKick: "أوريون · الورشة", jcDone: "تم ✓", addItemS: "＋ صنف", pjNewS: "＋ مشروع", jbNewS: "＋ كارت", seAddS: "＋ معدة", userNewS: "＋ مستخدم", seNewT: "معدة جديدة في موقع", seEditT: "تعديل المعدة",
     seName: "اسم المعدة", seRef: "الرقم / اللوحة / القدرة", seQty: "العدد", seSentOn: "تاريخ الإرسال", seTag: "الحالة", seSection: "القسم", seRemarks: "ملاحظات", seRecv: "المستلم",
     tg_new: "جديد", tg_extra: "إضافي", tg_returned: "مُرجَع", tg_rent: "إيجار", tg_balance: "رصيد متبقٍ", sec_civil: "مدني", sec_mep: "MEP",
     seLines: "{n} سطر · {u} قطعة", seSaved: "تم حفظ المعدة ✓", seJob: "🔧 كارت صيانة لهذه المعدة", seDel: "🗑 حذف السطر", seDelQ: "اضغط مرة أخرى للحذف", sePickSite: "اختر الموقع أولًا",
@@ -209,7 +209,7 @@ const I18N = {
     pol1: "The driver / operator reports any fault or leak to the maintenance section at once.", pol2: "A machine enters and leaves the workshop against the signatures of the driver and the fleet officer.",
     pol3: "No repair or change outside the company's workshops without the fleet engineer's written approval.", sigDate: "Date", sigSign: "Signature",
     seDesc: "The machines and tools at each site (from the SITE EQUIPMENT sheet) — to follow them up, and to open a job card for any of them.", seSearch: "Search by machine, number or receiver",
-    seAll: "All sites", seNone: "No equipment recorded", seAdd: "＋ Add equipment to a site", sePdf: "🖨️ Site equipment sheet PDF", seNewT: "New site equipment", seEditT: "Edit the equipment",
+    seAll: "All sites", seNone: "No equipment recorded", seAdd: "＋ Add equipment to a site", sePdf: "🖨️ Site equipment sheet PDF", printLangT: "🖨️ Paper language", ppKick: "MECHANIC STORE", jcKick: "ORION · WORKSHOP", jcDone: "DONE ✓", addItemS: "＋ Item", pjNewS: "＋ Project", jbNewS: "＋ Card", seAddS: "＋ Equipment", userNewS: "＋ User", seNewT: "New site equipment", seEditT: "Edit the equipment",
     seName: "Equipment", seRef: "No. / plate / rating", seQty: "Qty", seSentOn: "Date sent", seTag: "Status", seSection: "Section", seRemarks: "Remarks", seRecv: "Received by",
     tg_new: "New", tg_extra: "Extra", tg_returned: "Returned", tg_rent: "Rent", tg_balance: "Balance", sec_civil: "Civil", sec_mep: "MEP",
     seLines: "{n} lines · {u} pcs", seSaved: "Equipment saved ✓", seJob: "🔧 Job card for this machine", seDel: "🗑 Delete the line", seDelQ: "Tap again to delete", sePickSite: "Pick the site first",
@@ -238,7 +238,7 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.17-1';
+const APP_VERSION = '2026.11.17-2';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
@@ -380,22 +380,41 @@ document.addEventListener('pointerdown', e => {
 // a plate or a part number is found however it is typed: «rak1234» finds «RAK 1234»; an option marked .new stays at the top;
 // a search that finds nothing says why (data-none on the select)
 const nkey = s => String(s || '').toLowerCase().replace(/[\s._\/-]+/g, '');
+// THE ONE SEARCH of every list and picker: each word typed must be found (in any order); Arabic is read loosely (أ إ آ → ا,
+// ة → ه, ى → ي, no tashkeel, Arabic-Indic digits → 0-9), and a code or a plate is found however it is spaced or dashed
+const fold = s => String(s ?? '').normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g, '')
+  .replace(/[\u0671]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[٠-٩]/g, d => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+function qHit(q, ...fields) {
+  const words = fold(q).split(/\s+/).filter(Boolean); if (!words.length) return true;
+  const hay = fold(fields.flat().filter(x => x != null && x !== '').join(' \u2502 ')), hk = nkey(hay);
+  return words.every(w => hay.includes(w) || (nkey(w) && hk.includes(nkey(w))));
+}
 const Picker = (() => {
   let cur = null; const chev = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>', tick = '<svg viewBox="0 0 24 24"><path d="M5 12l5 5L19 7"/></svg>';
-  function label(sel) { const o = sel.selectedOptions[0]; const btn = sel._btn; const ph = !o || !o.value; btn.innerHTML = `<span class="${ph ? 'ph' : ''}">${esc(o ? o.text : '')}</span>${chev}`; }
+  function label(sel) { const o = sel.selectedOptions[0]; const btn = sel._btn; if (!btn) return; const ph = !o || !o.value; btn.innerHTML = `<span class="${ph ? 'ph' : ''}">${esc(o ? o.text : '')}</span>${chev}`; }
   function attach(sel, title) {
     if (sel._btn) { sel._title = title; return label(sel); }
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'picker'; sel._btn = btn; sel._title = title; sel.classList.add('picked');
     sel.insertAdjacentElement('afterend', btn); btn.onclick = () => open(sel); label(sel);
+    // the code rewrites the options: the button follows (a .value set in code calls Picker.refresh, or fires «change»)
+    sel.addEventListener('change', () => label(sel));
+    new MutationObserver(() => label(sel)).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['selected'] });
+  }
+  // every <select> in a form opens this picker; its title is its label's text
+  function auto(root) {
+    root.querySelectorAll('select:not(.lang):not(.picked)').forEach(sel => {
+      const lb = sel.id && [...root.querySelectorAll('label[for]')].find(l => l.htmlFor === sel.id);
+      sel._tt = lb ? lb.textContent.replace(/\s+/g, ' ').trim() : ''; attach(sel, null);
+    });
   }
   function open(sel) {
-    cur = sel; const opts = [...sel.options]; $('pickTitle').textContent = sel._title ? t(sel._title) : '';
-    $('pickSearch').classList.toggle('hidden', opts.length < 9); $('pickSearch').value = ''; $('pickSearch').placeholder = sel.dataset.ph ? t(sel.dataset.ph) : ''; render();
+    cur = sel; const opts = [...sel.options]; $('pickTitle').textContent = sel._title ? t(sel._title) : (sel._tt || '');
+    $('pickSearch').classList.toggle('hidden', opts.length < 6); $('pickSearch').value = ''; $('pickSearch').placeholder = sel.dataset.ph ? t(sel.dataset.ph) : ''; render();
     $('pickSheet').classList.remove('hidden'); $('pickBackdrop').classList.remove('hidden');
   }
   function render() {
-    const q = $('pickSearch').value.trim().toLowerCase(), k = nkey(q);
-    const hit = o => !q || o.classList.contains('new') || !o.value || o.text.toLowerCase().includes(q) || (o.dataset.sub || '').toLowerCase().includes(q) || (k && nkey(o.text + ' ' + (o.dataset.sub || '')).includes(k));
+    const q = $('pickSearch').value.trim();
+    const hit = o => !q || o.classList.contains('new') || !o.value || qHit(q, o.text, o.dataset.sub, o.dataset.q);
     const list = [...cur.options].filter(hit), real = list.filter(o => o.value && !o.classList.contains('new'));
     $('pickOpts').innerHTML = list.map((o, i) => `<div class="opt ${o.selected ? 'on' : ''} ${o.classList.contains('new') ? 'new' : ''}" data-v="${esc(o.value)}" style="animation-delay:${Math.min(i, 10) * 20}ms"><span>${esc(o.text)}${o.dataset.sub ? `<div class="sub">${esc(o.dataset.sub)}</div>` : ''}</span>${tick}</div>`).join('')
       + (q && !real.length && cur.dataset.none ? `<div class="none">${esc(t(cur.dataset.none))}</div>` : '');
@@ -403,13 +422,19 @@ const Picker = (() => {
   function close() { $('pickSheet').classList.add('hidden'); $('pickBackdrop').classList.add('hidden'); cur = null; }
   $('pickSearch').oninput = render; $('pickBackdrop').onclick = close;
   $('pickOpts').onclick = e => { const o = e.target.closest('.opt'); if (!o || !cur) return; cur.value = o.dataset.v; label(cur); const s = cur; close(); s.dispatchEvent(new Event('change')); };
-  return { attach, refresh: sel => sel._btn && label(sel) };
+  // Enter in the search takes the first option found
+  $('pickSearch').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); const o = $('pickOpts').querySelector('.opt[data-v]:not([data-v=""])') || $('pickOpts').querySelector('.opt'); if (o) o.click(); } };
+  return { attach, auto, open, refresh: sel => sel._btn && label(sel) };
 })();
+
+// the bar on top of each list (its search and its «add») sits right under the header, whatever the header's height
+const hdrH = () => { const h = document.querySelector('header'); if (h && h.offsetHeight) document.documentElement.style.setProperty('--hdr-h', h.offsetHeight + 'px'); };
+hdrH(); addEventListener('resize', hdrH); if ('ResizeObserver' in window && document.querySelector('header')) new ResizeObserver(hdrH).observe(document.querySelector('header'));
 
 /* ---- the generic edit sheet ---- */
 const Edit = (() => {
   let onSave = null;
-  function open(title, bodyHtml, save, saveLabel, cls) { $('editTitle').textContent = title; $('editBody').innerHTML = bodyHtml; msg('editMsg', '', ''); onSave = save; $('btnEditSave').textContent = saveLabel || t('saveChanges'); $('btnEditSave').className = 'primary' + (cls ? ' ' + cls : ''); $('btnEditSave').classList.toggle('hidden', !save); $('editSheet').classList.remove('hidden'); $('editBackdrop').classList.remove('hidden'); $('editSheet').scrollTop = 0; }
+  function open(title, bodyHtml, save, saveLabel, cls) { $('editTitle').textContent = title; $('editBody').innerHTML = bodyHtml; Picker.auto($('editBody')); msg('editMsg', '', ''); onSave = save; $('btnEditSave').textContent = saveLabel || t('saveChanges'); $('btnEditSave').className = 'primary' + (cls ? ' ' + cls : ''); $('btnEditSave').classList.toggle('hidden', !save); $('editSheet').classList.remove('hidden'); $('editBackdrop').classList.remove('hidden'); $('editSheet').scrollTop = 0; }
   function close() { $('editSheet').classList.add('hidden'); $('editBackdrop').classList.add('hidden'); onSave = null; }
   $('editBackdrop').onclick = close;
   $('btnEditSave').onclick = async () => { if (!onSave) return; busy($('btnEditSave'), true); try { const r = await onSave(); if (r !== 'keep') close(); if (r !== false && r !== 'keep') toast(t('saved')); } catch (e) { if (e?.silent) return; msg('editMsg', errText(e), 'err'); } finally { busy($('btnEditSave'), false); } };
@@ -434,6 +459,8 @@ const FTYPES = ['oil', 'fuel', 'water_sep', 'air', 'cabin'];
 const KINDS = ['receive', 'issue', 'return', 'transfer', 'adjust'];
 const itemOf = id => STOCK.find(i => i.item_id === id) || null;
 const storeOf = id => STORES.find(s => s.id === id) || null;
+// an item is also found by its category and its filter type, in Arabic and in English («فلتر زيت» finds OIL FILTER FO-3143)
+const itemWords = i => ['ar', 'en'].flatMap(l => [I18N[l]['c1_' + i.category], i.filter_type ? I18N[l]['f_' + i.filter_type] : '']);
 const storeName = id => storeOf(id)?.name || '—';
 const unitLbl = u => t('u_' + u);
 const qtyTxt = (n, u) => `${fmtQ(n)} ${unitLbl(u || 'pcs')}`;
@@ -475,9 +502,9 @@ function renderStock() {
   renderStockList();
 }
 function stockRows() {
-  const q = SK.q.trim().toLowerCase(), k = nkey(q);
+  const q = SK.q.trim();
   return STOCK.filter(i => (SK.cat === 'all' || (SK.cat === 'low' ? i.low : i.category === SK.cat))
-    && (!q || i.name.toLowerCase().includes(q) || i.code.toLowerCase().includes(q) || (k && nkey(i.part_no || '').includes(k)) || (k && nkey(i.code).includes(k))));
+    && qHit(q, i.name, i.code, i.part_no, i.shelf, i.note, itemWords(i)));
 }
 function itemRow(i) {
   const q = qtyIn(i, SK.store);
@@ -570,7 +597,7 @@ function plateOpts() {
 function addOpts() {
   const sel = $('mvAdd'), have = new Set(MV.lines.map(l => l.item_id));
   const list = STOCK.filter(i => !have.has(i.item_id) && (i.active || MV.kind === 'issue' || MV.kind === 'transfer' || MV.kind === 'adjust'));
-  sel.innerHTML = `<option value="">${esc(t('addLine'))}</option>` + list.map(i => `<option value="${esc(i.item_id)}" data-sub="${esc([i.code, i.part_no && i.category !== 'filter' ? i.part_no : '', t('haveN', { n: qtyTxt(qtyIn(i, $('mvStore').value), i.unit) })].filter(Boolean).join(' · '))}">${esc(i.name)}</option>`).join('');
+  sel.innerHTML = `<option value="">${esc(t('addLine'))}</option>` + list.map(i => `<option value="${esc(i.item_id)}" data-q="${esc(itemWords(i).join(' '))}" data-sub="${esc([i.code, i.part_no && i.category !== 'filter' ? i.part_no : '', t('haveN', { n: qtyTxt(qtyIn(i, $('mvStore').value), i.unit) })].filter(Boolean).join(' · '))}">${esc(i.name)}</option>`).join('');
   sel.value = ''; Picker.attach(sel, 'addLine');
 }
 function setKind(k) {
@@ -673,10 +700,9 @@ async function renderMoves(force) {
   renderMoveList();
 }
 function moveRows() {
-  const q = HS.q.trim().toLowerCase(), k = nkey(q);
+  const q = HS.q.trim();
   return HS.rows.filter(m => (HS.kind === 'all' || m.kind === HS.kind) && (HS.store === 'all' || m.store_id === HS.store || m.to_store_id === HS.store)
-    && (!q || [m.no, m.party, m.ref_no, m.note, m.by_name].some(x => String(x || '').toLowerCase().includes(q)) || (k && nkey(m.plate).includes(k))
-      || (m.lines || []).some(l => l.name.toLowerCase().includes(q) || nkey(l.code).includes(k))));
+    && qHit(q, m.no, m.party, m.ref_no, m.note, m.by_name, m.plate, t('k_' + m.kind), storeName(m.store_id), m.to_store_id ? storeName(m.to_store_id) : '', (m.lines || []).map(l => [l.name, l.code])));
 }
 function moveRow(m) {
   const ls = m.lines || [];
@@ -713,7 +739,7 @@ function openMove(id, rows) {
     <button type="button" class="ghost" id="mPrint">${esc(t('printMove'))}</button>
     ${canAdmin() && m.status === 'posted' ? `<button type="button" class="ghost danger" id="mVoid">${esc(t('voidYes'))}</button>` : ''}`;
   Edit.open(t('moveT', { no: m.no }), body, null);
-  $('mPrint').onclick = () => movePdf(m);
+  $('mPrint').onclick = () => printIn(() => movePdf(m));
   if ($('mVoid')) $('mVoid').onclick = () => Edit.open(t('voidQ'), `<div class="warnbox">${esc(t('voidD'))}</div><input id="vReason" maxlength="300" placeholder="${esc(t('reasonPh'))}" style="margin-top:10px">`, async () => {
     const r = $('vReason').value.trim(); if (!r) throw new Error(t('errReason'));
     await repo.void(m.id, r); await reloadStock(); HS.rows = []; if (rows) { PJ.loaded = false; renderProjects(); } else await renderMoves(true); toast(t('voided')); return false;
@@ -727,10 +753,9 @@ function renderFilters() {
   renderFilterList();
 }
 function renderFilterList() {
-  const q = FT.q.trim().toLowerCase(), k = nkey(q);
+  const q = FT.q.trim();
   const fitsOf = id => FITS.filter(f => f.equipment_id === id);
-  const rows = EQUIP.filter(e => (FT.grp === 'all' || e.grp === FT.grp) && (!q || e.grp.toLowerCase().includes(q) || (e.name || '').toLowerCase().includes(q) || (k && nkey(e.plate).includes(k))
-    || (k && fitsOf(e.id).some(f => { const i = itemOf(f.item_id); return i && nkey(i.part_no).includes(k); }))));
+  const rows = EQUIP.filter(e => (FT.grp === 'all' || e.grp === FT.grp) && qHit(q, e.grp, e.name, e.plate, fitsOf(e.id).map(f => itemOf(f.item_id)?.part_no)));
   let last = null;
   $('ftList').innerHTML = rows.length ? rows.map(e => { const fs = fitsOf(e.id); const by = {}; fs.forEach(f => { (by[f.filter_type] = by[f.filter_type] || []).push(f.item_id); });
     const hd = e.grp !== last ? `<div class="lhead"><span>${esc(e.grp)}</span><span class="n">${esc(t('equipN', { n: rows.filter(x => x.grp === e.grp).length }))}</span></div>` : ''; last = e.grp;
@@ -761,9 +786,9 @@ function renderProjects() {
   if (!PJ.loaded) loadSummary();
 }
 function renderProjectList() {
-  const q = PJ.q.trim().toLowerCase(), k = nkey(q);
+  const q = PJ.q.trim();
   const rows = projects().filter(s => (PJ.show === 'open' ? s.active : !s.active)
-    && (!q || s.name.toLowerCase().includes(q) || (s.location || '').toLowerCase().includes(q) || (k && nkey(s.code).includes(k))));
+    && qHit(q, s.name, s.location, s.code));
   $('pjList').innerHTML = rows.length ? rows.map(s => { const held = pjHeld(s.id), units = held.reduce((a, i) => a + qtyIn(i, s.id), 0), sm = PJ.sum[s.id];
     return `<div class="frow pj ${s.active ? '' : 'off'}" data-id="${esc(s.id)}"><div class="fb"><div class="fn">🏗 ${esc(s.name)}</div>
       <div class="fs">${s.code ? `<span class="rec">${esc(s.code)}</span>` : ''}${s.location ? `<span class="muted">📍 ${esc(s.location)}</span>` : ''}${s.active ? '' : `<span class="pill mute">${esc(s.closed_on ? t('pjClosedOn', { d: dSlash(s.closed_on) }) : t('pjClosedB'))}</span>`}</div>
@@ -819,7 +844,7 @@ async function openProject(id) {
       try { await repo.updStore(id, { active: !s.active }); STORES = await repo.stores(); renderProjects(); toast(t(s.active ? 'pjClosedT' : 'pjReopenedT')); Edit.close(); }
       catch (e) { msg('editMsg', errText(e), 'err'); } finally { if ($('pjTogB')) busy($('pjTogB'), false); } };
   }
-  if ($('pjPdfB')) $('pjPdfB').onclick = () => stockPdf(id, held);
+  if ($('pjPdfB')) $('pjPdfB').onclick = () => printIn(() => stockPdf(id, held));
   $('pjEquipB').onclick = () => { Edit.close(); JB.pane = 'equip'; SE.site = id; SE.q = ''; $('seSearch').value = ''; openTab('jobs', true); };
   try {
     const rows = await repo.movesIn('2020-01-01', dubaiToday(), id);
@@ -865,9 +890,9 @@ function renderJobs() {
   else { if (!SE.loaded) { $('seList').innerHTML = skeleton(5); loadSiteEq(); } else renderSiteEq(); }
 }
 function jobRows() {
-  const q = JB.q.trim().toLowerCase(), k = nkey(q);
+  const q = JB.q.trim();
   return JB.rows.filter(c => (JB.show === 'all' || c.status === JB.show)
-    && (!q || [c.no, c.make_model, c.eq_type, c.driver, c.mechanic, c.diagnosis, storeOf(c.store_id)?.name].some(x => String(x || '').toLowerCase().includes(q)) || (k && (nkey(c.plate).includes(k) || nkey(c.no).includes(k)))));
+    && qHit(q, c.no, c.plate, c.make_model, c.eq_type, c.driver, c.mechanic, c.diagnosis, c.parts, storeOf(c.store_id)?.name, storeOf(c.store_id)?.code));
 }
 function jobRow(c) {
   const st = storeOf(c.store_id);
@@ -995,7 +1020,7 @@ function openJob(id) {
     ${canEdit() && fitsStock.length ? `<button type="button" class="ghost" id="jbIssueB">${esc(t('jbIssue'))}</button>` : ''}
     ${canAdmin() ? `<button type="button" class="ghost danger" id="jbDelB">${esc(t('jbDelete'))}</button>` : ''}`;
   Edit.open('🔧 ' + c.no, body, null);
-  $('jbPrintB').onclick = () => jobPdf(c);
+  $('jbPrintB').onclick = () => printIn(() => jobPdf(c));
   if ($('jbEditB')) {
     $('jbEditB').onclick = () => jobSheet(c);
     $('jbTogB').onclick = async () => { busy($('jbTogB'), true);
@@ -1016,9 +1041,9 @@ function openJob(id) {
 
 // the site equipment
 function seRowsOf() {
-  const q = SE.q.trim().toLowerCase(), k = nkey(q);
+  const q = SE.q.trim();
   return SE.rows.filter(r => (SE.site === 'all' || r.store_id === SE.site)
-    && (!q || [r.name, r.remarks, r.received_by, storeOf(r.store_id)?.name, storeOf(r.store_id)?.code].some(x => String(x || '').toLowerCase().includes(q)) || (k && nkey(r.ref).includes(k))));
+    && qHit(q, r.name, r.ref, r.remarks, r.received_by, r.tag ? t('tg_' + r.tag) : '', storeOf(r.store_id)?.name, storeOf(r.store_id)?.code));
 }
 const seSort = (a, b) => (a.store_id === b.store_id ? 0 : (storeOf(a.store_id)?.name || '').localeCompare(storeOf(b.store_id)?.name || '')) || String(b.sent_on || '').localeCompare(String(a.sent_on || '')) || (a.sort - b.sort);
 const tagPill = g => g ? `<span class="kpill tg-${esc(g)}">${esc(t('tg_' + g))}</span>` : '';
@@ -1049,7 +1074,7 @@ $('seSites').onclick = e => { const b = e.target.closest('.chip'); if (!b) retur
 $('seSearch').oninput = e => { SE.q = e.target.value; SE.n = 120; renderSiteEq(); };
 $('seList').onclick = e => { if (e.target.id === 'seMore') { SE.n += 200; renderSiteEq(); return; } const r = e.target.closest('.frow'); if (r) openSe(r.dataset.id); };
 $('btnSeAdd').onclick = () => { if (canEdit()) seSheet(null); };
-$('btnSePdf').onclick = () => { if (SE.site !== 'all') sePdf(SE.site); };
+$('btnSePdf').onclick = () => { const site = SE.site; if (site !== 'all') printIn(() => sePdf(site)); };
 function seFormHtml(r) {
   const cur = r?.store_id || (SE.site !== 'all' ? SE.site : '');
   const sites = STORES.filter(s => s.active || s.id === cur);
@@ -1133,6 +1158,15 @@ const printEnd = () => `${pwBar()}<script src="print.js"></script></body></html>
 // the window is opened INSIDE the tap (a window opened after a round trip is a pop-up to a phone)
 function openPrint(html) { const w = window.open('', '_blank'); if (!w) return toast(t('errPopup')); w.document.write(html); w.document.close(); }
 
+// «print» asks the paper's language (Arabic or English, the whole paper in it); the paper is built in that language and the page
+// stays in its own. The window opens in the tap on the choice, so a phone does not take it for a pop-up.
+let PRINT_LANG = (() => { try { return localStorage.getItem('printLang') || ''; } catch { return ''; } })();
+function inLang(l, build) { const keep = lang; lang = I18N[l] ? l : keep; try { return build(); } finally { lang = keep; } }
+function printIn(build) {
+  const sel = $('printLang'); sel.value = I18N[PRINT_LANG] ? PRINT_LANG : lang;
+  sel.onchange = () => { PRINT_LANG = sel.value; try { localStorage.setItem('printLang', PRINT_LANG); } catch { /* remembered for this visit only */ } inLang(sel.value, build); };
+  sel._title = 'printLangT'; Picker.open(sel);
+}
 const MS_CSS = `.pp{--v:#1F2A1A;--vt:#F4F7EE;--vl:#D7DECB;--vh:#E9EFDD;--ink:#14171C;--mu:#454C57;font-family:Tajawal,Arial,sans-serif;color:var(--ink);font-size:12px;line-height:1.45}
 .pp *{box-sizing:border-box}
 .pp .band{display:flex;align-items:center;gap:16px;background:linear-gradient(120deg,#0E1210 0%,#1F2A1A 55%,#3F6212 100%);color:#fff;border-radius:16px;padding:14px 18px}
@@ -1147,7 +1181,7 @@ const MS_CSS = `.pp{--v:#1F2A1A;--vt:#F4F7EE;--vl:#D7DECB;--vh:#E9EFDD;--ink:#14
 .pp .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 12px;margin-top:10px;font-size:11.5px}.pp .meta small{color:var(--mu);display:block;font-size:10px}
 .pp .foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:7px;border-top:1px solid var(--vl);font-size:9.5px;color:var(--mu)}`;
 const CO = 'Orion Contracting Company';
-const ppBand = (title, sub, noK, noV) => `<div class="band"><img src="logo.png" alt="Orion"><div class="bt"><span class="tag">MECHANIC STORE</span><h1>${esc(title)}</h1><div class="co">${esc(sub)}</div></div>${noV != null ? `<div class="no"><small>${esc(noK)}</small><b>${esc(noV)}</b></div>` : ''}</div>`;
+const ppBand = (title, sub, noK, noV) => `<div class="band"><img src="logo.png" alt="Orion"><div class="bt"><span class="tag">${esc(t('ppKick'))}</span><h1>${esc(title)}</h1><div class="co">${esc(sub)}</div></div>${noV != null ? `<div class="no"><small>${esc(noK)}</small><b>${esc(noV)}</b></div>` : ''}</div>`;
 const nowTxt = () => { const d = new Date(); return `${dSlash(d.toLocaleDateString('en-CA'))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 const ppFoot = () => `<div class="foot"><span>${esc(CO)}</span><span>${esc(t('printed'))} <span dir="ltr">${nowTxt()}</span> · ${esc(profile?.name || '')}</span></div>`;
 const paperDoc = (title, css = MS_CSS) => `<!doctype html><html lang="${lang}" dir="${I18N[lang].dir}"><head><meta charset="utf-8"><base href="${esc(location.href)}"><title>${esc(title)}</title>
@@ -1170,7 +1204,7 @@ function movePdf(m) {
     ${ppFoot()}</div>` + printEnd();
   openPrint(html);
 }
-$('btnSkPdf').onclick = () => stockPdf(SK.store, stockRows());
+$('btnSkPdf').onclick = () => printIn(() => stockPdf(SK.store, stockRows()));
 // the stock paper of a store (or of all of them): the rows given, by category, a blank column to count on
 function stockPdf(st, rows) {
   const html = paperDoc(t('ppStock')) + `<div class="pp">${ppBand(t('ppStock'), (st === 'all' ? t('allStores') : storeName(st) + (storeOf(st)?.code ? ' (' + storeOf(st).code + ')' : '')) + ' · ' + CO, t('thDate'), dSlash(dubaiToday()))}
@@ -1180,13 +1214,14 @@ function stockPdf(st, rows) {
     <div class="sigs"><div class="sig"><small>${esc(t('sigStore'))}</small><b>&nbsp;</b><i></i></div><div class="sig"><small>${esc(t('sigApprove'))}</small><b>&nbsp;</b><i></i></div></div>${ppFoot()}</div>` + printEnd();
   openPrint(html);
 }
-$('btnHsPdf').onclick = () => {
+$('btnHsPdf').onclick = () => printIn(movesPdf);
+function movesPdf() {
   const rows = moveRows();
   const html = paperDoc(t('ppMoves')) + `<div class="pp">${ppBand(t('ppMoves'), CO, t('thDate'), t('ppPeriod', { a: dSlash(HS.from), b: dSlash(HS.to) }))}
     <table><thead><tr><th>${esc(t('thNo'))}</th><th>${esc(t('thDate'))}</th><th>${esc(t('thKind'))}</th><th>${esc(t('thTo'))}</th><th>${esc(t('thItem'))}</th><th class="num">${esc(t('thQty'))}</th><th>${esc(t('thBy'))}</th></tr></thead>
     <tbody>${rows.map(m => (m.lines || []).map((l, ix) => `<tr class="${m.status === 'void' ? 'void' : ''}">${ix ? '<td></td><td></td><td></td><td></td>' : `<td class="ltr">${esc(m.no)}</td><td>${esc(dSlash(m.moved_on))}</td><td>${esc(t('k_' + m.kind))}</td><td>${esc([m.plate, m.party, m.to_store_id ? storeName(m.to_store_id) : ''].filter(Boolean).join(' · '))}</td>`}<td>${esc(l.name)}</td><td class="num ${Number(l.qty) < 0 ? 'neg' : 'pos'}">${Number(l.qty) > 0 ? '+' : ''}${esc(fmtQ(l.qty))}</td><td>${ix ? '' : esc(m.by_name || '')}</td></tr>`).join('')).join('')}</tbody></table>${ppFoot()}</div>` + printEnd();
   openPrint(html);
-};
+}
 
 // THE JOB CARD'S PAPER — Orion's own: an oil-black head on a hazard stripe, the card number on lime, numbered sections, every label in
 // both languages (the workshop reads both), the fuel as a gauge, the checks as ticks, the oils and the filters side by side.
@@ -1243,22 +1278,21 @@ const JC_CSS = `@page{size:A4 portrait;margin:11mm 12mm}@media screen{.jc{paddin
 .jc .pol b{font:900 10px Cairo,Arial,sans-serif}.jc .pol ol{margin:2px 0 0;padding-inline-start:16px}
 .jc .ft{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:2px solid var(--k);font-size:8.5px;color:var(--mu)}.jc .ft b{color:#111}
 .jc .stamp{position:absolute;top:96px;inset-inline-end:150px;transform:rotate(-9deg);border:2.5px solid #15803D;color:#15803D;font:900 13px Poppins,Arial,sans-serif;padding:1px 10px;border-radius:8px;letter-spacing:2px;opacity:.85;background:rgba(255,255,255,.7)}`;
-// a label in the page's language over the other one, small (the paper is read in both)
-const other = () => lang === 'ar' ? 'en' : 'ar';
-const L2 = k => `${esc(t(k))}<span class="l2">${esc(I18N[other()][k] ?? '')}</span>`;
+// every paper is in ONE language, the one picked at «print» (printIn): no second line in the other one
+const L2 = k => esc(t(k));
 function jobPdf(c) {
   const st = storeOf(c.store_id), se = seOf(c.site_equipment_id);
   const oil = o => (c.oils || []).find(x => x.type === o), flt = f => (c.filters || []).find(x => x.type === f);
   const tile = (k, v) => `<div class="tile"><small>${esc(t(k))}</small><b>${v || '—'}</b></div>`;
-  const kv = (k, v) => `<div class="kv"><small>${esc(t(k))} · ${esc(I18N[other()][k] ?? '')}</small><b>${v || '&nbsp;'}</b></div>`;
-  const sec = (n, k) => `<div class="sec"><span class="n">${String(n).padStart(2, '0')}</span><span class="t"><b>${esc(t(k))}</b><span class="l2">${esc(I18N[other()][k] ?? '')}</span></span></div>`;
+  const kv = (k, v) => `<div class="kv"><small>${esc(t(k))}</small><b>${v || '&nbsp;'}</b></div>`;
+  const sec = (n, k) => `<div class="sec"><span class="n">${String(n).padStart(2, '0')}</span><span class="t"><b>${esc(t(k))}</b></span></div>`;
   const when = (d, tm) => d ? `<span class="ltr">${esc(dSlash(d))}${tm ? ' · ' + esc(hhmm(tm)) : ''}</span>` : '';
   const fuel = c.fuel == null ? -1 : FUELS.indexOf(c.fuel);
   const html = paperDoc(c.no, JC_CSS) + `<div class="jc">
     <div class="hd"><div class="lg"><img src="logo.png" alt="Orion"></div>
-      <div class="tt"><div class="k">ORION · WORKSHOP</div><h1>${esc(t('ppJob'))}</h1><div class="s">${esc(t('ppJobSub'))} — ${esc(CO)}</div><span class="l2">${esc(I18N[other()].ppJob)} · ${esc(I18N[other()].ppJobSub)}</span></div>
+      <div class="tt"><div class="k">${esc(t('jcKick'))}</div><h1>${esc(t('ppJob'))}</h1><div class="s">${esc(t('ppJobSub'))} — ${esc(CO)}</div></div>
       <div class="no"><small>${esc(t('ppJobNo'))}</small><b>${esc(c.no)}</b><i>${esc(t(c.status === 'done' ? 'jbStDone' : 'jbStOpen'))}</i></div></div>
-    ${c.status === 'done' ? `<div class="stamp">DONE ✓</div>` : ''}
+    ${c.status === 'done' ? `<div class="stamp">${esc(t('jcDone'))}</div>` : ''}
     <div class="strip">${tile('jfInOn', when(c.in_on, c.in_time))}${tile('jfOutOn', when(c.out_on, c.out_time))}${tile('jfSite', st ? esc(st.name) + (st.code ? ` <span class="ltr">(${esc(st.code)})</span>` : '') : esc(t('jfNoSite').replace(/—/g, '').trim()))}
       ${tile('jfReading', c.reading != null ? `<span class="ltr">${esc(fmtQ(c.reading))}</span> ${esc(t('ru_' + (c.reading_unit || 'km')))}` : '')}${tile('jfDriver', esc(c.driver || ''))}</div>
     ${sec(1, 'jsVehicle')}
@@ -1271,13 +1305,13 @@ function jobPdf(c) {
       <div>${sec(4, 'jsFilters')}
       <table><thead><tr><th>${L2('thFilter')}</th><th>${L2('jfPartNo')}</th><th>${L2('jfAction')}</th></tr></thead><tbody>${JFILTERS.map(f => { const x = flt(f); return `<tr class="${x ? '' : 'off'}"><td>${L2('fl_' + f)}</td><td class="q">${esc(x?.part_no || (x ? '' : '—'))}</td><td>${x ? `<span class="act ${esc(x.action || 'change')}">${esc(t('ac_' + (x.action || 'change')))}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${sec(5, 'jsWork')}
-    <div class="works">${WORKS.map(w => `<span class="wk ${(c.work || []).includes(w) ? 'on' : ''}"><i></i>${esc(t('w_' + w))} <span class="l2">${esc(I18N[other()]['w_' + w])}</span></span>`).join('')}</div>
+    <div class="works">${WORKS.map(w => `<span class="wk ${(c.work || []).includes(w) ? 'on' : ''}"><i></i>${esc(t('w_' + w))}</span>`).join('')}</div>
     ${sec(6, 'jsDiag')}
     <div class="two"><div class="box"><span class="bh">${L2('jsDiag')}</span><span dir="auto">${esc(c.diagnosis || '')}</span></div><div class="box"><span class="bh">${L2('jsParts')}</span><span dir="auto">${esc(c.parts || '')}</span></div></div>
     ${sec(7, 'jsSign')}
     <div class="sigs">${[['jfMech', c.mechanic], ['jfFleet', c.fleet_officer], ['jfSup', c.supervisor]].map(([k, v]) => `<div class="sg"><small>${L2(k)}</small><b>${esc(v || '')}</b><div class="ln"><span>${esc(t('sigSign'))}</span><span>${esc(t('sigDate'))}</span></div></div>`).join('')}</div>
     ${c.final_notes ? `${sec(8, 'jsNotes')}<div class="box" style="min-height:0" dir="auto">${esc(c.final_notes)}</div>` : ''}
-    <div class="pol"><b>${esc(t('policyT'))}</b> <span class="l2" style="display:inline">${esc(I18N[other()].policyT)}</span><ol><li>${esc(t('pol1'))}</li><li>${esc(t('pol2'))}</li><li>${esc(t('pol3'))}</li></ol></div>
+    <div class="pol"><b>${esc(t('policyT'))}</b><ol><li>${esc(t('pol1'))}</li><li>${esc(t('pol2'))}</li><li>${esc(t('pol3'))}</li></ol></div>
     <div class="ft"><span><b>${esc(CO)}</b> · ${esc(t('ppJob'))} <span class="ltr">${esc(c.no)}</span></span><span>${esc(t('jbBy', { n: c.created_by_name || '', d: dSlash(String(c.created_at || '').slice(0, 10)) }))} · ${esc(t('printed'))} <span class="ltr">${nowTxt()}</span> · ${esc(profile?.name || '')}</span></div>
   </div>` + printEnd();
   openPrint(html);
@@ -1319,8 +1353,8 @@ function renderUsers() {
   renderUserList();
 }
 function renderUserList() {
-  const q = US.q.trim().toLowerCase();
-  const rows = US.rows.filter(u => (US.role === 'all' || (US.role === 'stopped' ? !u.active : u.role === US.role)) && (!q || (u.name || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q)));
+  const q = US.q.trim();
+  const rows = US.rows.filter(u => (US.role === 'all' || (US.role === 'stopped' ? !u.active : u.role === US.role)) && qHit(q, u.name, u.username, t(u.role)));
   $('usList').innerHTML = rows.length ? rows.map(u => { const me = u.id === userId;
     return `<div class="frow ${u.active ? '' : 'off'}" data-id="${esc(u.id)}"><div class="fb" data-act="edit"><div class="fn">${esc(u.name || '—')}${me ? ` <span class="pill mute">${esc(t('usYou'))}</span>` : ''}</div>
       <div class="fs"><span class="pill ${u.role === 'admin' ? 'err' : u.role === 'manager' || u.role === 'deputy' ? 'warn' : u.role === 'storekeeper' ? 'ok' : 'mute'}">${esc(t(u.role))}</span>${u.active ? '' : `<span class="pill mute">⏸ ${esc(t('usStopped'))}</span>`}<span class="ltr muted">${esc(u.username || '')}</span></div>

@@ -159,6 +159,11 @@
   .btn-sm:active{transform:scale(.94)}
   .btn-sm.danger{background:rgba(220,38,38,.10);color:var(--err)}
   .btn-sm.pr{background:rgba(var(--primary-rgb),.12);color:var(--primary)}
+  /* the bar on top of every list: its search and its «add», held under the header while the list scrolls */
+  .topbar{position:sticky;top:var(--hdr-h,64px);z-index:4;display:flex;gap:8px;align-items:center;margin:10px -16px 0;padding:8px 16px;background:var(--bg)}
+  .topbar input[type=search]{flex:1;min-width:0;margin:0!important}
+  .topbar button.primary.addb{flex:0 0 auto;width:auto;margin:0;min-height:50px;padding:0 16px;font-size:14px;white-space:nowrap}
+  .tools{margin-top:2px}
   .row2b{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
   .row2b button{margin-top:0;font-size:13px;line-height:1.25;padding:0 8px}
   .segment{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0;margin-top:2px}
@@ -418,6 +423,7 @@
   <div id="editBody"></div>
   <div class="stick"><button class="primary" id="btnEditSave" data-i18n="saveChanges">حفظ</button><div class="msg" id="editMsg"></div></div>
 </div>
+<select id="printLang" class="hidden" aria-hidden="true"><option value="ar">العربية — الورقة كلها بالعربي</option><option value="en">English — the whole paper in English</option></select>
 <div id="pickBackdrop" class="sheet-backdrop hidden"></div>
 <div id="pickSheet" class="sheet list hidden"><div class="handle"></div><b class="title" id="pickTitle"></b><input id="pickSearch" type="search" autocapitalize="none" class="hidden"><div class="opts" id="pickOpts"></div></div>
 
@@ -452,12 +458,11 @@
   <!-- the stock: every item, what each store holds -->
   <section class="screen" id="scr-stock">
     <div class="hero" id="skHero"></div>
-    <button type="button" class="fbar hidden" id="btnAddItem"><span class="s">＋ <span data-i18n="addItem">إضافة صنف جديد</span></span><span>📦</span></button>
-    <input id="skSearch" type="search" data-i18n-ph="searchItems" placeholder="ابحث بالاسم أو الكود أو رقم القطعة" autocapitalize="none" style="margin-top:14px">
+    <div class="topbar"><input id="skSearch" type="search" data-i18n-ph="searchItems" placeholder="ابحث بالاسم أو الكود أو رقم القطعة" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnAddItem" data-i18n="addItemS">＋ صنف</button></div>
+    <div class="row2b tools"><button class="ghost" id="btnSkPdf">🖨️ <span data-i18n="stockPdf">جرد المخزون PDF</span></button><button class="ghost" id="btnSkCheck">🧮 <span data-i18n="stockCheck">مطابقة الرصيد</span></button></div>
     <div class="chips" id="skStores" style="margin-top:10px"></div>
     <div class="chips" id="skCats" style="margin-top:8px"></div>
     <div id="skList"></div>
-    <div class="row2b"><button class="ghost" id="btnSkPdf">🖨️ <span data-i18n="stockPdf">جرد المخزون PDF</span></button><button class="ghost" id="btnSkCheck">🧮 <span data-i18n="stockCheck">مطابقة الرصيد</span></button></div>
   </section>
 
   <!-- a new movement: receive · issue · return · transfer · count -->
@@ -505,23 +510,22 @@
     </div>
     <div class="chips" id="hsKinds" style="margin-top:10px"></div>
     <div class="chips" id="hsStores" style="margin-top:8px"></div>
-    <input id="hsSearch" type="search" data-i18n-ph="searchMoves" placeholder="ابحث برقم الحركة أو اللوحة أو الاسم أو الصنف" autocapitalize="none" style="margin-top:10px">
+    <div class="topbar"><input id="hsSearch" type="search" data-i18n-ph="searchMoves" placeholder="ابحث برقم الحركة أو اللوحة أو الاسم أو الصنف" autocapitalize="none" enterkeyhint="search"></div>
+    <button class="ghost tools" id="btnHsPdf">🖨️ <span data-i18n="movesPdf">تقرير الحركات PDF</span></button>
     <div id="hsList"></div>
-    <button class="ghost" id="btnHsPdf">🖨️ <span data-i18n="movesPdf">تقرير الحركات PDF</span></button>
   </section>
 
   <!-- the equipment and the filters each one takes -->
   <section class="screen" id="scr-filters">
     <div class="pane-d" data-i18n="filtersDesc">لكل معدة أو مركبة: الفلاتر التي تركب عليها (زيت، ديزل، هواء، فاصل ماء) وما في المخزن منها الآن.</div>
-    <input id="ftSearch" type="search" data-i18n-ph="searchEquip" placeholder="ابحث باللوحة أو النوع أو رقم الفلتر" autocapitalize="none">
+    <div class="topbar"><input id="ftSearch" type="search" data-i18n-ph="searchEquip" placeholder="ابحث باللوحة أو النوع أو رقم الفلتر" autocapitalize="none" enterkeyhint="search"></div>
     <div class="chips" id="ftGroups" style="margin-top:10px"></div>
     <div id="ftList"></div>
   </section>
   <!-- the projects (sites): each one with its own store -->
   <section class="screen" id="scr-projects">
     <div class="pane-d" data-i18n="pjDesc">كل مشروع (موقع) له مخزن خاص به: اصرف له مواد من المخزن الرئيسي، انقل منه لمشروع آخر، أو أرجع المواد للمخزن الرئيسي.</div>
-    <button class="primary hidden" id="btnPjNew" data-i18n="pjNew">＋ مشروع جديد</button>
-    <input id="pjSearch" type="search" data-i18n-ph="pjSearch" placeholder="ابحث باسم المشروع أو الكود أو الموقع" autocapitalize="none" style="margin-top:12px">
+    <div class="topbar"><input id="pjSearch" type="search" data-i18n-ph="pjSearch" placeholder="ابحث باسم المشروع أو الكود أو الموقع" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnPjNew" data-i18n="pjNewS">＋ مشروع</button></div>
     <div class="chips" id="pjShow" style="margin-top:10px"></div>
     <div id="pjList"></div>
   </section>
@@ -530,24 +534,22 @@
     <div class="segment kind" id="jbPane"><button type="button" data-p="cards"><span data-i18n="jbCardsP">🔧 كروت الصيانة</span></button><button type="button" data-p="equip"><span data-i18n="jbEquipP">🏗 معدات المواقع</span></button></div>
     <div id="jbCards">
       <div class="pane-d" data-i18n="jbDesc" style="margin-top:10px">كارت عمل لكل دخول معدة أو مركبة للورشة.</div>
-      <button class="primary hidden" id="btnJbNew" data-i18n="jbNew">＋ كارت صيانة جديد</button>
-      <input id="jbSearch" type="search" data-i18n-ph="jbSearch" placeholder="ابحث برقم الكارت أو اللوحة أو المعدة أو السائق" autocapitalize="none" style="margin-top:12px">
+      <div class="topbar"><input id="jbSearch" type="search" data-i18n-ph="jbSearch" placeholder="ابحث برقم الكارت أو اللوحة أو المعدة أو السائق" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnJbNew" data-i18n="jbNewS">＋ كارت</button></div>
       <div class="chips" id="jbShow" style="margin-top:10px"></div>
       <div id="jbList"></div>
     </div>
     <div id="jbEquip" class="hidden">
       <div class="pane-d" data-i18n="seDesc" style="margin-top:10px">المعدات والعُدد الموجودة في كل موقع.</div>
-      <input id="seSearch" type="search" data-i18n-ph="seSearch" placeholder="ابحث باسم المعدة أو الرقم أو المستلم" autocapitalize="none">
+      <div class="topbar"><input id="seSearch" type="search" data-i18n-ph="seSearch" placeholder="ابحث باسم المعدة أو الرقم أو المستلم" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnSeAdd" data-i18n="seAddS">＋ معدة</button></div>
+      <button class="ghost hidden tools" id="btnSePdf" data-i18n="sePdf">🖨️ كشف معدات الموقع PDF</button>
       <div class="chips" id="seSites" style="margin-top:10px"></div>
       <div id="seList"></div>
-      <div class="row2b"><button class="ghost hidden" id="btnSeAdd" data-i18n="seAdd">＋ إضافة معدة لموقع</button><button class="ghost hidden" id="btnSePdf" data-i18n="sePdf">🖨️ كشف معدات الموقع PDF</button></div>
     </div>
   </section>
   <!-- the accounts (admin only) -->
   <section class="screen" id="scr-users">
     <div class="pane-d" data-i18n="usersDesc">حسابات النظام: الأدمن يضيف المستخدمين ويحدد دور كل واحد ويوقفه أو يغيّر كلمة مروره.</div>
-    <button class="primary" id="btnUserNew" data-i18n="userNew">＋ مستخدم جديد</button>
-    <input id="usSearch" type="search" data-i18n-ph="usSearchPh" placeholder="ابحث بالاسم أو اسم المستخدم" autocapitalize="none" style="margin-top:12px">
+    <div class="topbar"><input id="usSearch" type="search" data-i18n-ph="usSearchPh" placeholder="ابحث بالاسم أو اسم المستخدم" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb" id="btnUserNew" data-i18n="userNewS">＋ مستخدم</button></div>
     <div class="chips" id="usRoles" style="margin-top:10px"></div>
     <div id="usList"></div>
   </section>

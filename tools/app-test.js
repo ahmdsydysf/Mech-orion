@@ -28,14 +28,16 @@ async function boot(role, opt = {}) {
   const open = id => !d.getElementById(id).classList.contains('hidden');
   const nav = s => click(d.querySelector(`nav button[data-s="${s}"]`));
   await wait(300);
-  return { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, calls: () => w.__calls, db: w.__db };
+  // «print» asks the paper's language: pl('ar' | 'en') taps it
+  const pl = async l => { click(d.querySelector(`#pickOpts .opt[data-v="${l}"]`)); await wait(20); };
+  return { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, pl, calls: () => w.__calls, db: w.__db };
 }
 const AR = /[؀-ۿ]/;
 
 (async () => {
   // ---------------- the storekeeper ----------------
   {
-    const B = await boot('storekeeper'), { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, db } = B;
+    const B = await boot('storekeeper'), { w, d, errors, printed, wait, click, set, txt, active, tabs, open, nav, pl, db } = B;
     check('storekeeper: lands on the stock, six tabs (projects second, maintenance last)', active() === 'scr-stock' && tabs() === 'stock,projects,move,moves,filters,jobs', active() + ' ' + tabs());
     const hero = txt(d.getElementById('skHero'));
     check('the hero: 11 items (the stopped one with nothing left out), 5 in stock, 1 below minimum, 6 at zero', /11\s*صنف/.test(hero) && /5\s*فيها رصيد/.test(hero) && /1\s*تحت الحد/.test(hero) && /6\s*رصيدها صفر/.test(hero), hero);
@@ -106,12 +108,31 @@ const AR = /[؀-ۿ]/;
     set('hsSearch', ''); await wait(20);
     click(hr().find(r => /ISS-000002/.test(txt(r))).querySelector('.fb')); await wait(40);
     check('a movement opened: its lines, a print button, no cancel for the storekeeper', /FLT-0008/.test(txt(d.getElementById('editBody'))) && !!d.getElementById('mPrint') && !d.getElementById('mVoid'), txt(d.getElementById('editBody')).slice(0, 200));
-    click(d.getElementById('mPrint')); await wait(20);
+    const p0 = printed.length; click(d.getElementById('mPrint')); await wait(20);
+    const po = [...d.querySelectorAll('#pickOpts .opt')];
+    check('«print» asks the paper\'s language first: Arabic or English, nothing printed yet', open('pickSheet') && /لغة الورقة/.test(txt(d.getElementById('pickTitle'))) && po.map(o => o.dataset.v).join() === 'ar,en' && printed.length === p0, [po.map(o => o.dataset.v), printed.length - p0]);
+    await pl('ar');
     const P = printed.pop() || '';
     check('the voucher: its number, the plate, the lines, the signatures, print.js and its base', /ISS-000002/.test(P) && /74522/.test(P) && /FLT-0010/.test(P) && /أمين المخزن/.test(P) && /<script src="print.js"><\/script>/.test(P) && /<base href=/.test(P), P.length);
+    // the one search: every word, any order; Arabic read loosely; codes however spaced; Arabic digits
+    const qh = (q, ...f) => w.qHit(q, ...f);
+    check('the search: each word in any order, أ/ة/ى read loosely, a code however dashed, Arabic digits, a word missing → no',
+      qh('دوريه صيانه', 'صيانة دورية') && qh('اسماعيل', 'إسماعيل') && qh('مستشفي', 'مستشفى') && qh('rak 1234', 'RAK-1234') && qh('٧٤٥٢٢', 'plate 74522') && qh('oil filter', ['Filter', 'engine oil']) && !qh('oil air', 'oil filter') && qh('', 'x'), null);
+    check('an item is found by its category / filter type in either language (the stock list)', (() => { set('skSearch', 'فلتر زيت'); const n = d.querySelectorAll('#skList .frow').length; set('skSearch', ''); return n === 2; })(), null);
+    check('the «add» buttons sit in the bar on top, beside the search', ['btnAddItem', 'btnPjNew', 'btnJbNew', 'btnSeAdd', 'btnUserNew'].every(id => d.getElementById(id).parentElement.classList.contains('topbar'))
+      && d.getElementById('skSearch').parentElement === d.getElementById('btnAddItem').parentElement, null);
     // a new item
     nav('stock'); await wait(30); click(d.getElementById('btnAddItem')); await wait(30);
-    set('iName', 'torque wrench'); set('iCat', 'filter'); await wait(10);
+    set('iName', 'torque wrench');
+    const cat = d.getElementById('iCat'), cb = cat.nextElementSibling;
+    check('a list in a form opens as a picker: the select hidden, its button showing the choice', cat.classList.contains('picked') && cb?.classList.contains('picker') && /مستهلك/.test(txt(cb)), txt(cb));
+    click(cb); await wait(10);
+    check('… the picker: titled by its label, a search box (six choices or more)', open('pickSheet') && txt(d.getElementById('pickTitle')) === 'الفئة' && open('pickSearch') && d.querySelectorAll('#pickOpts .opt').length === 6, d.querySelectorAll('#pickOpts .opt').length);
+    set('pickSearch', 'فلتر'); await wait(10);
+    const fo = [...d.querySelectorAll('#pickOpts .opt')];
+    check('… the search narrows it; Enter takes the first found', fo.length === 1 && fo[0].dataset.v === 'filter', fo.map(o => o.dataset.v));
+    d.getElementById('pickSearch').dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await wait(10);
+    check('… picked: the form\'s value, the button\'s label, the sheet closed', cat.value === 'filter' && /فلتر/.test(txt(cb)) && !open('pickSheet'), [cat.value, txt(cb)]);
     check('a filter shows its filter type box', open('iFtBox'), null);
     set('iPart', 'fo 3143'); click(d.getElementById('btnEditSave')); await wait(60);
     check('the same part number another way → said with the item it belongs to', /FLT-0008/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
@@ -172,10 +193,13 @@ const AR = /[؀-ۿ]/;
       && j2.oils.length === 2 && j2.oils[1].qty === 9.5 && j2.oils[1].note === '15W-40' && j2.filters.find(f => f.type === 'air').part_no === 'FOA-2579' && j2.filters.find(f => f.type === 'air').action === 'clean'
       && j2.filters.find(f => f.type === 'oil').action === 'change' && j2.work.join() === 'electrical,routine' && j2.equipment_id === 'e2' && j2.store_id === 's3' && j2.reading === 880, j2);
     check('… and opened after saving', /JC-000002/.test(txt(d.getElementById('editTitle'))) && !!d.getElementById('jbPrintB'), txt(d.getElementById('editTitle')));
-    const pn = printed.length; click(d.getElementById('jbPrintB')); await wait(20);
+    const pn = printed.length; click(d.getElementById('jbPrintB')); await wait(20); await pl('ar');
     const pj = printed[pn] || '';
-    check('the job card\'s paper: Orion\'s own (jc), its number, both languages, the fuel gauge, the ticks, the filters, the policy, the print script', /class="jc"/.test(pj) && /JC-000002/.test(pj) && /كارت عمل صيانة/.test(pj) && /Job card/.test(pj)
+    check('the job card\'s paper in Arabic: Orion\'s own (jc), its number, Arabic only, the fuel gauge, the ticks, the filters, the policy, the print script', /class="jc"/.test(pj) && /JC-000002/.test(pj) && /dir="rtl"/.test(pj) && /كارت عمل صيانة/.test(pj) && !/Job card|WORKSHOP|ENGINE OIL|Hydraulic oil|Sign-off|class="l2"/i.test(pj)
       && (pj.match(/class="on /g) || []).length === 4 && /class="ck ok"/.test(pj) && /class="ck bad"/.test(pj) && /FOA-2579/.test(pj) && /act clean/.test(pj) && /تعليمات الصيانة الداخلية/.test(pj) && /<script src="print.js"><\/script>/.test(pj) && !/onclick=/.test(pj), pj.slice(0, 200));
+    click(d.getElementById('jbPrintB')); await wait(20); await pl('en');
+    const pe = printed[pn + 1] || '', peText = pe.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
+    check('… and in English: English only, left to right; the page itself stays Arabic', /dir="ltr"/.test(pe) && /<h1>Job card<\/h1>/.test(pe) && /FOA-2579/.test(pe) && !AR.test(peText) && w.eval('lang') === 'ar' && /طباعة/.test(txt(d.getElementById('jbPrintB'))), peText.match(/[؀-ۿ]+/g));
     click(d.getElementById('jbTogB')); await wait(60);
     check('closing the card: done, the day out filled', j2.status === 'done' && !!j2.out_on, [j2.status, j2.out_on]);
     // the site equipment
@@ -184,7 +208,7 @@ const AR = /[؀-ۿ]/;
     check('site equipment: every site\'s lines under its name, the returned one marked', sr().length === 4 && /Site A/.test(txt(d.getElementById('seList'))) && /110kv/.test(txt(d.getElementById('seList'))) && d.querySelectorAll('#seList .frow.off').length === 1, sr().map(r => txt(r)));
     click(d.querySelector('#seSites [data-v="s2"]')); await wait(20);
     check('a site chip: its three lines, the sheet button', sr().length === 3 && open('btnSePdf'), sr().length);
-    const pn2 = printed.length; click(d.getElementById('btnSePdf')); await wait(20);
+    const pn2 = printed.length; click(d.getElementById('btnSePdf')); await wait(20); await pl('ar');
     check('the site\'s equipment sheet: its lines by section', /كشف معدات الموقع/.test(printed[pn2] || '') && /heat gun/.test(printed[pn2] || '') && /MEP/.test(printed[pn2] || ''), (printed[pn2] || '').slice(0, 100));
     click(d.getElementById('btnSeAdd')); await wait(30);
     set('seName', 'Plate Compactor'); set('seQty', '2'); set('seTag', 'new'); click(d.getElementById('btnEditSave')); await wait(60);
@@ -354,7 +378,9 @@ const AR = /[؀-ۿ]/;
     B.nav('jobs'); await wait(80);
     check('English: the maintenance screen in English', /Job cards/.test(txt(d.getElementById('jbPane'))) && /Routine service/.test(txt(d.getElementById('jbList'))) && !AR.test(txt(d.getElementById('scr-jobs'))), txt(d.getElementById('scr-jobs')).match(/[؀-ۿ]+/g));
     B.click(d.querySelector('#jbList .frow .fb')); await wait(40); const pn = B.printed.length; B.click(d.getElementById('jbPrintB')); await wait(20);
-    check('English: the paper in English first, Arabic under it', /dir="ltr"/.test(B.printed[pn] || '') && /<h1>Job card<\/h1>/.test(B.printed[pn] || '') && /كارت عمل صيانة/.test(B.printed[pn] || ''), (B.printed[pn] || '').slice(0, 120));
+    check('English: the paper\'s language offered is the page\'s (English ticked)', /Paper language/.test(txt(d.getElementById('pickTitle'))) && d.querySelector('#pickOpts .opt.on')?.dataset.v === 'en', txt(d.getElementById('pickTitle')));
+    await B.pl('ar');
+    check('English: a paper asked in Arabic is Arabic only, right to left', /dir="rtl"/.test(B.printed[pn] || '') && /<h1>كارت عمل صيانة<\/h1>/.test(B.printed[pn] || '') && !/Job card|WORKSHOP/.test(B.printed[pn] || '') && B.w.eval('lang') === 'en', (B.printed[pn] || '').slice(0, 120));
     check('English: no runtime errors', errors.length === 0, errors);
   }
   const bad = T.filter(x => !x.ok);
