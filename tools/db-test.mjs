@@ -209,5 +209,56 @@ const r3 = await runFile('schema.sql');
 check('schema.sql runs again over the projects: one main, the projects kept', !r3.err && (await one(`select count(*)::int n from ms_stores where kind = 'main'`)).n === 1
   && (await one(`select count(*)::int n from ms_stores where kind = 'project'`)).n === 2, r3.err);
 
+
+// ---------- the equipment at the sites (the owner's sheet), the job cards ----------
+const e1 = await runFile('site-equipment.sql'); const e2 = await runFile('site-equipment.sql');
+const ec = await one(`select (select count(*)::int from ms_site_equipment) n, (select count(*)::int from ms_stores where kind = 'project' and code like 'RAK%') p`);
+check('site-equipment.sql runs twice: 759 lines over the 26 sites, not twice', !e1.err && !e2.err && ec.n === 759 && ec.p >= 20, [e1.err, e2.err, ec]);
+const r66 = await one(`select count(*)::int n, count(*) filter (where section = 'mep')::int mep from ms_site_equipment e join ms_stores s on s.id = e.store_id where s.code = 'RAK266'`);
+check('RAK266: its civil and MEP logs, side by side in the sheet, both in', r66.n === 81 && r66.mep === 13, r66);
+const gq = await one(`select qty, tag, sent_on::text d from ms_site_equipment where src = 'rak270!B23'`);
+check('«2new» read as 2, tagged new, with its date', Number(gq.qty) === 2 && gq.tag === 'new' && gq.d === '2026-08-25', gq);
+check('a viewer reads the site equipment', (await val('V', `select count(*)::int from ms_site_equipment`)) === 759, null);
+const SITE6 = (await one(`select id from ms_stores where code = 'RAK266'`)).id;
+check('a mechanic cannot add site equipment', /row-level security/.test(await run('C', `insert into ms_site_equipment (store_id, name, qty) values ($1, 'x', 1)`, [SITE6])), null);
+const se = await run('K', `insert into ms_site_equipment (store_id, name, ref, qty, sent_on, tag) values ($1, '  Tower   Light ', ' TL-9 ', 1, current_date, 'NEW') returning id, name, ref, tag, created_by_name`, [SITE6]);
+check('a storekeeper adds a line: cleaned, tagged, stamped', Array.isArray(se) && se[0].name === 'Tower Light' && se[0].ref === 'TL-9' && se[0].tag === 'new' && se[0].created_by_name === 'Karim Store', se);
+check('a line needs its name and a real tag', /MS_NAME_REQUIRED/.test(await run('K', `insert into ms_site_equipment (store_id, name) values ($1, ' ')`, [SITE6]))
+  && /check/.test(await run('K', `insert into ms_site_equipment (store_id, name, tag) values ($1, 'x', 'lost')`, [SITE6])), null);
+check('a storekeeper cannot delete a line, an admin can', (await run('K', `delete from ms_site_equipment where id = $1 returning id`, [se[0].id])).length === 0
+  && (await run('A', `delete from ms_site_equipment where id = $1 returning id`, [se[0].id])).length === 1, null);
+check('a site holding equipment is never deleted', /MS_STORE_IN_USE/.test(await run('A', `delete from ms_stores where id = $1`, [SITE6])), null);
+const card = { store_id: SITE6, plate: ' 74522 ', make_model: 'Bobcat S650', eq_type: 'Skid steer', driver: 'Ravi', in_time: '08:30', reading: 1520.5, reading_unit: 'hr', fuel: 50,
+  checks: { tyres: 'ok', brakes: 'bad' }, oils: [{ type: 'hydraulic', qty: 20 }, { type: 'diesel_engine', qty: 9.5, note: '15W-40' }],
+  filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
+  diagnosis: 'Hydraulic hose leaking', parts: 'Hose 1/2"', mechanic: 'Mech One' };
+const ins = (who, c) => { const ks = Object.keys(c).join(', '); return run(who, `insert into ms_job_cards (${ks}) select ${ks} from jsonb_populate_record(null::ms_job_cards, $1::jsonb) returning id, no, plate, created_by_name, status`, [JSON.stringify(c)]); };
+const j1 = await ins('C', card);
+check('a mechanic opens a job card: JC-000001, the plate cleaned, his name on it', Array.isArray(j1) && j1[0].no === 'JC-000001' && j1[0].plate === '74522' && j1[0].created_by_name === 'Mech One' && j1[0].status === 'open', j1);
+const j2 = await ins('K', { ...card, plate: null, make_model: 'Generator 110kv', oils: [], filters: [], checks: {}, work: [] });
+check('… the next one is JC-000002', Array.isArray(j2) && j2[0].no === 'JC-000002', j2);
+check('a viewer cannot open one', /row-level security/.test(await ins('V', card)), null);
+check('nothing to work on → MS_JOB_WHAT_REQUIRED', /MS_JOB_WHAT_REQUIRED/.test(await ins('C', { ...card, plate: null, make_model: null })), null);
+check('an unknown oil, filter action, check or work → MS_JOB_INVALID', /MS_JOB_INVALID/.test(await ins('C', { ...card, oils: [{ type: 'olive', qty: 1 }] }))
+  && /MS_JOB_INVALID/.test(await ins('C', { ...card, filters: [{ type: 'air', action: 'burn' }] })) && /MS_JOB_INVALID/.test(await ins('C', { ...card, checks: { tyres: 'maybe' } }))
+  && /MS_JOB_INVALID/.test(await ins('C', { ...card, work: ['painting'] })), null);
+check('out before in → MS_OUT_BEFORE_IN; a fuel level off the gauge refused', /MS_OUT_BEFORE_IN/.test(await ins('C', { ...card, in_on: '2026-11-10', out_on: '2026-11-09' }))
+  && /check/.test(await ins('C', { ...card, fuel: 40 })), null);
+check('the number never changes, nor who opened it', (await run('A', `update ms_job_cards set no = 'X', seq = 99, created_by_name = 'Y' where id = $1 returning no, created_by_name`, [j1[0].id]))[0].no === 'JC-000001'
+  && (await one(`select created_by_name from ms_job_cards where id = $1`, [j1[0].id])).created_by_name === 'Mech One', null);
+await as(null); await mk('C2', 'mechanic', 'Mech Two');
+check('a mechanic edits his own card, not another\'s', (await run('C', `update ms_job_cards set status = 'done', out_on = in_on where id = $1 returning status`, [j1[0].id]))[0]?.status === 'done'
+  && (await run('C2', `update ms_job_cards set status = 'open' where id = $1 returning id`, [j1[0].id])).length === 0, null);
+check('a storekeeper edits any card', (await run('K', `update ms_job_cards set supervisor = 'Boss' where id = $1 returning supervisor`, [j1[0].id]))[0]?.supervisor === 'Boss', null);
+const lj = await run('V', `select action, tbl from ms_log where row_id = $1 order by at`, [j1[0].id]);
+check('the job card in the log: added, edited', Array.isArray(lj) && lj[0].tbl === 'job_card' && lj.some(l => l.action === 'edit'), lj);
+check('a mechanic cannot delete a card, an admin can', (await run('C', `delete from ms_job_cards where id = $1 returning id`, [j2[0].id])).length === 0
+  && (await run('A', `delete from ms_job_cards where id = $1 returning id`, [j2[0].id])).length === 1, null);
+check('ms_job_cards_before_write and ms_site_equipment_before_write are internal', !(await one(`select has_function_privilege('authenticated', 'ms_job_cards_before_write()', 'execute') x`)).x
+  && !(await one(`select has_function_privilege('authenticated', 'ms_site_equipment_before_write()', 'execute') x`)).x, null);
+check('anon reaches neither', !(await one(`select has_table_privilege('anon', 'public.ms_job_cards', 'select') x`)).x && !(await one(`select has_table_privilege('anon', 'public.ms_site_equipment', 'select') x`)).x, null);
+const r4 = await runFile('schema.sql');
+check('schema.sql runs again over them: the lines and the cards kept', !r4.err && (await one(`select count(*)::int n from ms_site_equipment`)).n === 759 && (await one(`select count(*)::int n from ms_job_cards`)).n === 1, r4.err);
+
 console.log(`\n${T.filter(Boolean).length} of ${T.length} passed`);
 process.exit(T.every(Boolean) ? 0 : 1);

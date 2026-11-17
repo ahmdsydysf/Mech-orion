@@ -81,6 +81,34 @@ const I18N = {
     thCode: "الكود", thItem: "الصنف", thPart: "رقم القطعة", thQty: "الكمية", thUnit: "الوحدة", thShelf: "الرف", thMin: "الحد", thNo: "رقم", thKind: "النوع", thDate: "التاريخ", thTo: "إلى / من", thBy: "بواسطة",
     ppStock: "جرد المخزون", ppMoves: "تقرير حركات المخزن", ppMove: "سند {k}", sigStore: "أمين المخزن", sigRecv: "المستلم", sigApprove: "اعتماد المدير", printed: "طُبع",
     ppItems: "أصناف", ppUnits: "فيها رصيد", ppLow: "تحت الحد", ppPeriod: "{a} — {b}", close: "إغلاق", loading: "جارٍ التحميل…", readOnly: "اطلاع فقط",
+    navJobs: "الصيانة", jbCardsP: "🔧 كروت الصيانة", jbEquipP: "🏗 معدات المواقع",
+    jbDesc: "كارت عمل لكل دخول معدة أو مركبة للورشة: الزيوت والفلاتر والأعطال وقطع الغيار — يُحفظ في النظام ويُطبع أو يُحفظ PDF في أي وقت.",
+    jbNew: "＋ كارت صيانة جديد", jbSearch: "ابحث برقم الكارت أو اللوحة أو المعدة أو السائق", jbOpen: "مفتوحة", jbDone: "مكتملة", jbAll: "الكل", jbNone: "لا كروت صيانة بعد",
+    jbNewT: "كارت صيانة جديد", jbEditT: "تعديل {no}", jbSaved: "تم حفظ الكارت {no} ✓", jbStOpen: "مفتوح", jbStDone: "مكتمل",
+    jsVehicle: "بيانات المركبة / المعدة", jsTimes: "الدخول والخروج", jsCond: "الحالة عند الاستلام", jsChecks: "فحص السلامة", jsOils: "الزيوت والسوائل", jsFilters: "الفلاتر",
+    jsWork: "نوع الصيانة المطلوب", jsDiag: "الملاحظات والتشخيص الفني", jsParts: "قطع الغيار والمواد المطلوبة", jsSign: "التوقيعات", jsNotes: "الملاحظات والتوصيات النهائية",
+    jfSite: "الموقع / المشروع", jfNoSite: "— الورشة (بدون موقع) —", jfPlate: "رقم اللوحة / رمز المعدة", jfMake: "الماركة والموديل", jfType: "نوع المركبة / المعدة", jfDriver: "اسم السائق / المشغل",
+    jfInOn: "تاريخ الدخول", jfOutOn: "تاريخ الخروج", jfTime: "الوقت", jfReading: "قراءة العداد", ru_km: "كم", ru_hr: "ساعة", jfFuel: "مستوى الوقود", jfLinked: "مرتبط بمعدة الموقع: {n}",
+    ck_tyres: "الإطارات", ck_brakes: "الفرامل", ck_lights: "الأنوار", ck_horn: "البوق (الهرن)", ck_mirrors: "المرايات", ck_seatbelt: "حزام الأمان", ck_extinguisher: "طفاية الحريق", ck_leaks: "خلوّ من التسريبات",
+    ckHint: "اضغط مرة: سليم ✓ · مرتين: يحتاج إصلاح ✗ · ثلاثًا: لم يُفحص", ckOk: "سليم", ckBad: "يحتاج إصلاح", ckNa: "لم يُفحص",
+    o_hydraulic: "زيت هيدروليك", o_diesel_engine: "زيت محرك ديزل", o_petrol_engine: "زيت محرك بنزين", o_gear: "زيت جير / ناقل الحركة", o_coolant: "سائل تبريد المحرك", jfLitres: "لتر", jfNote: "ملاحظة",
+    fl_hydraulic: "فلتر هيدروليك", fl_oil: "فلتر زيت المحرك", fl_fuel: "فلتر ديزل / وقود", fl_air: "فلتر الهواء", fl_cabin: "فلتر المكيف", jfPartNo: "رقم القطعة", jfAction: "الإجراء",
+    ac_change: "تغيير", ac_clean: "تنظيف", thOil: "الزيت / السائل", thFilter: "الفلتر",
+    w_mechanical: "ميكانيك", w_electrical: "كهرباء", w_hydraulic: "نظام هيدروليك وضغط", w_routine: "صيانة دورية", w_field: "إصلاح أعطال ميدانية",
+    jfMech: "الفني المسؤول", jfFleet: "مسؤول الحركة / الأسطول", jfSup: "اعتماد مهندس الورشة",
+    jbPrint: "🖨️ طباعة / حفظ PDF", jbEdit: "✎ تعديل", jbMarkDone: "✓ إغلاق الكارت (مكتمل)", jbReopen: "↺ إعادة فتح", jbIssue: "⬆ صرف الفلاتر من المخزن", jbDelete: "🗑 حذف الكارت",
+    jbDelQ: "اضغط مرة أخرى لحذف {no} نهائيًا", jbDoneT: "أُغلق الكارت ✓", jbReopenT: "أُعيد فتح الكارت ✓", jbBy: "فتحه {n} · {d}", jbNoFilters: "لا فلتر في الكارت يطابق صنفًا في المخزن",
+    ppJob: "كارت عمل صيانة", ppJobSub: "صيانة الأسطول · الزيوت والفلاتر", ppJobNo: "رقم الكارت", policyT: "تعليمات الصيانة الداخلية",
+    pol1: "يبلغ السائق / المشغل قسم الصيانة فور ظهور أي عطل أو تسريب.", pol2: "تُستلم المعدة وتُسلَّم من وإلى الورشة بتوقيع السائق ومسؤول الحركة.",
+    pol3: "لا صيانة ولا تعديل خارج ورش الشركة إلا بإذن خطي من مهندس الصيانة والأسطول.", sigDate: "التاريخ", sigSign: "التوقيع",
+    seDesc: "المعدات والعُدد الموجودة في كل موقع (من شيت SITE EQUIPMENT) — للمتابعة، ولفتح كارت صيانة لأي معدة منها.", seSearch: "ابحث باسم المعدة أو الرقم أو المستلم",
+    seAll: "كل المواقع", seNone: "لا معدات مسجلة", seAdd: "＋ إضافة معدة لموقع", sePdf: "🖨️ كشف معدات الموقع PDF", seNewT: "معدة جديدة في موقع", seEditT: "تعديل المعدة",
+    seName: "اسم المعدة", seRef: "الرقم / اللوحة / القدرة", seQty: "العدد", seSentOn: "تاريخ الإرسال", seTag: "الحالة", seSection: "القسم", seRemarks: "ملاحظات", seRecv: "المستلم",
+    tg_new: "جديد", tg_extra: "إضافي", tg_returned: "مُرجَع", tg_rent: "إيجار", tg_balance: "رصيد متبقٍ", sec_civil: "مدني", sec_mep: "MEP",
+    seLines: "{n} سطر · {u} قطعة", seSaved: "تم حفظ المعدة ✓", seJob: "🔧 كارت صيانة لهذه المعدة", seDel: "🗑 حذف السطر", seDelQ: "اضغط مرة أخرى للحذف", sePickSite: "اختر الموقع أولًا",
+    ppSiteEq: "كشف معدات الموقع", pjEquip: "🏗 معدات الموقع", thSite: "الموقع", thRef: "الرقم", thRecv: "المستلم", thRemarks: "ملاحظات",
+    errJobWhat: "اكتب رقم اللوحة أو الماركة والموديل", errJobInvalid: "بيانات الكارت غير صحيحة — راجع الزيوت والفلاتر", errOutBeforeIn: "تاريخ الخروج قبل تاريخ الدخول",
+    errReading: "قراءة العداد غير صحيحة", errRefLong: "الرقم طويل جدًا", errPlateLong: "رقم اللوحة طويل جدًا", lg_site_equipment: "معدة موقع", lg_job_card: "كارت صيانة",
   },
   en: {
     dir: "ltr", locale: "en-GB",
@@ -160,6 +188,34 @@ const I18N = {
     thCode: "Code", thItem: "Item", thPart: "Part no.", thQty: "Qty", thUnit: "Unit", thShelf: "Shelf", thMin: "Min", thNo: "No.", thKind: "Type", thDate: "Date", thTo: "To / from", thBy: "By",
     ppStock: "Stock count sheet", ppMoves: "Store movements report", ppMove: "{k} voucher", sigStore: "Storekeeper", sigRecv: "Received by", sigApprove: "Manager's approval", printed: "Printed",
     ppItems: "Items", ppUnits: "In stock", ppLow: "Below minimum", ppPeriod: "{a} — {b}", close: "Close", loading: "Loading…", readOnly: "View only",
+    navJobs: "Maintenance", jbCardsP: "🔧 Job cards", jbEquipP: "🏗 Site equipment",
+    jbDesc: "A job card for every vehicle or machine that comes into the workshop: the oils and filters, the faults, the parts — stored, and printed or saved as PDF at any time.",
+    jbNew: "＋ New job card", jbSearch: "Search by card no., plate, machine or driver", jbOpen: "Open", jbDone: "Done", jbAll: "All", jbNone: "No job cards yet",
+    jbNewT: "New job card", jbEditT: "Edit {no}", jbSaved: "Job card {no} saved ✓", jbStOpen: "Open", jbStDone: "Done",
+    jsVehicle: "Vehicle & equipment", jsTimes: "In & out", jsCond: "Condition on arrival", jsChecks: "Safety checks", jsOils: "Oils & fluids", jsFilters: "Filters",
+    jsWork: "Work required", jsDiag: "Remarks & diagnosis", jsParts: "Spare parts required", jsSign: "Sign-off", jsNotes: "Final notes & recommendations",
+    jfSite: "Site / project", jfNoSite: "— Workshop (no site) —", jfPlate: "Plate / equipment ID", jfMake: "Make & model", jfType: "Vehicle / equipment type", jfDriver: "Driver / operator",
+    jfInOn: "Date in", jfOutOn: "Date out", jfTime: "Time", jfReading: "Km / hours reading", ru_km: "km", ru_hr: "hours", jfFuel: "Fuel level", jfLinked: "Linked to site equipment: {n}",
+    ck_tyres: "Tyres", ck_brakes: "Brakes", ck_lights: "Lights", ck_horn: "Horn", ck_mirrors: "Mirrors", ck_seatbelt: "Seat belt", ck_extinguisher: "Fire extinguisher", ck_leaks: "No leaks",
+    ckHint: "Tap once: OK ✓ · twice: needs fixing ✗ · three times: not checked", ckOk: "OK", ckBad: "Needs fixing", ckNa: "Not checked",
+    o_hydraulic: "Hydraulic oil", o_diesel_engine: "Diesel engine oil", o_petrol_engine: "Petrol engine oil", o_gear: "Gear / transmission oil", o_coolant: "Coolant / water", jfLitres: "L", jfNote: "Note",
+    fl_hydraulic: "Hydraulic filter", fl_oil: "Engine oil filter", fl_fuel: "Diesel / fuel filter", fl_air: "Air filter", fl_cabin: "Cabin / A/C filter", jfPartNo: "Part no.", jfAction: "Action",
+    ac_change: "Change", ac_clean: "Clean", thOil: "Oil / fluid", thFilter: "Filter",
+    w_mechanical: "Mechanical repair", w_electrical: "Electrical repair", w_hydraulic: "Hydraulic system", w_routine: "Routine service", w_field: "Field maintenance",
+    jfMech: "Responsible technician", jfFleet: "Fleet officer", jfSup: "Workshop supervisor",
+    jbPrint: "🖨️ Print / save PDF", jbEdit: "✎ Edit", jbMarkDone: "✓ Close the card (done)", jbReopen: "↺ Reopen", jbIssue: "⬆ Issue the filters from stock", jbDelete: "🗑 Delete the card",
+    jbDelQ: "Tap again to delete {no} for good", jbDoneT: "Card closed ✓", jbReopenT: "Card reopened ✓", jbBy: "Opened by {n} · {d}", jbNoFilters: "No filter on the card matches a stock item",
+    ppJob: "Job card", ppJobSub: "Fleet maintenance · oils & filters", ppJobNo: "Card no.", policyT: "Internal maintenance policy",
+    pol1: "The driver / operator reports any fault or leak to the maintenance section at once.", pol2: "A machine enters and leaves the workshop against the signatures of the driver and the fleet officer.",
+    pol3: "No repair or change outside the company's workshops without the fleet engineer's written approval.", sigDate: "Date", sigSign: "Signature",
+    seDesc: "The machines and tools at each site (from the SITE EQUIPMENT sheet) — to follow them up, and to open a job card for any of them.", seSearch: "Search by machine, number or receiver",
+    seAll: "All sites", seNone: "No equipment recorded", seAdd: "＋ Add equipment to a site", sePdf: "🖨️ Site equipment sheet PDF", seNewT: "New site equipment", seEditT: "Edit the equipment",
+    seName: "Equipment", seRef: "No. / plate / rating", seQty: "Qty", seSentOn: "Date sent", seTag: "Status", seSection: "Section", seRemarks: "Remarks", seRecv: "Received by",
+    tg_new: "New", tg_extra: "Extra", tg_returned: "Returned", tg_rent: "Rent", tg_balance: "Balance", sec_civil: "Civil", sec_mep: "MEP",
+    seLines: "{n} lines · {u} pcs", seSaved: "Equipment saved ✓", seJob: "🔧 Job card for this machine", seDel: "🗑 Delete the line", seDelQ: "Tap again to delete", sePickSite: "Pick the site first",
+    ppSiteEq: "Site equipment sheet", pjEquip: "🏗 Site equipment", thSite: "Site", thRef: "No.", thRecv: "Received by", thRemarks: "Remarks",
+    errJobWhat: "Type the plate or the make & model", errJobInvalid: "Invalid card data — check the oils and filters", errOutBeforeIn: "The date out is before the date in",
+    errReading: "Invalid reading", errRefLong: "The number is too long", errPlateLong: "The plate is too long", lg_site_equipment: "Site equipment", lg_job_card: "Job card",
   },
 };
 let lang = localStorage.getItem('lang') || 'ar'; if (!I18N[lang]) lang = 'ar';
@@ -182,7 +238,7 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.09-2';
+const APP_VERSION = '2026.11.17-1';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
@@ -190,10 +246,13 @@ const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\
 // (the Edge Function says ADMIN_ONLY); deputy («admin» on screen): the same, one more step below — never an admin's nor a
 // manager's account (MANAGER_ONLY); storekeeper: items and movements; mechanic and viewer read. The server says the same
 // (ms_editor / ms_admin / ms_reader in supabase/schema.sql), and a stopped account (profiles.active = false) reads nothing.
-const TABS = { admin: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], manager: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], deputy: ['stock', 'projects', 'move', 'moves', 'filters', 'users'], storekeeper: ['stock', 'projects', 'move', 'moves', 'filters'], mechanic: ['stock', 'projects', 'moves', 'filters'], viewer: ['stock', 'projects', 'moves', 'filters'] };
+const TABS = { admin: ['stock', 'projects', 'move', 'moves', 'filters', 'jobs', 'users'], manager: ['stock', 'projects', 'move', 'moves', 'filters', 'jobs', 'users'], deputy: ['stock', 'projects', 'move', 'moves', 'filters', 'jobs', 'users'], storekeeper: ['stock', 'projects', 'move', 'moves', 'filters', 'jobs'], mechanic: ['stock', 'projects', 'moves', 'filters', 'jobs'], viewer: ['stock', 'projects', 'moves', 'filters', 'jobs'] };
 const ROLE_LIST = ['admin', 'manager', 'deputy', 'storekeeper', 'mechanic', 'viewer'];
 const canEdit = () => !!profile && profile.active !== false && ['storekeeper', 'deputy', 'manager', 'admin'].includes(profile.role);
 const canAdmin = () => !!profile && profile.active !== false && ['admin', 'manager', 'deputy'].includes(profile.role);
+// a job card: the mechanics write theirs, the editors any (ms_jobber in schema.sql); the viewer reads
+const canJob = () => !!profile && profile.active !== false && ['mechanic', 'storekeeper', 'deputy', 'manager', 'admin'].includes(profile.role);
+const canEditJob = c => canEdit() || (canJob() && !!c && c.created_by === userId);
 // the roles above mine: I never touch such an account nor give such a role (a manager: the admin; a deputy: the admin, the manager)
 const ABOVE = { admin: [], manager: ['admin'], deputy: ['admin', 'manager'] };
 const above = () => (profile && ABOVE[profile.role]) || ROLE_LIST;
@@ -249,6 +308,15 @@ class StoreRepository {
   delItem(id) { return this.#some(this.#db.from('ms_items').delete().eq('id', id).select('id')); }
   addStore(row) { return this.#one(this.#db.from('ms_stores').insert(row).select().single()); }
   updStore(id, patch) { return this.#some(this.#db.from('ms_stores').update(patch).eq('id', id).select()); }
+  // the equipment at the sites (a register, never stock) and the maintenance job cards
+  siteEquipment() { return this.#paged(() => this.#db.from('ms_site_equipment').select('*').order('store_id').order('sort')); }
+  addSiteEq(row) { return this.#one(this.#db.from('ms_site_equipment').insert(row).select().single()); }
+  updSiteEq(id, patch) { return this.#some(this.#db.from('ms_site_equipment').update(patch).eq('id', id).select()); }
+  delSiteEq(id) { return this.#some(this.#db.from('ms_site_equipment').delete().eq('id', id).select('id')); }
+  jobCards() { return this.#paged(() => this.#db.from('ms_job_cards').select('*').order('seq', { ascending: false })); }
+  addJob(row) { return this.#one(this.#db.from('ms_job_cards').insert(row).select().single()); }
+  updJob(id, patch) { return this.#some(this.#db.from('ms_job_cards').update(patch).eq('id', id).select()); }
+  delJob(id) { return this.#some(this.#db.from('ms_job_cards').delete().eq('id', id).select('id')); }
   async changePassword(password) { const { error } = await this.#db.auth.updateUser({ password }); if (error) throw error; }
 }
 const repo = CONFIGURED ? new StoreRepository(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
@@ -294,7 +362,8 @@ const errText = e => { const m = String(e?.message ?? e ?? ''), code = String(e?
     MS_STORE_INACTIVE: 'errStoreInactive', MS_DATE_FUTURE: 'errDateFuture', MS_DATE_OLD: 'errDateOld', MS_WHO_REQUIRED: 'errWho', MS_LINES_REQUIRED: 'errLines',
     MS_TOO_MANY_LINES: 'errTooMany', MS_ITEM_UNKNOWN: 'errItemUnknown', MS_NOTHING_CHANGED: 'errNothing', MS_REASON_REQUIRED: 'errReason', MS_ALREADY_VOID: 'errAlreadyVoid',
     MS_ITEM_IN_USE: 'errItemInUse', MS_STORE_IN_USE: 'errStoreInUse', MS_MOVE_UNKNOWN: 'errMoveUnknown', MS_MAIN_STORE: 'errMainStore', MS_STORE_CODE_DUP: 'errStoreCodeDup',
-    MS_CODE_TOO_LONG: 'errCodeLong', MS_LOCATION_TOO_LONG: 'errLocationLong', MS_PROJECT_HAS_STOCK: 'errProjectHasStock', MS_PROJECT_CLOSED: 'errProjectClosed' };
+    MS_CODE_TOO_LONG: 'errCodeLong', MS_LOCATION_TOO_LONG: 'errLocationLong', MS_PROJECT_HAS_STOCK: 'errProjectHasStock', MS_PROJECT_CLOSED: 'errProjectClosed',
+    MS_JOB_WHAT_REQUIRED: 'errJobWhat', MS_JOB_INVALID: 'errJobInvalid', MS_OUT_BEFORE_IN: 'errOutBeforeIn', MS_READING_INVALID: 'errReading', MS_REF_TOO_LONG: 'errRefLong', MS_PLATE_TOO_LONG: 'errPlateLong' };
   for (const k in M) if (m.includes(k)) return t(M[k]);
   if (/MS_FORBIDDEN|FORBIDDEN|row-level security|permission denied|not allowed/i.test(m)) return t('errForbidden');
   if (code === '23505' || /duplicate key|unique/i.test(m)) return t('errDup');
@@ -357,6 +426,8 @@ const MV = { kind: 'issue', lines: [] };               // the movement being wri
 const HS = { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [], seq: 0 };
 const FT = { q: '', grp: 'all' };
 const PJ = { q: '', show: 'open', sum: {}, seq: 0 };   // the projects screen: search, open / closed, ms_store_summary by store id
+const JB = { pane: 'cards', q: '', show: 'open', rows: [], loaded: false, seq: 0, err: '' };   // the maintenance screen: its pane, the job cards
+const SE = { site: 'all', q: '', rows: [], loaded: false, n: 120, seq: 0, err: '' };      // the site equipment: the site on show, the search
 const CATS = ['machine', 'tool', 'consumable', 'oil', 'filter', 'spare'];
 const UNITS = ['pcs', 'set', 'pair', 'roll', 'box', 'can', 'drum', 'litre', 'kg', 'm'];
 const FTYPES = ['oil', 'fuel', 'water_sep', 'air', 'cabin'];
@@ -728,6 +799,7 @@ async function openProject(id) {
       <div class="row2b"><button type="button" class="ghost" id="pjGoBackAll">${esc(t('pjBackAll'))}</button><button type="button" class="ghost" id="pjGoIssue">${esc(t('pjIssue'))}</button></div>` : ''}
     ${canAdmin() ? `<div class="row2b"><button type="button" class="ghost" id="pjEditB">${esc(t('pjEdit'))}</button><button type="button" class="ghost" id="pjTogB">${esc(t(s.active ? 'pjClose' : 'pjReopen'))}</button></div>
       ${s.active && held.length ? `<div class="hint">${esc(t('pjCloseHint'))}</div>` : ''}` : ''}
+    <button type="button" class="ghost" id="pjEquipB">${esc(t('pjEquip'))}</button>
     <div class="lhead"><span>${esc(t('pjStockT'))}</span><span class="n">${held.length}</span></div>
     ${held.length ? `<div class="card" style="margin-top:6px">${held.map(i => `<div class="kv"><span>${esc(i.name)} <small class="muted ltr">${esc(i.code)}</small></span><b>${esc(qtyTxt(qtyIn(i, id), i.unit))}</b></div>`).join('')}</div>
       <button type="button" class="ghost" id="pjPdfB">${esc(t('pjPdf'))}</button>` : `<div class="muted">${esc(t('pjEmpty'))}</div>`}
@@ -748,12 +820,276 @@ async function openProject(id) {
       catch (e) { msg('editMsg', errText(e), 'err'); } finally { if ($('pjTogB')) busy($('pjTogB'), false); } };
   }
   if ($('pjPdfB')) $('pjPdfB').onclick = () => stockPdf(id, held);
+  $('pjEquipB').onclick = () => { Edit.close(); JB.pane = 'equip'; SE.site = id; SE.q = ''; $('seSearch').value = ''; openTab('jobs', true); };
   try {
     const rows = await repo.movesIn('2020-01-01', dubaiToday(), id);
     if (!$('pjMoves') || $('editTitle').textContent !== '🏗 ' + s.name) return;
     $('pjMoves').innerHTML = rows.length ? rows.slice(0, 50).map(moveRow).join('') : `<div class="muted">${esc(t('pjNoMoves'))}</div>`;
     $('pjMoves').onclick = e => { const r = e.target.closest('.frow'); if (r) openMove(r.dataset.id, rows); };
   } catch (e) { if ($('pjMoves')) $('pjMoves').innerHTML = `<div class="msg err">${esc(errText(e))}</div>`; }
+}
+
+/* ---------------- 8c) الصيانة: كروت العمل ومعدات المواقع ---------------- */
+// A job card (ms_job_cards) is the workshop's record of one visit: the vehicle or the machine, in and out, the reading and the fuel,
+// the safety checks, the oils and the filters, the work, the diagnosis, the parts, the names that sign. The server numbers it
+// (JC-000001), checks every key and value, and lets a mechanic edit his own cards only; the page prints it on Orion's own paper (jobPdf).
+// The site equipment (ms_site_equipment) is the owner's sheet of what each site holds — a register beside the stock, never moving it.
+const OILS = ['hydraulic', 'diesel_engine', 'petrol_engine', 'gear', 'coolant'];
+const JFILTERS = ['hydraulic', 'oil', 'fuel', 'air', 'cabin'];
+const CHECKS = ['tyres', 'brakes', 'lights', 'horn', 'mirrors', 'seatbelt', 'extinguisher', 'leaks'];
+const WORKS = ['mechanical', 'electrical', 'hydraulic', 'routine', 'field'];
+const FUELS = [0, 25, 50, 75, 100];
+const SETAGS = ['new', 'extra', 'returned', 'rent', 'balance'];
+const fuelLbl = v => ({ 0: 'E', 25: '¼', 50: '½', 75: '¾', 100: 'F' })[v] ?? '—';
+const hhmm = v => v ? String(v).slice(0, 5) : '';
+const jobOf = id => JB.rows.find(c => c.id === id) || null;
+const seOf = id => SE.rows.find(r => r.id === id) || null;
+const jobWhat = c => [c.plate, c.make_model, c.eq_type].filter(Boolean).join(' · ') || (seOf(c.site_equipment_id)?.name ?? '—');
+async function loadJobs() {
+  const seq = ++JB.seq;
+  try { const rows = await repo.jobCards(); if (seq !== JB.seq) return; JB.rows = rows; JB.loaded = true; JB.err = ''; }
+  catch (e) { if (seq !== JB.seq) return; JB.err = errText(e); }
+  if (JB.pane === 'cards') renderJobList();
+}
+async function loadSiteEq() {
+  const seq = ++SE.seq;
+  try { const rows = await repo.siteEquipment(); if (seq !== SE.seq) return; SE.rows = rows; SE.loaded = true; SE.err = ''; }
+  catch (e) { if (seq !== SE.seq) return; SE.err = errText(e); }
+  if (JB.pane === 'equip') renderSiteEq();
+}
+function renderJobs() {
+  document.querySelectorAll('#jbPane button').forEach(b => b.classList.toggle('on', b.dataset.p === JB.pane));
+  $('jbCards').classList.toggle('hidden', JB.pane !== 'cards'); $('jbEquip').classList.toggle('hidden', JB.pane !== 'equip');
+  $('btnJbNew').classList.toggle('hidden', !canJob()); $('btnSeAdd').classList.toggle('hidden', !canEdit());
+  if (JB.pane === 'cards') { if (!JB.loaded) { $('jbList').innerHTML = skeleton(4); loadJobs(); } else renderJobList(); if (!SE.loaded) loadSiteEq(); }
+  else { if (!SE.loaded) { $('seList').innerHTML = skeleton(5); loadSiteEq(); } else renderSiteEq(); }
+}
+function jobRows() {
+  const q = JB.q.trim().toLowerCase(), k = nkey(q);
+  return JB.rows.filter(c => (JB.show === 'all' || c.status === JB.show)
+    && (!q || [c.no, c.make_model, c.eq_type, c.driver, c.mechanic, c.diagnosis, storeOf(c.store_id)?.name].some(x => String(x || '').toLowerCase().includes(q)) || (k && (nkey(c.plate).includes(k) || nkey(c.no).includes(k)))));
+}
+function jobRow(c) {
+  const st = storeOf(c.store_id);
+  return `<div class="frow job ${c.status === 'done' ? 'done' : ''}" data-id="${esc(c.id)}"><div class="fb">
+    <div class="fn"><span class="oid">${esc(c.no)}</span> ${c.plate ? plateHtml(c.plate) : ''} ${esc([c.make_model, c.eq_type].filter(Boolean).join(' · '))}</div>
+    <div class="fs">${esc(dSlash(c.in_on))}${c.out_on ? ' → ' + esc(dSlash(c.out_on)) : ''}${st ? ` · ${esc(storeLbl(st))}` : ''}${c.driver ? ` · ${esc(c.driver)}` : ''}</div>
+    ${(c.work || []).length ? `<div class="fs">${c.work.map(w => `<span class="kpill f">${esc(t('w_' + w))}</span>`).join('')}</div>` : ''}
+    ${c.diagnosis ? `<div class="fx">${esc(String(c.diagnosis).slice(0, 140))}</div>` : ''}</div>
+    <div class="fa"><span class="pill ${c.status === 'done' ? 'ok' : 'warn'}">${esc(t(c.status === 'done' ? 'jbStDone' : 'jbStOpen'))}</span><small class="muted">${esc(c.mechanic || c.created_by_name || '')}</small></div></div>`;
+}
+function renderJobList() {
+  const n = v => JB.rows.filter(c => v === 'all' || c.status === v).length;
+  $('jbShow').innerHTML = ['open', 'done', 'all'].map(v => `<button type="button" class="chip ${JB.show === v ? 'on' : ''}" data-v="${v}">${esc(t(v === 'open' ? 'jbOpen' : v === 'done' ? 'jbDone' : 'jbAll'))} <small>${n(v)}</small></button>`).join('');
+  if (JB.err) { $('jbList').innerHTML = `<div class="msg err">${esc(JB.err)}</div>`; return; }
+  const rows = jobRows();
+  $('jbList').innerHTML = rows.length ? rows.map(jobRow).join('') : `<div class="empty">${esc(t(JB.rows.length ? 'noMatch' : 'jbNone'))}</div>`;
+}
+$('jbPane').onclick = e => { const b = e.target.closest('button'); if (!b) return; JB.pane = b.dataset.p; renderJobs(); };
+$('jbShow').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; JB.show = b.dataset.v; renderJobList(); };
+$('jbSearch').oninput = e => { JB.q = e.target.value; renderJobList(); };
+$('jbList').onclick = e => { const r = e.target.closest('.frow'); if (r) openJob(r.dataset.id); };
+$('btnJbNew').onclick = () => { if (canJob()) jobSheet(null); };
+
+// the form: one sheet, the paper's sections in its order
+const JF = { checks: {}, work: [], fuel: null };
+const secH = (n, k) => `<div class="jsec"><span>${String(n).padStart(2, '0')}</span><b>${esc(t(k))}</b></div>`;
+function jobFormHtml(c, pre) {
+  const v = k => esc(c?.[k] ?? pre?.[k] ?? '');
+  const sites = STORES.filter(s => s.active || s.id === (c?.store_id ?? pre?.store_id));
+  const cur = c?.store_id ?? pre?.store_id ?? '';
+  const se = seOf(c?.site_equipment_id ?? pre?.site_equipment_id);
+  const parts = [...new Set(STOCK.filter(i => i.category === 'filter' && i.part_no).map(i => i.part_no))];
+  const oil = o => (c?.oils || []).find(x => x.type === o) || {}, flt = f => (c?.filters || []).find(x => x.type === f) || {};
+  return `${secH(1, 'jsVehicle')}
+    ${se ? `<div class="infobox">${esc(t('jfLinked', { n: [se.name, se.ref].filter(Boolean).join(' · ') + ' — ' + storeName(se.store_id) }))}</div>` : ''}
+    <label for="jfSite">${esc(t('jfSite'))}</label><select id="jfSite"><option value="">${esc(t('jfNoSite'))}</option>${sites.map(s => `<option value="${esc(s.id)}" ${s.id === cur ? 'selected' : ''}>${esc(storeLbl(s))}${s.code ? ' — ' + esc(s.code) : ''}</option>`).join('')}</select>
+    <div class="row"><div><label for="jfPlate">${esc(t('jfPlate'))}</label><input id="jfPlate" class="ltr" maxlength="30" list="jfPlates" autocapitalize="characters" autocomplete="off" value="${v('plate')}">
+      <datalist id="jfPlates">${EQUIP.filter(e => e.plate).map(e => `<option value="${esc(e.plate)}">${esc([e.grp, e.name].filter(Boolean).join(' · '))}</option>`).join('')}</datalist></div>
+      <div><label for="jfMake">${esc(t('jfMake'))}</label><input id="jfMake" maxlength="80" autocomplete="off" value="${v('make_model')}"></div></div>
+    <div class="row"><div><label for="jfType">${esc(t('jfType'))}</label><input id="jfType" maxlength="80" autocomplete="off" value="${v('eq_type')}"></div>
+      <div><label for="jfDriver">${esc(t('jfDriver'))}</label><input id="jfDriver" maxlength="80" autocomplete="off" value="${v('driver')}"></div></div>
+    ${secH(2, 'jsTimes')}
+    <div class="row"><div><label for="jfInOn">${esc(t('jfInOn'))}</label><input id="jfInOn" type="date" max="${dubaiToday()}" value="${esc(c?.in_on || dubaiToday())}"></div>
+      <div><label for="jfInTime">${esc(t('jfTime'))}</label><input id="jfInTime" type="time" value="${esc(hhmm(c?.in_time))}"></div></div>
+    <div class="row"><div><label for="jfOutOn">${esc(t('jfOutOn'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="jfOutOn" type="date" max="${dubaiToday()}" value="${esc(c?.out_on || '')}"></div>
+      <div><label for="jfOutTime">${esc(t('jfTime'))}</label><input id="jfOutTime" type="time" value="${esc(hhmm(c?.out_time))}"></div></div>
+    ${secH(3, 'jsCond')}
+    <div class="row"><div><label for="jfReading">${esc(t('jfReading'))}</label><input id="jfReading" class="ltr" inputmode="decimal" autocomplete="off" value="${c?.reading != null ? esc(fmtQ(c.reading).replace(/,/g, '')) : ''}"></div>
+      <div><label for="jfUnit">&nbsp;</label><select id="jfUnit">${['km', 'hr'].map(u => `<option value="${u}" ${(c?.reading_unit || 'km') === u ? 'selected' : ''}>${esc(t('ru_' + u))}</option>`).join('')}</select></div></div>
+    <label>${esc(t('jfFuel'))}</label><div class="segment fuel" id="jfFuel">${FUELS.map(f => `<button type="button" data-v="${f}">${fuelLbl(f)}</button>`).join('')}</div>
+    <label>${esc(t('jsChecks'))}</label><div class="ckgrid" id="jfChecks">${CHECKS.map(k => `<button type="button" class="ckc" data-k="${k}"><i></i><span>${esc(t('ck_' + k))}</span></button>`).join('')}</div>
+    <div class="hint">${esc(t('ckHint'))}</div>
+    ${secH(4, 'jsOils')}
+    ${OILS.map(o => `<div class="jline"><span>${esc(t('o_' + o))}</span><input id="jo_${o}" class="ltr" inputmode="decimal" placeholder="${esc(t('jfLitres'))}" autocomplete="off" value="${oil(o).qty != null ? esc(oil(o).qty) : ''}"><input id="jn_${o}" maxlength="120" placeholder="${esc(t('jfNote'))}" autocomplete="off" value="${esc(oil(o).note || '')}"></div>`).join('')}
+    ${secH(5, 'jsFilters')}
+    <datalist id="jfParts">${parts.map(p => `<option value="${esc(p)}"></option>`).join('')}</datalist>
+    ${JFILTERS.map(f => `<div class="jline"><span>${esc(t('fl_' + f))}</span><input id="jp_${f}" class="ltr" maxlength="40" list="jfParts" placeholder="${esc(t('jfPartNo'))}" autocapitalize="characters" autocomplete="off" value="${esc(flt(f).part_no || '')}">
+      <select id="ja_${f}"><option value="">—</option>${['change', 'clean'].map(a => `<option value="${a}" ${flt(f).type && (flt(f).action || 'change') === a ? 'selected' : ''}>${esc(t('ac_' + a))}</option>`).join('')}</select></div>`).join('')}
+    ${secH(6, 'jsWork')}
+    <div class="chips wrap" id="jfWork">${WORKS.map(w => `<button type="button" class="chip" data-v="${w}">${esc(t('w_' + w))}</button>`).join('')}</div>
+    ${secH(7, 'jsDiag')}<textarea id="jfDiag" rows="3" maxlength="2000">${v('diagnosis')}</textarea>
+    <label for="jfParts2">${esc(t('jsParts'))}</label><textarea id="jfParts2" rows="3" maxlength="2000">${v('parts')}</textarea>
+    ${secH(8, 'jsSign')}
+    <div class="row"><div><label for="jfMech">${esc(t('jfMech'))}</label><input id="jfMech" maxlength="80" autocomplete="off" value="${esc(c?.mechanic ?? pre?.mechanic ?? (profile?.role === 'mechanic' ? profile.name : ''))}"></div>
+      <div><label for="jfFleet">${esc(t('jfFleet'))}</label><input id="jfFleet" maxlength="80" autocomplete="off" value="${v('fleet_officer')}"></div></div>
+    <label for="jfSup">${esc(t('jfSup'))}</label><input id="jfSup" maxlength="80" autocomplete="off" value="${v('supervisor')}">
+    <label for="jfNotes">${esc(t('jsNotes'))}<span class="opt-t">${esc(t('optional'))}</span></label><textarea id="jfNotes" rows="2" maxlength="1000">${v('final_notes')}</textarea>`;
+}
+function jfPaint() {
+  document.querySelectorAll('#jfFuel button').forEach(b => b.classList.toggle('on', Number(b.dataset.v) === JF.fuel));
+  document.querySelectorAll('#jfChecks .ckc').forEach(b => { const s = JF.checks[b.dataset.k]; b.className = 'ckc ' + (s || ''); b.querySelector('i').textContent = s === 'ok' ? '✓' : s === 'bad' ? '✗' : ''; });
+  document.querySelectorAll('#jfWork .chip').forEach(b => b.classList.toggle('on', JF.work.includes(b.dataset.v)));
+}
+function jobRead(c, pre) {
+  const txt = id => $(id).value.trim();
+  const plate = txt('jfPlate'), make = txt('jfMake');
+  const se = c?.site_equipment_id ?? pre?.site_equipment_id ?? null;
+  if (!plate && !make && !se) throw new Error(t('errJobWhat'));
+  const rd = txt('jfReading'), reading = rd === '' ? null : qNum(rd); if (rd !== '' && !(reading >= 0)) throw new Error(t('errReading'));
+  const oils = OILS.map(o => { const q = txt('jo_' + o), note = txt('jn_' + o); if (q === '' && !note) return null; const n = q === '' ? null : qNum(q);
+    if (q !== '' && !(n >= 0)) throw new Error(t('errQty', { c: t('o_' + o) })); const r = { type: o }; if (n != null) r.qty = n; if (note) r.note = note; return r; }).filter(Boolean);
+  const filters = JFILTERS.map(f => { const p = txt('jp_' + f).toUpperCase(), a = $('ja_' + f).value; if (!p && !a) return null; const r = { type: f, action: a || 'change' }; if (p) r.part_no = p; return r; }).filter(Boolean);
+  const inOn = $('jfInOn').value || dubaiToday(), outOn = $('jfOutOn').value || null;
+  if (outOn && outOn < inOn) throw new Error(t('errOutBeforeIn'));
+  const eq = plate ? EQUIP.find(e => e.plate && nkey(e.plate) === nkey(plate)) : null;
+  return { store_id: $('jfSite').value || null, equipment_id: eq ? eq.id : null, site_equipment_id: se, plate: plate || null, make_model: make || null, eq_type: txt('jfType') || null, driver: txt('jfDriver') || null,
+    in_on: inOn, in_time: $('jfInTime').value || null, out_on: outOn, out_time: outOn ? ($('jfOutTime').value || null) : null,
+    reading, reading_unit: reading == null ? null : $('jfUnit').value, fuel: JF.fuel, checks: { ...JF.checks }, oils, filters, work: WORKS.filter(w => JF.work.includes(w)),
+    diagnosis: txt('jfDiag') || null, parts: txt('jfParts2') || null, final_notes: txt('jfNotes') || null,
+    mechanic: txt('jfMech') || null, fleet_officer: txt('jfFleet') || null, supervisor: txt('jfSup') || null };
+}
+function jobSheet(c, pre) {
+  JF.checks = { ...(c?.checks || {}) }; JF.work = [...(c?.work || [])]; JF.fuel = c?.fuel ?? null;
+  Edit.open(c ? t('jbEditT', { no: c.no }) : t('jbNewT'), jobFormHtml(c, pre), async () => {
+    const row = jobRead(c, pre);
+    const saved = c ? await repo.updJob(c.id, row) : await repo.addJob({ ...row, status: 'open' });
+    const i = JB.rows.findIndex(x => x.id === saved.id); if (i >= 0) JB.rows[i] = saved; else JB.rows.unshift(saved);
+    toast(t('jbSaved', { no: saved.no })); if (JB.pane === 'cards' && $('scr-jobs').classList.contains('active')) renderJobList();
+    openJob(saved.id); return 'keep';
+  });
+  jfPaint();
+  $('jfFuel').onclick = e => { const b = e.target.closest('button'); if (!b) return; const f = Number(b.dataset.v); JF.fuel = JF.fuel === f ? null : f; jfPaint(); };
+  $('jfChecks').onclick = e => { const b = e.target.closest('.ckc'); if (!b) return; const k = b.dataset.k, s = JF.checks[k];
+    if (!s) JF.checks[k] = 'ok'; else if (s === 'ok') JF.checks[k] = 'bad'; else delete JF.checks[k]; jfPaint(); };
+  $('jfWork').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; const w = b.dataset.v; JF.work = JF.work.includes(w) ? JF.work.filter(x => x !== w) : [...JF.work, w]; jfPaint(); };
+}
+function openJob(id) {
+  const c = jobOf(id); if (!c) return;
+  const st = storeOf(c.store_id), se = seOf(c.site_equipment_id), ed = canEditJob(c);
+  const fitsStock = (c.filters || []).map(f => f.part_no && STOCK.find(i => i.category === 'filter' && nkey(i.part_no) === nkey(f.part_no))).filter(Boolean);
+  const kv = (k, v) => v ? `<div><small>${esc(t(k))}</small><b>${v}</b></div>` : '';
+  const body = `<div class="fs" style="margin-bottom:8px"><span class="pill ${c.status === 'done' ? 'ok' : 'warn'}">${esc(t(c.status === 'done' ? 'jbStDone' : 'jbStOpen'))}</span>
+      <span class="muted">${esc(t('jbBy', { n: c.created_by_name || '', d: fmtDT(c.created_at) }))}</span></div>
+    <div class="pinfo">${kv('jfPlate', c.plate ? plateHtml(c.plate) : '')}${kv('jfMake', esc(c.make_model || ''))}${kv('jfType', esc(c.eq_type || ''))}${kv('jfDriver', esc(c.driver || ''))}
+      ${kv('jfSite', st ? esc(storeLbl(st)) : '')}${se ? kv('seName', esc([se.name, se.ref].filter(Boolean).join(' · '))) : ''}
+      ${kv('jfInOn', esc(dSlash(c.in_on) + (c.in_time ? ' ' + hhmm(c.in_time) : '')))}${kv('jfOutOn', c.out_on ? esc(dSlash(c.out_on) + (c.out_time ? ' ' + hhmm(c.out_time) : '')) : '')}
+      ${kv('jfReading', c.reading != null ? esc(fmtQ(c.reading) + ' ' + t('ru_' + (c.reading_unit || 'km'))) : '')}${kv('jfFuel', c.fuel != null ? esc(fuelLbl(c.fuel)) : '')}</div>
+    ${(c.work || []).length ? `<div class="fs">${c.work.map(w => `<span class="kpill f">${esc(t('w_' + w))}</span>`).join('')}</div>` : ''}
+    ${(c.oils || []).length ? `<div class="lhead"><span>${esc(t('jsOils'))}</span></div><div class="card" style="margin-top:6px">${c.oils.map(o => `<div class="kv"><span>${esc(t('o_' + o.type))}${o.note ? ` <small class="muted">${esc(o.note)}</small>` : ''}</span><b class="ltr">${o.qty != null ? esc(fmtQ(o.qty)) + ' ' + esc(t('jfLitres')) : '—'}</b></div>`).join('')}</div>` : ''}
+    ${(c.filters || []).length ? `<div class="lhead"><span>${esc(t('jsFilters'))}</span></div><div class="card" style="margin-top:6px">${c.filters.map(f => `<div class="kv"><span>${esc(t('fl_' + f.type))} <small class="muted ltr">${esc(f.part_no || '')}</small></span><b>${esc(t('ac_' + (f.action || 'change')))}</b></div>`).join('')}</div>` : ''}
+    ${c.diagnosis ? `<div class="lhead"><span>${esc(t('jsDiag'))}</span></div><div class="infobox" style="white-space:pre-wrap">${esc(c.diagnosis)}</div>` : ''}
+    ${c.parts ? `<div class="lhead"><span>${esc(t('jsParts'))}</span></div><div class="infobox" style="white-space:pre-wrap">${esc(c.parts)}</div>` : ''}
+    <button type="button" class="primary" id="jbPrintB">${esc(t('jbPrint'))}</button>
+    ${ed ? `<div class="row2b"><button type="button" class="ghost" id="jbEditB">${esc(t('jbEdit'))}</button><button type="button" class="ghost" id="jbTogB">${esc(t(c.status === 'done' ? 'jbReopen' : 'jbMarkDone'))}</button></div>` : ''}
+    ${canEdit() && fitsStock.length ? `<button type="button" class="ghost" id="jbIssueB">${esc(t('jbIssue'))}</button>` : ''}
+    ${canAdmin() ? `<button type="button" class="ghost danger" id="jbDelB">${esc(t('jbDelete'))}</button>` : ''}`;
+  Edit.open('🔧 ' + c.no, body, null);
+  $('jbPrintB').onclick = () => jobPdf(c);
+  if ($('jbEditB')) {
+    $('jbEditB').onclick = () => jobSheet(c);
+    $('jbTogB').onclick = async () => { busy($('jbTogB'), true);
+      try { const done = c.status !== 'done'; const patch = { status: done ? 'done' : 'open' }; if (done && !c.out_on) { patch.out_on = dubaiToday() < c.in_on ? c.in_on : dubaiToday(); }
+        const s = await repo.updJob(c.id, patch); const i = JB.rows.findIndex(x => x.id === c.id); if (i >= 0) JB.rows[i] = s; toast(t(done ? 'jbDoneT' : 'jbReopenT')); renderJobList(); openJob(c.id); }
+      catch (e) { msg('editMsg', errText(e), 'err'); } finally { if ($('jbTogB')) busy($('jbTogB'), false); } };
+  }
+  if ($('jbIssueB')) $('jbIssueB').onclick = () => {
+    const from = st && st.active ? st.id : mainStore()?.id;
+    Edit.close(); startMove('issue', [...new Set(fitsStock.map(i => i.item_id))].map(id => ({ item_id: id, qty: '1' })), { from });
+    if (c.plate && [...$('mvPlate').options].some(o => o.value === c.plate)) { $('mvPlate').value = c.plate; Picker.refresh($('mvPlate')); renderFits(); }
+    $('mvRef').value = c.no; if (c.mechanic) $('mvParty').value = c.mechanic;
+  };
+  if ($('jbDelB')) { let armed = false; $('jbDelB').onclick = async () => {
+    if (!armed) { armed = true; $('jbDelB').textContent = t('jbDelQ', { no: c.no }); return; }
+    try { await repo.delJob(c.id); JB.rows = JB.rows.filter(x => x.id !== c.id); Edit.close(); toast(t('deleted')); renderJobList(); } catch (e) { msg('editMsg', errText(e), 'err'); } }; }
+}
+
+// the site equipment
+function seRowsOf() {
+  const q = SE.q.trim().toLowerCase(), k = nkey(q);
+  return SE.rows.filter(r => (SE.site === 'all' || r.store_id === SE.site)
+    && (!q || [r.name, r.remarks, r.received_by, storeOf(r.store_id)?.name, storeOf(r.store_id)?.code].some(x => String(x || '').toLowerCase().includes(q)) || (k && nkey(r.ref).includes(k))));
+}
+const seSort = (a, b) => (a.store_id === b.store_id ? 0 : (storeOf(a.store_id)?.name || '').localeCompare(storeOf(b.store_id)?.name || '')) || String(b.sent_on || '').localeCompare(String(a.sent_on || '')) || (a.sort - b.sort);
+const tagPill = g => g ? `<span class="kpill tg-${esc(g)}">${esc(t('tg_' + g))}</span>` : '';
+function seRow(r) {
+  return `<div class="frow se ${r.tag === 'returned' ? 'off' : ''}" data-id="${esc(r.id)}"><div class="fb">
+    <div class="fn">${esc(r.name)} ${r.ref ? `<span class="rec">${esc(r.ref)}</span>` : ''}</div>
+    <div class="fs">${tagPill(r.tag)}${r.section ? `<span class="kpill f">${esc(t('sec_' + r.section))}</span>` : ''}${r.sent_on ? `<span class="muted">${esc(dSlash(r.sent_on))}</span>` : ''}${r.received_by ? `<span class="muted">👤 ${esc(r.received_by)}</span>` : ''}</div>
+    ${r.remarks ? `<div class="fx">${esc(r.remarks)}</div>` : ''}</div>
+    <div class="fa"><span class="qty">${r.qty != null ? esc(fmtQ(r.qty)) : '—'}</span></div></div>`;
+}
+function renderSiteEq() {
+  const sites = [...new Set(SE.rows.map(r => r.store_id))].map(storeOf).filter(Boolean).sort((a, b) => a.name.localeCompare(b.name));
+  if (SE.site !== 'all' && !sites.some(s => s.id === SE.site) && !storeOf(SE.site)) SE.site = 'all';
+  const cnt = id => SE.rows.filter(r => id === 'all' || r.store_id === id).length;
+  const chips = [{ id: 'all', name: t('seAll') }, ...sites, ...(SE.site !== 'all' && !sites.some(s => s.id === SE.site) ? [storeOf(SE.site)] : [])];
+  $('seSites').innerHTML = chips.map(s => `<button type="button" class="chip ${SE.site === s.id ? 'on' : ''}" data-v="${esc(s.id)}">${esc(s.id === 'all' ? s.name : (s.code || s.name))} <small>${cnt(s.id)}</small></button>`).join('');
+  $('btnSePdf').classList.toggle('hidden', SE.site === 'all');
+  if (SE.err) { $('seList').innerHTML = `<div class="msg err">${esc(SE.err)}</div>`; return; }
+  const rows = seRowsOf().sort(seSort), shown = rows.slice(0, SE.n);
+  let last = null;
+  $('seList').innerHTML = rows.length ? shown.map(r => { const s = storeOf(r.store_id);
+      const hd = r.store_id !== last ? `<div class="lhead"><span>🏗 ${esc(s?.name || '—')} ${s?.code ? `<small class="muted ltr">${esc(s.code)}</small>` : ''}</span><span class="n">${esc(t('seLines', { n: rows.filter(x => x.store_id === r.store_id).length, u: fmtQ(rows.filter(x => x.store_id === r.store_id && x.tag !== 'returned').reduce((a, x) => a + Number(x.qty || 0), 0)) }))}</span></div>` : '';
+      last = r.store_id; return hd + seRow(r); }).join('')
+      + (rows.length > SE.n ? `<button type="button" class="ghost" id="seMore">${esc(t('moreN', { n: rows.length - SE.n }))}</button>` : '')
+    : `<div class="empty">${esc(t(SE.rows.length ? 'noMatch' : 'seNone'))}</div>`;
+}
+$('seSites').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; SE.site = b.dataset.v; SE.n = 120; renderSiteEq(); };
+$('seSearch').oninput = e => { SE.q = e.target.value; SE.n = 120; renderSiteEq(); };
+$('seList').onclick = e => { if (e.target.id === 'seMore') { SE.n += 200; renderSiteEq(); return; } const r = e.target.closest('.frow'); if (r) openSe(r.dataset.id); };
+$('btnSeAdd').onclick = () => { if (canEdit()) seSheet(null); };
+$('btnSePdf').onclick = () => { if (SE.site !== 'all') sePdf(SE.site); };
+function seFormHtml(r) {
+  const cur = r?.store_id || (SE.site !== 'all' ? SE.site : '');
+  const sites = STORES.filter(s => s.active || s.id === cur);
+  const o = (list, v, pfx) => `<option value="">—</option>` + list.map(x => `<option value="${x}" ${x === v ? 'selected' : ''}>${esc(t(pfx + x))}</option>`).join('');
+  return `<label for="seSite">${esc(t('jfSite'))}</label><select id="seSite"><option value="">—</option>${sites.map(s => `<option value="${esc(s.id)}" ${s.id === cur ? 'selected' : ''}>${esc(storeLbl(s))}${s.code ? ' — ' + esc(s.code) : ''}</option>`).join('')}</select>
+    <label for="seName">${esc(t('seName'))}</label><input id="seName" maxlength="120" autocomplete="off" value="${esc(r?.name || '')}">
+    <div class="row"><div><label for="seRef">${esc(t('seRef'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="seRef" class="ltr" maxlength="40" autocomplete="off" value="${esc(r?.ref || '')}"></div>
+      <div><label for="seQty">${esc(t('seQty'))}</label><input id="seQty" class="ltr" inputmode="decimal" autocomplete="off" value="${r?.qty != null ? esc(r.qty) : '1'}"></div></div>
+    <div class="row"><div><label for="seSent">${esc(t('seSentOn'))}</label><input id="seSent" type="date" max="${dubaiToday()}" value="${esc(r ? (r.sent_on || '') : dubaiToday())}"></div>
+      <div><label for="seTag">${esc(t('seTag'))}</label><select id="seTag">${o(SETAGS, r?.tag || '', 'tg_')}</select></div></div>
+    <div class="row"><div><label for="seSec">${esc(t('seSection'))}</label><select id="seSec">${o(['civil', 'mep'], r?.section || '', 'sec_')}</select></div>
+      <div><label for="seRecv">${esc(t('seRecv'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="seRecv" maxlength="80" autocomplete="off" value="${esc(r?.received_by || '')}"></div></div>
+    <label for="seRem">${esc(t('seRemarks'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="seRem" maxlength="200" autocomplete="off" value="${esc(r?.remarks || '')}">`;
+}
+function seSheet(r) {
+  const extra = r ? `${canJob() ? `<button type="button" class="ghost" id="seJobB">${esc(t('seJob'))}</button>` : ''}${canAdmin() ? `<button type="button" class="ghost danger" id="seDelB">${esc(t('seDel'))}</button>` : ''}` : '';
+  Edit.open(r ? t('seEditT') : t('seNewT'), seFormHtml(r) + extra, async () => {
+    const site = $('seSite').value; if (!site) throw new Error(t('sePickSite'));
+    const name = $('seName').value.trim(); if (!name) throw new Error(t('errNameReq'));
+    const qs = $('seQty').value.trim(), qty = qs === '' ? null : qNum(qs); if (qs !== '' && !(qty >= 0)) throw new Error(t('errQty', { c: name }));
+    const row = { store_id: site, name, ref: $('seRef').value.trim() || null, qty, sent_on: $('seSent').value || null, tag: $('seTag').value || null, section: $('seSec').value || null,
+      received_by: $('seRecv').value.trim() || null, remarks: $('seRem').value.trim() || null };
+    const saved = r ? await repo.updSiteEq(r.id, row) : await repo.addSiteEq({ ...row, sort: 900000 + SE.rows.length });
+    const i = SE.rows.findIndex(x => x.id === saved.id); if (i >= 0) SE.rows[i] = saved; else SE.rows.push(saved);
+    renderSiteEq(); toast(t('seSaved')); return false;
+  });
+  if ($('seJobB')) $('seJobB').onclick = () => seJob(r);
+  if ($('seDelB')) { let armed = false; $('seDelB').onclick = async () => {
+    if (!armed) { armed = true; $('seDelB').textContent = t('seDelQ'); return; }
+    try { await repo.delSiteEq(r.id); SE.rows = SE.rows.filter(x => x.id !== r.id); Edit.close(); toast(t('deleted')); renderSiteEq(); } catch (e) { msg('editMsg', errText(e), 'err'); } }; }
+}
+const seJob = r => jobSheet(null, { site_equipment_id: r.id, store_id: r.store_id, eq_type: r.name, make_model: [r.name, r.ref].filter(Boolean).join(' ') });
+function openSe(id) {
+  const r = seOf(id); if (!r) return;
+  if (canEdit()) return seSheet(r);
+  const s = storeOf(r.store_id), kv = (k, v) => v ? `<div><small>${esc(t(k))}</small><b>${esc(v)}</b></div>` : '';
+  Edit.open(r.name, `<div class="pinfo">${kv('jfSite', s ? storeLbl(s) : '')}${kv('seRef', r.ref)}${kv('seQty', r.qty != null ? fmtQ(r.qty) : '')}${kv('seSentOn', r.sent_on ? dSlash(r.sent_on) : '')}
+      ${kv('seTag', r.tag ? t('tg_' + r.tag) : '')}${kv('seSection', r.section ? t('sec_' + r.section) : '')}${kv('seRecv', r.received_by)}</div>${r.remarks ? `<div class="infobox">${esc(r.remarks)}</div>` : ''}
+    ${canJob() ? `<button type="button" class="primary" id="seJobB">${esc(t('seJob'))}</button>` : ''}`, null);
+  if ($('seJobB')) $('seJobB').onclick = () => seJob(r);
 }
 
 /* ---------------- 9) المخازن والسجل ---------------- */
@@ -779,7 +1115,7 @@ async function openLog() {
   openSheet(false); Edit.open(t('logTitle'), skeleton(5), null);
   try {
     const rows = await repo.log();
-    $('editBody').innerHTML = rows.length ? rows.map(l => `<div class="lg"><div><b>${esc(t(l.action === 'add' ? 'lgAdd' : l.action === 'edit' ? 'lgEdit' : 'lgDelete'))} · ${esc(t('lg_' + l.tbl))}</b> — ${esc(l.snap?.name || l.snap?.plate || '')} <span class="muted ltr">${esc(l.snap?.code || '')}</span></div>
+    $('editBody').innerHTML = rows.length ? rows.map(l => `<div class="lg"><div><b>${esc(t(l.action === 'add' ? 'lgAdd' : l.action === 'edit' ? 'lgEdit' : 'lgDelete'))} · ${esc(t('lg_' + l.tbl))}</b> — ${esc(l.snap?.name || l.snap?.plate || l.snap?.make_model || '')} <span class="muted ltr">${esc(l.snap?.code || l.snap?.no || '')}</span></div>
       ${l.changes ? `<div class="muted">${Object.entries(l.changes).map(([k, v]) => `${esc(t('lf_' + k))}: ${esc(logVal(k, v[0]))} → ${esc(logVal(k, v[1]))}`).join(' · ')}</div>` : ''}
       <div class="muted">${esc(l.by_name || '')} · ${esc(fmtDT(l.at))}</div></div>`).join('') : `<div class="empty">${esc(t('logEmpty'))}</div>`;
   } catch (e) { $('editBody').innerHTML = `<div class="msg err">${esc(errText(e))}</div>`; }
@@ -814,12 +1150,12 @@ const CO = 'Orion Contracting Company';
 const ppBand = (title, sub, noK, noV) => `<div class="band"><img src="logo.png" alt="Orion"><div class="bt"><span class="tag">MECHANIC STORE</span><h1>${esc(title)}</h1><div class="co">${esc(sub)}</div></div>${noV != null ? `<div class="no"><small>${esc(noK)}</small><b>${esc(noV)}</b></div>` : ''}</div>`;
 const nowTxt = () => { const d = new Date(); return `${dSlash(d.toLocaleDateString('en-CA'))} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 const ppFoot = () => `<div class="foot"><span>${esc(CO)}</span><span>${esc(t('printed'))} <span dir="ltr">${nowTxt()}</span> · ${esc(profile?.name || '')}</span></div>`;
-const paperDoc = title => `<!doctype html><html lang="${lang}" dir="${I18N[lang].dir}"><head><meta charset="utf-8"><base href="${esc(location.href)}"><title>${esc(title)}</title>
+const paperDoc = (title, css = MS_CSS) => `<!doctype html><html lang="${lang}" dir="${I18N[lang].dir}"><head><meta charset="utf-8"><base href="${esc(location.href)}"><title>${esc(title)}</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
   <style>@page{size:A4 portrait;margin:6mm}html,body{background:#fff}body{margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   @media screen{body{padding:14px;max-width:210mm;margin:0 auto}}
   .hint{background:#F4F9E8;border:1px solid #CFE3A6;color:#365314;padding:8px 10px;border-radius:10px;margin-bottom:12px;font:500 11px Tajawal,Arial,sans-serif}@media print{.hint{display:none}}
-  ${MS_CSS}</style></head><body><div class="hint">${esc(t('printHint'))}</div>`;
+  ${css}</style></head><body><div class="hint">${esc(t('printHint'))}</div>`;
 function movePdf(m) {
   const ls = m.lines || [], adj = m.kind === 'adjust';
   const meta = [[t('thDate'), dSlash(m.moved_on)], [t(m.kind === 'transfer' ? 'mvFrom' : 'mvStore'), storeName(m.store_id)], m.to_store_id ? [t('mvTo'), storeName(m.to_store_id)] : null,
@@ -851,6 +1187,113 @@ $('btnHsPdf').onclick = () => {
     <tbody>${rows.map(m => (m.lines || []).map((l, ix) => `<tr class="${m.status === 'void' ? 'void' : ''}">${ix ? '<td></td><td></td><td></td><td></td>' : `<td class="ltr">${esc(m.no)}</td><td>${esc(dSlash(m.moved_on))}</td><td>${esc(t('k_' + m.kind))}</td><td>${esc([m.plate, m.party, m.to_store_id ? storeName(m.to_store_id) : ''].filter(Boolean).join(' · '))}</td>`}<td>${esc(l.name)}</td><td class="num ${Number(l.qty) < 0 ? 'neg' : 'pos'}">${Number(l.qty) > 0 ? '+' : ''}${esc(fmtQ(l.qty))}</td><td>${ix ? '' : esc(m.by_name || '')}</td></tr>`).join('')).join('')}</tbody></table>${ppFoot()}</div>` + printEnd();
   openPrint(html);
 };
+
+// THE JOB CARD'S PAPER — Orion's own: an oil-black head on a hazard stripe, the card number on lime, numbered sections, every label in
+// both languages (the workshop reads both), the fuel as a gauge, the checks as ticks, the oils and the filters side by side.
+const JC_CSS = `@page{size:A4 portrait;margin:11mm 12mm}@media screen{.jc{padding:11mm 12mm}}
+.jc{--k:#0D0F0C;--l:#A3E635;--ld:#4D7C0F;--g:#F4F6F0;--ln:#D9DED2;--mu:#5B6356;font:10.5px/1.4 Tajawal,Arial,sans-serif;color:#111;position:relative}
+.jc *{box-sizing:border-box}.jc .ltr{direction:ltr;unicode-bidi:isolate}
+.jc .l2{display:block;font:700 8px Poppins,Arial,sans-serif;letter-spacing:.4px;color:var(--mu);text-transform:uppercase}
+.jc .hd{display:grid;grid-template-columns:auto 1fr auto;background:var(--k);color:#fff;border-radius:14px;overflow:hidden;position:relative}
+.jc .hd::after{content:"";position:absolute;inset:auto 0 0 0;height:6px;background:repeating-linear-gradient(135deg,var(--l) 0 10px,var(--k) 10px 20px)}
+.jc .hd .lg{padding:12px 16px 18px;display:flex;align-items:center;border-inline-end:1px solid rgba(255,255,255,.14)}.jc .hd .lg img{height:34px;filter:brightness(0) invert(1)}
+.jc .hd .tt{padding:11px 16px 20px}.jc .hd .tt .k{font:800 8.5px Poppins,Arial,sans-serif;letter-spacing:2.5px;color:var(--l)}
+.jc .hd .tt h1{margin:1px 0 0;font:900 19px Cairo,Arial,sans-serif;line-height:1.2}.jc .hd .tt .s{font-size:9.5px;opacity:.8}.jc .hd .tt .l2{color:rgba(255,255,255,.6)}
+.jc .hd .no{background:var(--l);color:var(--k);padding:10px 18px 18px;display:flex;flex-direction:column;justify-content:center;align-items:center;min-width:132px}
+.jc .hd .no small{font:800 8px Poppins,Arial,sans-serif;letter-spacing:1.5px}.jc .hd .no b{font:900 19px Poppins,Arial,sans-serif;direction:ltr}
+.jc .hd .no i{font-style:normal;margin-top:4px;font:800 9px Cairo,Arial,sans-serif;background:var(--k);color:var(--l);padding:1px 10px;border-radius:999px}
+.jc .strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:8px 0 0}
+.jc .tile{border:1px solid var(--ln);border-top:3px solid var(--k);border-radius:9px;padding:4px 8px 5px;background:var(--g);min-width:0}
+.jc .tile small{display:block;font:800 9px Cairo,Arial,sans-serif;color:var(--mu)}.jc .tile b{display:block;font:900 11.5px Cairo,Arial,sans-serif;overflow-wrap:anywhere}
+.jc .sec{display:flex;align-items:center;gap:8px;margin:8px 0 5px;break-after:avoid}
+.jc .sec .n{flex:0 0 auto;width:23px;height:23px;border-radius:7px;background:var(--k);color:var(--l);font:900 10.5px Poppins,Arial,sans-serif;display:grid;place-items:center}
+.jc .sec .t{display:flex;align-items:baseline;gap:7px;flex:0 0 auto}.jc .sec .t b{font:900 12.5px Cairo,Arial,sans-serif}.jc .sec .t .l2{display:inline}
+.jc .sec::after{content:"";flex:1;height:1.5px;background:var(--ln)}
+.jc .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px 12px}
+.jc .kv{border-bottom:1px dashed var(--ln);padding:2px 1px 4px;min-width:0}.jc .kv small{display:block;color:var(--mu);font-size:8.5px}.jc .kv b{font:800 11.5px Cairo,Arial,sans-serif;overflow-wrap:anywhere}
+.jc .plate{display:inline-block;border:2px solid #111;border-radius:6px;padding:0 8px;font:800 12px Poppins,Arial,sans-serif;direction:ltr;background:#fff;letter-spacing:.5px}
+.jc .cond{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start}
+.jc .gauge{border:1px solid var(--ln);border-radius:10px;padding:6px 8px;background:var(--g)}.jc .gauge small{font:800 9px Cairo,Arial,sans-serif;color:var(--mu)}
+.jc .bars{display:flex;gap:3px;margin-top:5px;direction:ltr}.jc .bars span{flex:1;height:16px;border-radius:3px;background:#E3E6DE;border:1px solid #CFD5C7}
+.jc .bars span.on{background:var(--l);border-color:var(--ld)}.jc .bars span.on.lo{background:#F59E0B;border-color:#B45309}
+.jc .ticks{display:flex;justify-content:space-between;direction:ltr;font:800 8.5px Poppins,Arial,sans-serif;color:var(--mu);margin-top:2px}
+.jc .cks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.jc .ck{display:flex;align-items:center;gap:6px;border:1px solid var(--ln);border-radius:8px;padding:3px 6px;font-size:9.5px;min-width:0}
+.jc .ck i{flex:0 0 auto;width:15px;height:15px;border-radius:4px;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:10px;border:1.5px solid #A8AFA0;color:#A8AFA0}
+.jc .ck.ok i{background:#15803D;border-color:#15803D;color:#fff}.jc .ck.bad i{background:#B91C1C;border-color:#B91C1C;color:#fff}.jc .ck.bad{border-color:#FCA5A5;background:#FEF2F2}
+.jc .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.jc table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.jc th{background:var(--k);color:#fff;font:800 9px Cairo,Arial,sans-serif;padding:4px 6px;text-align:start}.jc th .l2{color:rgba(255,255,255,.55);font-size:7px}
+.jc td{padding:3px 6px;border-top:1px solid var(--ln);font-size:10px;vertical-align:middle}.jc td .l2{font-size:7px}
+.jc td.q{direction:ltr;text-align:center;font:800 11px Poppins,Arial,sans-serif;white-space:nowrap}.jc tr.off td{color:#A3A99B}.jc tr.off td .l2{color:#C3C8BC}
+.jc .act{display:inline-block;padding:1px 8px;border-radius:999px;font:800 8.5px Cairo,Arial,sans-serif;background:#fff;border:1px solid var(--ln);color:var(--mu)}
+.jc .act.change{background:var(--l);border-color:var(--ld);color:var(--k)}.jc .act.clean{background:#E0F2FE;border-color:#7DD3FC;color:#075985}
+.jc .works{display:flex;flex-wrap:wrap;gap:6px}
+.jc .wk{display:flex;align-items:center;gap:6px;padding:4px 11px 4px 9px;border-radius:999px;border:1.5px solid var(--ln);font:800 10px Cairo,Arial,sans-serif;color:var(--mu)}
+.jc .wk i{width:11px;height:11px;border-radius:50%;border:1.5px solid currentColor}.jc .wk .l2{display:inline;font-size:7.5px}
+.jc .wk.on{background:var(--k);border-color:var(--k);color:#fff}.jc .wk.on i{background:var(--l);border-color:var(--l)}.jc .wk.on .l2{color:rgba(255,255,255,.6)}
+.jc .box{border:1px solid var(--ln);border-radius:10px;padding:5px 8px;min-height:50px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:18px;background:repeating-linear-gradient(transparent 0 17px,#ECEFE7 17px 18px)}
+.jc .box .bh{display:block;font:900 10.5px Cairo,Arial,sans-serif;line-height:1.3;margin-bottom:2px}
+.jc .sigs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.jc .sg{border:1px solid var(--ln);border-radius:10px;padding:5px 8px 6px 12px;position:relative;overflow:hidden}
+.jc .sg::before{content:"";position:absolute;top:0;bottom:0;inset-inline-start:0;width:4px;background:var(--l)}
+.jc .sg small{font:800 9px Cairo,Arial,sans-serif;color:var(--mu)}.jc .sg b{display:block;font:900 11px Cairo,Arial,sans-serif;min-height:16px}
+.jc .sg .ln{display:flex;gap:10px;margin-top:12px;font-size:8px;color:var(--mu)}.jc .sg .ln span{flex:1;border-top:1px solid #9CA39A;padding-top:2px}
+.jc .pol{margin-top:8px;padding:6px 10px;border-radius:10px;background:var(--g);border-inline-start:4px solid var(--k);font-size:9px;line-height:1.5}
+.jc .pol b{font:900 10px Cairo,Arial,sans-serif}.jc .pol ol{margin:2px 0 0;padding-inline-start:16px}
+.jc .ft{display:flex;justify-content:space-between;gap:10px;margin-top:8px;padding-top:5px;border-top:2px solid var(--k);font-size:8.5px;color:var(--mu)}.jc .ft b{color:#111}
+.jc .stamp{position:absolute;top:96px;inset-inline-end:150px;transform:rotate(-9deg);border:2.5px solid #15803D;color:#15803D;font:900 13px Poppins,Arial,sans-serif;padding:1px 10px;border-radius:8px;letter-spacing:2px;opacity:.85;background:rgba(255,255,255,.7)}`;
+// a label in the page's language over the other one, small (the paper is read in both)
+const other = () => lang === 'ar' ? 'en' : 'ar';
+const L2 = k => `${esc(t(k))}<span class="l2">${esc(I18N[other()][k] ?? '')}</span>`;
+function jobPdf(c) {
+  const st = storeOf(c.store_id), se = seOf(c.site_equipment_id);
+  const oil = o => (c.oils || []).find(x => x.type === o), flt = f => (c.filters || []).find(x => x.type === f);
+  const tile = (k, v) => `<div class="tile"><small>${esc(t(k))}</small><b>${v || '—'}</b></div>`;
+  const kv = (k, v) => `<div class="kv"><small>${esc(t(k))} · ${esc(I18N[other()][k] ?? '')}</small><b>${v || '&nbsp;'}</b></div>`;
+  const sec = (n, k) => `<div class="sec"><span class="n">${String(n).padStart(2, '0')}</span><span class="t"><b>${esc(t(k))}</b><span class="l2">${esc(I18N[other()][k] ?? '')}</span></span></div>`;
+  const when = (d, tm) => d ? `<span class="ltr">${esc(dSlash(d))}${tm ? ' · ' + esc(hhmm(tm)) : ''}</span>` : '';
+  const fuel = c.fuel == null ? -1 : FUELS.indexOf(c.fuel);
+  const html = paperDoc(c.no, JC_CSS) + `<div class="jc">
+    <div class="hd"><div class="lg"><img src="logo.png" alt="Orion"></div>
+      <div class="tt"><div class="k">ORION · WORKSHOP</div><h1>${esc(t('ppJob'))}</h1><div class="s">${esc(t('ppJobSub'))} — ${esc(CO)}</div><span class="l2">${esc(I18N[other()].ppJob)} · ${esc(I18N[other()].ppJobSub)}</span></div>
+      <div class="no"><small>${esc(t('ppJobNo'))}</small><b>${esc(c.no)}</b><i>${esc(t(c.status === 'done' ? 'jbStDone' : 'jbStOpen'))}</i></div></div>
+    ${c.status === 'done' ? `<div class="stamp">DONE ✓</div>` : ''}
+    <div class="strip">${tile('jfInOn', when(c.in_on, c.in_time))}${tile('jfOutOn', when(c.out_on, c.out_time))}${tile('jfSite', st ? esc(st.name) + (st.code ? ` <span class="ltr">(${esc(st.code)})</span>` : '') : esc(t('jfNoSite').replace(/—/g, '').trim()))}
+      ${tile('jfReading', c.reading != null ? `<span class="ltr">${esc(fmtQ(c.reading))}</span> ${esc(t('ru_' + (c.reading_unit || 'km')))}` : '')}${tile('jfDriver', esc(c.driver || ''))}</div>
+    ${sec(1, 'jsVehicle')}
+    <div class="g4">${kv('jfPlate', c.plate ? `<span class="plate">${esc(c.plate)}</span>` : '')}${kv('jfMake', esc(c.make_model || ''))}${kv('jfType', esc(c.eq_type || ''))}${kv('seName', se ? esc([se.name, se.ref].filter(Boolean).join(' · ')) : '')}</div>
+    ${sec(2, 'jsCond')}
+    <div class="cond"><div class="gauge"><small>${L2('jfFuel')}</small><div class="bars">${FUELS.map((f, i) => `<span class="${i <= fuel && fuel >= 0 ? 'on' : ''} ${fuel === 0 ? 'lo' : ''}"></span>`).join('')}</div><div class="ticks">${FUELS.map(f => `<span>${fuelLbl(f)}</span>`).join('')}</div></div>
+      <div class="cks">${CHECKS.map(k => { const s = (c.checks || {})[k]; return `<div class="ck ${s || ''}"><i>${s === 'ok' ? '✓' : s === 'bad' ? '✗' : ''}</i><span>${L2('ck_' + k)}</span></div>`; }).join('')}</div></div>
+    <div class="two"><div>${sec(3, 'jsOils')}
+      <table><thead><tr><th>${L2('thOil')}</th><th>${L2('jfLitres')}</th><th>${L2('jfNote')}</th></tr></thead><tbody>${OILS.map(o => { const x = oil(o); return `<tr class="${x ? '' : 'off'}"><td>${L2('o_' + o)}</td><td class="q">${x && x.qty != null ? esc(fmtQ(x.qty)) : '—'}</td><td>${esc(x?.note || '')}</td></tr>`; }).join('')}</tbody></table></div>
+      <div>${sec(4, 'jsFilters')}
+      <table><thead><tr><th>${L2('thFilter')}</th><th>${L2('jfPartNo')}</th><th>${L2('jfAction')}</th></tr></thead><tbody>${JFILTERS.map(f => { const x = flt(f); return `<tr class="${x ? '' : 'off'}"><td>${L2('fl_' + f)}</td><td class="q">${esc(x?.part_no || (x ? '' : '—'))}</td><td>${x ? `<span class="act ${esc(x.action || 'change')}">${esc(t('ac_' + (x.action || 'change')))}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>
+    ${sec(5, 'jsWork')}
+    <div class="works">${WORKS.map(w => `<span class="wk ${(c.work || []).includes(w) ? 'on' : ''}"><i></i>${esc(t('w_' + w))} <span class="l2">${esc(I18N[other()]['w_' + w])}</span></span>`).join('')}</div>
+    ${sec(6, 'jsDiag')}
+    <div class="two"><div class="box"><span class="bh">${L2('jsDiag')}</span><span dir="auto">${esc(c.diagnosis || '')}</span></div><div class="box"><span class="bh">${L2('jsParts')}</span><span dir="auto">${esc(c.parts || '')}</span></div></div>
+    ${sec(7, 'jsSign')}
+    <div class="sigs">${[['jfMech', c.mechanic], ['jfFleet', c.fleet_officer], ['jfSup', c.supervisor]].map(([k, v]) => `<div class="sg"><small>${L2(k)}</small><b>${esc(v || '')}</b><div class="ln"><span>${esc(t('sigSign'))}</span><span>${esc(t('sigDate'))}</span></div></div>`).join('')}</div>
+    ${c.final_notes ? `${sec(8, 'jsNotes')}<div class="box" style="min-height:0" dir="auto">${esc(c.final_notes)}</div>` : ''}
+    <div class="pol"><b>${esc(t('policyT'))}</b> <span class="l2" style="display:inline">${esc(I18N[other()].policyT)}</span><ol><li>${esc(t('pol1'))}</li><li>${esc(t('pol2'))}</li><li>${esc(t('pol3'))}</li></ol></div>
+    <div class="ft"><span><b>${esc(CO)}</b> · ${esc(t('ppJob'))} <span class="ltr">${esc(c.no)}</span></span><span>${esc(t('jbBy', { n: c.created_by_name || '', d: dSlash(String(c.created_at || '').slice(0, 10)) }))} · ${esc(t('printed'))} <span class="ltr">${nowTxt()}</span> · ${esc(profile?.name || '')}</span></div>
+  </div>` + printEnd();
+  openPrint(html);
+}
+// the site's equipment, the sheet the owner keeps — by section, the newest first
+function sePdf(site) {
+  const s = storeOf(site), rows = SE.rows.filter(r => r.store_id === site).sort(seSort);
+  const live = rows.filter(r => r.tag !== 'returned'), units = live.reduce((a, r) => a + Number(r.qty || 0), 0);
+  const groups = [['civil', rows.filter(r => r.section === 'civil')], ['mep', rows.filter(r => r.section === 'mep')], [null, rows.filter(r => !r.section)]].filter(([, g]) => g.length);
+  const html = paperDoc(t('ppSiteEq')) + `<div class="pp">${ppBand(t('ppSiteEq'), (s ? s.name + (s.code ? ' (' + s.code + ')' : '') : '') + ' · ' + CO, t('thDate'), dSlash(dubaiToday()))}
+    <div class="cards"><div class="card"><div class="k">${esc(t('seName'))}</div><div class="v">${fmtInt(rows.length)}</div></div><div class="card"><div class="k">${esc(t('seQty'))}</div><div class="v">${fmtQ(units)}</div></div><div class="card"><div class="k">${esc(t('tg_returned'))}</div><div class="v">${fmtInt(rows.length - live.length)}</div></div></div>
+    <table><thead><tr><th>#</th><th>${esc(t('seName'))}</th><th>${esc(t('thRef'))}</th><th class="num">${esc(t('seQty'))}</th><th>${esc(t('seSentOn'))}</th><th>${esc(t('seTag'))}</th><th>${esc(t('thRecv'))}</th><th>${esc(t('thRemarks'))}</th></tr></thead>
+    <tbody>${groups.map(([sec, g]) => (groups.length > 1 || sec ? `<tr class="grp"><td colspan="8">${esc(sec ? t('sec_' + sec) : '—')} (${g.length})</td></tr>` : '') + g.map((r, i) => `<tr class="${r.tag === 'returned' ? 'void' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td><td class="ltr">${esc(r.ref || '')}</td><td class="num">${r.qty != null ? esc(fmtQ(r.qty)) : ''}</td><td>${esc(r.sent_on ? dSlash(r.sent_on) : '')}</td><td>${esc(r.tag ? t('tg_' + r.tag) : '')}</td><td>${esc(r.received_by || '')}</td><td>${esc(r.remarks || '')}</td></tr>`).join('')).join('')}</tbody></table>
+    <div class="sigs"><div class="sig"><small>${esc(t('sigStore'))}</small><b>&nbsp;</b><i></i></div><div class="sig"><small>${esc(t('sigApprove'))}</small><b>&nbsp;</b><i></i></div></div>${ppFoot()}</div>` + printEnd();
+  openPrint(html);
+}
 
 /* ---------------- 10b) المستخدمون (admin only) ---------------- */
 // Accounts are made, changed and removed by the Edge Function admin-users (service role); the list is ms_user_list() (admin only).
@@ -965,9 +1408,10 @@ function openTab(id, keep) {
   show(id);
   if (id === 'stock') renderStock(); else if (id === 'move') { if (!keep) renderMove(); else { storeOpts($('mvStore'), $('mvStore').value || (STORES.find(s => s.active) || {}).id); plateOpts(); if (!$('mvDate').value) $('mvDate').value = dubaiToday(); } }
   else if (id === 'moves') renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') loadUsers(); else if (id === 'projects') { PJ.loaded = false; renderProjects(); }
+  else if (id === 'jobs') { if (!keep) { JB.loaded = false; SE.loaded = false; } renderJobs(); }
 }
 async function rerender() { const a = document.querySelector('.screen.active'); const id = a ? a.id.replace('scr-', '') : 'stock';
-  if (id === 'stock') renderStock(); else if (id === 'move') renderMove(); else if (id === 'moves') await renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') renderUsers(); else if (id === 'projects') renderProjects(); }
+  if (id === 'stock') renderStock(); else if (id === 'move') renderMove(); else if (id === 'moves') await renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') renderUsers(); else if (id === 'projects') renderProjects(); else if (id === 'jobs') renderJobs(); }
 async function refresh() { try { await loadAll(); } catch { return; } HS.rows = []; await rerender(); }
 async function enter(user) {
   userId = user.id; let boot;
@@ -994,8 +1438,9 @@ async function enter(user) {
 function leave() {
   bootSeq++; HS.seq++; profile = null; userId = null; loaded = false; STORES = []; STOCK = []; EQUIP = []; FITS = []; PLATES = [];
   Object.assign(SK, { store: 'all', cat: 'all', q: '', n: 80 }); Object.assign(MV, { kind: 'issue', lines: [] }); Object.assign(HS, { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [] }); Object.assign(FT, { q: '', grp: 'all' }); Object.assign(PJ, { q: '', show: 'open', sum: {}, loaded: false, seq: PJ.seq + 1 }); Object.assign(US, { rows: [], q: '', role: 'all', del: null, seq: US.seq + 1 });
-  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'pjShow', 'pjList', 'usRoles', 'usList', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
-  ['skSearch', 'hsSearch', 'ftSearch', 'pjSearch', 'usSearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
+  Object.assign(JB, { pane: 'cards', q: '', show: 'open', rows: [], loaded: false, seq: JB.seq + 1 }); Object.assign(SE, { site: 'all', q: '', rows: [], loaded: false, n: 120, seq: SE.seq + 1 });
+  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'pjShow', 'pjList', 'usRoles', 'usList', 'jbShow', 'jbList', 'seSites', 'seList', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
+  ['skSearch', 'hsSearch', 'ftSearch', 'pjSearch', 'usSearch', 'jbSearch', 'seSearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
   Edit.close(); openSheet(false); $('btnMenu').classList.add('hidden'); $('lang').classList.remove('hidden'); $('who').textContent = ''; $('nav').classList.add('hidden'); show('login');
 }
 
