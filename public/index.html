@@ -368,7 +368,21 @@
   nav button.hidden{display:none}
   .chk{display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:700}.chk input{width:auto;height:auto;margin:0}
   /* ---------- the maintenance: job cards, site equipment (17 Nov 2026) ---------- */
-  #jbPane button{flex:1 1 0}
+  #jbPane{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}#jbPane button{position:relative;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  @media (min-width:640px){#jbPane{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  /* ---------- the maintenance types, the reminders, the bell (25 Nov 2026) ---------- */
+  header .bell{position:relative;padding:7px 9px;font-size:15px}
+  .bell b,#jbPane .pn{position:absolute;top:-4px;inset-inline-end:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#EF4444;color:#fff;font:800 11px/18px var(--font-mark,system-ui);text-align:center}
+  #jbPane .pn{position:static;display:inline-block;margin-inline-start:6px;vertical-align:middle}
+  .bell b.hidden,#jbPane .pn.hidden{display:none}
+  .frow.rem{--kc:var(--line)}.frow.rem.late{--kc:var(--err)}.frow.rem.today{--kc:var(--warn)}.frow.rem.soon{--kc:var(--ok)}.frow.rem.closed{opacity:.7}
+  .frow.ty{--kc:var(--brand)}.frow.ty.off{--kc:var(--surface2);opacity:.65}
+  .pill.late{background:var(--err-bg);color:var(--err)}
+  .pushbox{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding:10px 12px;border:1px dashed var(--line);border-radius:12px;font-size:13px}
+  .pushbox b{flex:1 1 180px;font-family:var(--font-head)}.pushbox .btn-sm{margin:0}.pushbox small{flex:1 1 100%;color:var(--muted);line-height:1.5}
+  .mtchip{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 11px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:700 13px var(--font-head);cursor:pointer;text-align:start}
+  .mtchip small{font-size:10.5px;color:var(--muted);font-weight:600}.mtchip.on{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}.mtchip.on small{color:inherit}
+  .nextdue{margin-top:8px;font-size:12.5px;color:var(--ok);font-weight:700;line-height:1.7}
   .jsec{display:flex;align-items:center;gap:8px;margin:20px 0 2px;font-family:var(--font-head)}
   .jsec span{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:var(--brand);color:#A3E635;font:900 11px var(--font-mark);display:grid;place-items:center}
   html[data-theme="dark"] .jsec span{background:#A3E635;color:#1A2E05}
@@ -401,6 +415,7 @@
   </div>
   <div class="tools">
     <select class="lang" id="lang"><option value="ar">العربية</option><option value="en">English</option></select>
+    <button id="btnBell" class="bell hidden" type="button" aria-label="reminders">🔔<b id="bellN" class="hidden"></b></button>
     <button id="btnMenu" class="avatar hidden" aria-label="menu"><span id="avatarInitial">A</span></button>
   </div>
 </header>
@@ -531,12 +546,23 @@
   </section>
   <!-- the maintenance: the job cards, the equipment at the sites -->
   <section class="screen" id="scr-jobs">
-    <div class="segment kind" id="jbPane"><button type="button" data-p="cards"><span data-i18n="jbCardsP">🔧 كروت الصيانة</span></button><button type="button" data-p="equip"><span data-i18n="jbEquipP">🏗 معدات المواقع</span></button></div>
+    <div class="segment kind" id="jbPane"><button type="button" data-p="cards"><span data-i18n="jbCardsP">🔧 كروت الصيانة</span></button><button type="button" data-p="rem"><span data-i18n="jbRemP">🔔 التذكيرات</span><b class="pn hidden" id="remN"></b></button><button type="button" data-p="types"><span data-i18n="jbTypesP">⚙️ الأنواع</span></button><button type="button" data-p="equip"><span data-i18n="jbEquipP">🏗 معدات المواقع</span></button></div>
     <div id="jbCards">
       <div class="pane-d" data-i18n="jbDesc" style="margin-top:10px">كارت عمل لكل دخول معدة أو مركبة للورشة.</div>
       <div class="topbar"><input id="jbSearch" type="search" data-i18n-ph="jbSearch" placeholder="ابحث برقم الكارت أو اللوحة أو المعدة أو السائق" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnJbNew" data-i18n="jbNewS">＋ كارت</button></div>
       <div class="chips" id="jbShow" style="margin-top:10px"></div>
       <div id="jbList"></div>
+    </div>
+    <div id="jbRem" class="hidden">
+      <div class="pane-d" data-i18n="remDesc" style="margin-top:10px">مواعيد التغيير القادمة.</div>
+      <div id="pushBox"></div>
+      <div class="chips" id="remShow" style="margin-top:10px"></div>
+      <div id="remList"></div>
+    </div>
+    <div id="jbTypes" class="hidden">
+      <div class="pane-d" data-i18n="tyDesc" style="margin-top:10px">أنواع الصيانة وعدد الأيام حتى التغيير القادم.</div>
+      <div class="topbar"><input id="tySearch" type="search" data-i18n-ph="tyName" placeholder="اسم النوع" autocapitalize="none" enterkeyhint="search"><button type="button" class="primary addb hidden" id="btnTyNew" data-i18n="tyNew">＋ نوع</button></div>
+      <div id="tyList"></div>
     </div>
     <div id="jbEquip" class="hidden">
       <div class="pane-d" data-i18n="seDesc" style="margin-top:10px">المعدات والعُدد الموجودة في كل موقع.</div>

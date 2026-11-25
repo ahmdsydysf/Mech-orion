@@ -69,6 +69,29 @@ const JOBS = [{ id: 'j1', seq: 1, no: 'JC-000001', status: 'open', store_id: 's2
   oils: [{ type: 'hydraulic', qty: 20 }], filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
   diagnosis: 'Hydraulic hose leaking', parts: 'Hose 1/2"', final_notes: null, mechanic: 'Mech One', fleet_officer: null, supervisor: null,
   created_by: 'u-mechanic', created_by_name: 'Mech One', created_at: '2026-11-15T05:00:00Z' }];
+// the maintenance types and their reminders (25 Nov 2026): REMS kept as the server's trigger keeps ms_reminders
+const addD = (d, n) => { const [y, m, dd] = d.split('-').map(Number); return new Date(Date.UTC(y, m - 1, dd + n)).toISOString().slice(0, 10); };
+const TYPES = [{ id: 't1', name: 'Quartz 20W-50', kind: 'oil', part: 'diesel_engine', item_id: 'i-OIL-0006', interval_days: 15, active: true, note: null, sort: 0 },
+  { id: 't2', name: 'Rimula R4 15W-40', kind: 'oil', part: 'diesel_engine', item_id: null, interval_days: 30, active: true, note: null, sort: 0 },
+  { id: 't3', name: 'Air filter', kind: 'filter', part: 'air', item_id: null, interval_days: 60, active: true, note: null, sort: 0 },
+  { id: 't4', name: 'Old grease', kind: 'service', part: null, item_id: null, interval_days: 90, active: false, note: null, sort: 0 }];
+JOBS[0].maint_types = ['t1'];
+const REMS = [{ id: 'r1', job_card_id: 'j1', type_id: 't1', vkey: 'P:74522', label: '74522 · Bobcat S650', done_on: addD(today(), -17), due_on: addD(today(), -2), status: 'open', closed_by_name: null, closed_at: null },
+  { id: 'r2', job_card_id: 'j1', type_id: 't3', vkey: 'P:74522', label: '74522 · Bobcat S650', done_on: addD(today(), -50), due_on: addD(today(), 10), status: 'open', closed_by_name: null, closed_at: null }];
+JOBS[0].maint_types = ['t1', 't3'];
+function syncRem(c) {
+  const vk = c.plate ? 'P:' + key(c.plate) : 'J:' + c.id, done = c.out_on || c.in_on, mt = c.maint_types || [];
+  for (let i = REMS.length - 1; i >= 0; i--) if (REMS[i].job_card_id === c.id && !mt.includes(REMS[i].type_id)) REMS.splice(i, 1);
+  mt.forEach(tid => { const ty = TYPES.find(x => x.id === tid); if (!ty) return; let r = REMS.find(x => x.job_card_id === c.id && x.type_id === tid);
+    if (!r) REMS.push(r = { id: 'r' + (++nid), job_card_id: c.id, type_id: tid, status: 'open', closed_by_name: null, closed_at: null });
+    Object.assign(r, { vkey: vk, label: [c.plate, c.make_model].filter(Boolean).join(' · '), done_on: done, due_on: addD(done, ty.interval_days) });
+    REMS.filter(o => o.job_card_id !== c.id && o.status === 'open' && o.vkey === vk && o.done_on <= done && (o.type_id === tid || (() => { const ot = TYPES.find(x => x.id === o.type_id); return ot && ty.part && ot.kind === ty.kind && ot.part === ty.part; })()))
+      .forEach(o => Object.assign(o, { status: 'renewed', closed_by_name: c.no, closed_at: new Date().toISOString() })); });
+}
+const remList = () => REMS.map(r => { const ty = TYPES.find(x => x.id === r.type_id), j = JOBS.find(x => x.id === r.job_card_id) || {};
+  return { ...r, job_no: j.no, type_name: ty.name, kind: ty.kind, part: ty.part, interval_days: ty.interval_days, plate: j.plate || null, store_id: j.store_id || null,
+    days_left: Math.round((Date.parse(r.due_on) - Date.parse(today())) / 864e5) }; }).sort((a, b) => (b.status === 'open') - (a.status === 'open') || a.due_on.localeCompare(b.due_on));
+const PUSH = [];
 const STOCK = new Map();          // store|item → qty
 const MOVES = [], LINES = [], LOG = [];
 const sk = (s, i) => s + '|' + i, have = (s, i) => STOCK.get(sk(s, i)) || 0;
@@ -125,7 +148,7 @@ post.call(null, { kind: 'adjust', store_id: 's1', lines: [{ item_id: 'i-MCH-0001
 SEEDING = false;
 const SAVED_ROLE = ROLE;
 const thenable = (fn) => { const st = {}; const o = { range(a, b) { st.range = [a, b]; return o; }, then(res, rej) { try { const r = fn(); if (r && r.data && Array.isArray(r.data) && st.range) r.data = r.data.slice(st.range[0], st.range[1] + 1); res(r); } catch (e) { (rej || (() => {}))(e); } } }; return o; };
-const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: STORES, ms_items: ITEMS, ms_equipment: EQUIP, ms_fits: FITS, ms_log: LOG, ms_site_equipment: SITE_EQ, ms_job_cards: JOBS }[tbl] || [];
+const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: STORES, ms_items: ITEMS, ms_equipment: EQUIP, ms_fits: FITS, ms_log: LOG, ms_site_equipment: SITE_EQ, ms_job_cards: JOBS, ms_maint_types: TYPES }[tbl] || [];
   const LT = { ms_items: 'item', ms_stores: 'store', ms_site_equipment: 'site_equipment', ms_job_cards: 'job_card' }[tbl] || 'equipment';
   const o = { select() { return o; }, order() { return o; }, eq(k, v) { st.f.push([k, v]); return o; }, range(a, b) { st.range = [a, b]; return o; }, limit() { return o; }, single() { st.single = true; return o; },
     insert(v) { st.op = 'insert'; st.v = { ...v }; return o; }, update(v) { st.op = 'update'; st.v = { ...v }; return o; }, delete() { st.op = 'delete'; return o; },
@@ -134,7 +157,13 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
       if (NO463 && /^ms_/.test(tbl)) return res(notRun);
       const hit = r => st.f.every(([k, v]) => r[k] === v);
       if (st.op === 'select') { if (!READ) return res({ data: [] }); let out = T.filter(hit).map(r => ({ ...r })); if (tbl === 'ms_job_cards') out.sort((a, b) => b.seq - a.seq); if (st.range) out = out.slice(st.range[0], st.range[1] + 1); return res({ data: st.single ? out[0] : out }); }
-      const canW = tbl === 'ms_stores' ? ADMIN : tbl === 'ms_job_cards' ? JOB : EDIT; if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
+      const canW = tbl === 'ms_stores' || tbl === 'ms_maint_types' ? ADMIN : tbl === 'ms_job_cards' ? JOB : EDIT;
+      if (tbl === 'ms_maint_types' && st.op === 'delete' && canW && T.filter(hit).some(x => REMS.some(r => r.type_id === x.id) || JOBS.some(j => (j.maint_types || []).includes(x.id)))) return res(err('MS_TYPE_IN_USE'));
+      if (tbl === 'ms_maint_types' && st.v && st.op !== 'delete' && canW) { const self = st.f[0] ? TYPES.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || {}), ...st.v };
+        if (!String(nx.name || '').trim()) return res(err('MS_NAME_REQUIRED')); if (!(nx.interval_days >= 1 && nx.interval_days <= 3650)) return res(err('MS_DAYS_INVALID'));
+        if (TYPES.some(x => x !== self && x.name.toLowerCase() === String(nx.name).trim().toLowerCase())) return res(err('MS_TYPE_DUP')); }
+      if (tbl === 'ms_job_cards' && st.v && st.v.maint_types && st.op !== 'delete' && st.v.maint_types.some(id => { const x = TYPES.find(y => y.id === id); return !x || !x.active; })
+        && !(st.f[0] && st.v.maint_types.every(id => (JOBS.find(j => j.id === st.f[0][1]) || {}).maint_types?.includes(id) || TYPES.find(y => y.id === id)?.active))) return res(err('MS_TYPE_INVALID')); if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
       if (tbl === 'ms_items' && st.v && st.v.part_no) { const d = ITEMS.find(i => key(i.part_no) === key(st.v.part_no) && !(st.f[0] && i.id === st.f[0][1])); if (d) return res(err('MS_PART_DUP:' + d.code)); }
       if (tbl === 'ms_items' && st.v && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
       if (tbl === 'ms_stores' && st.v && st.op !== 'delete') { const self = st.f[0] ? STORES.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || { kind: 'store', active: true }), ...st.v };
@@ -153,19 +182,21 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
       if (tbl === 'ms_site_equipment' && st.v && st.op !== 'delete' && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
       if (st.op === 'insert') { const row = { id: 'n' + (++nid), ...(tbl === 'ms_job_cards' || tbl === 'ms_site_equipment' ? {} : { active: true }), ...st.v };
         if (tbl === 'ms_items') { row.name = String(row.name).trim().toUpperCase(); row.code = { machine: 'MCH', tool: 'TOL', consumable: 'CON', oil: 'OIL', filter: 'FLT', spare: 'SPR' }[row.category] + '-' + String(nid).padStart(4, '0'); }
-        T.push(row); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: row.id, action: 'add', snap: { ...row } }); return res({ data: { ...row } }); }
+        T.push(row); if (tbl === 'ms_job_cards') syncRem(row); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: row.id, action: 'add', snap: { ...row } }); return res({ data: { ...row } }); }
       if (st.op === 'update') { const l = T.filter(hit); l.forEach(r => { const ch = {}; Object.keys(st.v).forEach(k => { if (r[k] !== st.v[k]) ch[k] = [r[k], st.v[k]]; }); Object.assign(r, st.v);
-        if (tbl === 'ms_items') r.name = String(r.name).trim().toUpperCase(); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: r.id, action: 'edit', changes: ch, snap: { ...r } }); });
+        if (tbl === 'ms_items') r.name = String(r.name).trim().toUpperCase(); if (tbl === 'ms_job_cards') syncRem(r); LOG.unshift({ id: ++nid, at: new Date().toISOString(), by_name: NAMES[ROLE], tbl: LT, row_id: r.id, action: 'edit', changes: ch, snap: { ...r } }); });
         return res({ data: l.map(r => ({ ...r })) }); }
-      if (st.op === 'delete') { const l = T.filter(hit); if (tbl === 'ms_items' && l.some(i => LINES.some(x => x.item_id === i.id))) return res(err('MS_ITEM_IN_USE')); l.forEach(r => T.splice(T.indexOf(r), 1)); return res({ data: l.map(r => ({ id: r.id })) }); }
+      if (st.op === 'delete') { const l = T.filter(hit); if (tbl === 'ms_job_cards') l.forEach(j => { for (let i = REMS.length - 1; i >= 0; i--) if (REMS[i].job_card_id === j.id) REMS.splice(i, 1); }); if (tbl === 'ms_items' && l.some(i => LINES.some(x => x.item_id === i.id))) return res(err('MS_ITEM_IN_USE')); l.forEach(r => T.splice(T.indexOf(r), 1)); return res({ data: l.map(r => ({ id: r.id })) }); }
       return res({});
     } catch (e) { (rej || (() => {}))(e); } } }; return o; };
-window.__db = { STORES, ITEMS, MOVES, LINES, STOCK, USERS, have, SITE_EQ, JOBS };
+window.__db = { STORES, ITEMS, MOVES, LINES, STOCK, USERS, have, SITE_EQ, JOBS, TYPES, REMS, PUSH };
 window.__calls = [];
 window.supabase = { createClient: () => ({
   auth: { onAuthStateChange(cb) { setTimeout(() => cb('SIGNED_IN', { user: { id: SAVED_ROLE === 'admin' ? USERS[0].id : 'u-' + SAVED_ROLE } }), 10); }, signOut: async () => { window.__calls.push({ rpc: 'signOut' }); return {}; }, updateUser: async () => ({}), signInWithPassword: async () => ({}) },
   from: t => q(t),
-  functions: { invoke: async (name, o) => { window.__calls.push({ fn: name, body: o.body }); return { data: adminFn(o.body), error: null }; } },
+  functions: { invoke: async (name, o) => { window.__calls.push({ fn: name, body: o.body });
+    if (name === 'maint-push') return { data: !ADMIN ? { error: 'FORBIDDEN' } : o.body.action === 'key' ? { ok: true, key: 'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM' } : { ok: true, sent: PUSH.length, failed: 0 }, error: null };
+    return { data: adminFn(o.body), error: null }; } },
   rpc: (n, a) => thenable(() => {
     window.__calls.push({ rpc: n, a });
     if (NO463 && /^ms_/.test(n)) return { error: { code: 'PGRST202', message: 'Could not find the function public.' + n + ' in the schema cache' } };
@@ -180,6 +211,11 @@ window.supabase = { createClient: () => ({
       return { store_id: s.id, items: ITEMS.filter(i => have(s.id, i.id) !== 0).length, units: ITEMS.reduce((a, i) => a + have(s.id, i.id), 0), moves: mv.length,
         last_move: mv.map(m => m.moved_on).sort().pop() || null, sent_in: mv.filter(m => m.kind === 'transfer' && m.to_store_id === s.id).length, sent_out: mv.filter(m => m.kind === 'transfer' && m.store_id === s.id).length }; }) };
     if (n === 'ms_stock_check') return { data: [] };
+    if (n === 'ms_reminders_list') return { data: remList().filter(r => a.p_all || r.status === 'open') };
+    if (n === 'ms_reminder_set') { if (!ADMIN) return err('MS_FORBIDDEN'); const r = REMS.find(x => x.id === a.p_id); if (!r) return err('MS_NOT_FOUND');
+      Object.assign(r, { status: a.p_status, closed_by_name: a.p_status === 'open' ? null : NAMES[ROLE], closed_at: a.p_status === 'open' ? null : new Date().toISOString() }); return { data: { ok: true, id: r.id, status: r.status } }; }
+    if (n === 'ms_push_save') { if (!ADMIN) return err('MS_FORBIDDEN'); if (!PUSH.some(x => x.endpoint === a.p_endpoint)) PUSH.push({ endpoint: a.p_endpoint, lang: a.p_lang }); return { data: { ok: true } }; }
+    if (n === 'ms_push_drop') { const i = PUSH.findIndex(x => x.endpoint === a.p_endpoint); if (i >= 0) PUSH.splice(i, 1); return { data: { ok: true, n: i >= 0 ? 1 : 0 } }; }
     if (n === 'ms_post') return post(a.p);
     if (n === 'ms_void') return voidMove(a.p_id, a.p_reason);
     return { data: null }; }),

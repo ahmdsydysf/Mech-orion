@@ -1019,3 +1019,232 @@ notify pgrst, 'reload schema';
 
 select 'site equipment lines' as item, (select count(*) from ms_site_equipment)::text as n
 union all select 'job cards', (select count(*) from ms_job_cards)::text;
+
+-- ---------- 12. the maintenance types, their change reminders, the phone notifications (25 Nov 2026) ----------
+-- The owner: «اريد اضافة خاصية في الصيانه وهي تحديد نوع الصيانه وكل نوع له عدد من الايام ويصلني اشعار بضرورة التغيير … واريد ايضا ان يصل
+-- للمستخدميين من مدير و ادمن اشعار علي الموبايل والابلكيشن».
+-- ms_maint_types — what a job card can do to a vehicle, each with its days until the next change: «Quartz 20W-50 engine oil, 15
+--   days», «Rimula R4 engine oil, 30 days», «air filter, 60 days». kind oil | filter | service; part = which of the card's oils / filters
+--   it is (two engine oils are two types of one part: the second one done renews the first one's reminder). The admins write it.
+-- ms_job_cards.maint_types — the types done on that card. Its trigger keeps ms_reminders: one per (card, type), due on the day out
+--   (or in) + the type's days; the same part done again on the same vehicle closes the older one as «renewed».
+-- ms_reminders — read by every reader; the admins / managers / deputies close one (done / dismissed) or reopen it (ms_reminder_set).
+-- ms_push_subs — the phones (Web Push) of the admins / managers / deputies; ms_push_conf — the server's keys and the cron's secret,
+--   read by the service role only. The Edge Function maint-push sends the due reminders to the phones (pg_cron calls it daily:
+--   supabase/push-cron.sql) and the page's «test» notification.
+
+create table if not exists ms_maint_types (
+  id uuid primary key default gen_random_uuid(),
+  name text not null check (char_length(name) between 1 and 80),
+  kind text not null default 'oil' check (kind in ('oil', 'filter', 'service')),
+  part text,
+  item_id uuid references ms_items(id) on delete set null,
+  interval_days int not null check (interval_days between 1 and 3650),
+  active boolean not null default true,
+  note text check (char_length(note) <= 200),
+  sort int not null default 0,
+  created_by_name text,
+  created_at timestamptz not null default now(),
+  updated_by_name text,
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists ms_maint_types_name_uq on ms_maint_types (lower(name));
+alter table ms_maint_types enable row level security;
+
+create or replace function ms_maint_types_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  new.name := ms_clean(new.name); new.note := ms_clean(new.note);
+  if new.name is null then raise exception 'MS_NAME_REQUIRED'; end if;
+  if char_length(new.name) > 80 then raise exception 'MS_NAME_TOO_LONG'; end if;
+  if char_length(coalesce(new.note, '')) > 200 then raise exception 'MS_NOTE_TOO_LONG'; end if;
+  if new.interval_days is null or new.interval_days < 1 or new.interval_days > 3650 then raise exception 'MS_DAYS_INVALID'; end if;
+  new.kind := coalesce(nullif(lower(btrim(coalesce(new.kind, ''))), ''), 'oil');
+  new.part := nullif(lower(btrim(coalesce(new.part, ''))), '');
+  if new.kind not in ('oil', 'filter', 'service')
+     or (new.kind = 'oil' and new.part is not null and new.part not in ('hydraulic', 'diesel_engine', 'petrol_engine', 'gear', 'coolant'))
+     or (new.kind = 'filter' and new.part is not null and new.part not in ('hydraulic', 'oil', 'fuel', 'air', 'cabin'))
+     or (new.kind = 'service' and new.part is not null) then raise exception 'MS_TYPE_INVALID'; end if;
+  if exists (select 1 from ms_maint_types t where lower(t.name) = lower(new.name) and t.id <> new.id) then raise exception 'MS_TYPE_DUP'; end if;
+  new.sort := coalesce(new.sort, 0); new.active := coalesce(new.active, true);
+  if tg_op = 'INSERT' then new.created_by_name := ms_me_name(); new.created_at := now();
+  else new.created_by_name := old.created_by_name; new.created_at := old.created_at; end if;
+  new.updated_by_name := ms_me_name(); new.updated_at := now();
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_maint_types_before on ms_maint_types;
+create trigger trg_ms_maint_types_before before insert or update on ms_maint_types for each row execute function ms_maint_types_before_write();
+
+-- the types a card did
+alter table ms_job_cards add column if not exists maint_types uuid[] not null default '{}';
+
+create table if not exists ms_reminders (
+  id uuid primary key default gen_random_uuid(),
+  job_card_id uuid not null references ms_job_cards(id) on delete cascade,
+  type_id uuid not null references ms_maint_types(id),
+  vkey text not null,                                           -- the vehicle: P:<plate_key> · S:<site equipment> · E:<equipment> · M:<make>
+  label text,
+  done_on date not null,
+  due_on date not null,
+  status text not null default 'open' check (status in ('open', 'done', 'dismissed', 'renewed')),
+  closed_by_name text,
+  closed_at timestamptz,
+  pushed_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (job_card_id, type_id)
+);
+create index if not exists ms_reminders_due on ms_reminders (status, due_on);
+create index if not exists ms_reminders_vkey on ms_reminders (vkey, type_id);
+alter table ms_reminders enable row level security;
+
+-- a card's types: each one known (a stopped type only if the card already had it), once (internal)
+create or replace function ms_job_cards_maint_check() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare x uuid;
+begin
+  new.maint_types := coalesce((select array_agg(distinct u) from unnest(coalesce(new.maint_types, '{}')) u where u is not null), '{}');
+  foreach x in array new.maint_types loop
+    if not exists (select 1 from ms_maint_types t where t.id = x and (t.active or (tg_op = 'UPDATE' and x = any(old.maint_types)))) then
+      raise exception 'MS_TYPE_INVALID'; end if;
+  end loop;
+  return new;
+end $fn$;
+drop trigger if exists trg_ms_job_cards_maint on ms_job_cards;
+create trigger trg_ms_job_cards_maint before insert or update on ms_job_cards for each row execute function ms_job_cards_maint_check();
+
+-- the reminders follow the card: one per type, due on the day out (or in) + the type's days; the same part done again on the same
+-- vehicle closes the older open ones as «renewed» (internal)
+create or replace function ms_job_cards_remind() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare v_key text; v_label text; v_done date := coalesce(new.out_on, new.in_on);
+begin
+  v_key := coalesce('P:' || plate_key(new.plate), 'S:' || new.site_equipment_id::text, 'E:' || new.equipment_id::text, 'M:' || lower(new.make_model), 'J:' || new.id::text);
+  v_label := nullif(concat_ws(' · ', new.plate, new.make_model, (select e.name from ms_site_equipment e where e.id = new.site_equipment_id)), '');
+  delete from ms_reminders r where r.job_card_id = new.id and not (r.type_id = any(new.maint_types));
+  insert into ms_reminders (job_card_id, type_id, vkey, label, done_on, due_on)
+    select new.id, t.id, v_key, v_label, v_done, v_done + t.interval_days from ms_maint_types t where t.id = any(new.maint_types)
+  on conflict (job_card_id, type_id) do update set vkey = excluded.vkey, label = excluded.label,
+    due_on = case when ms_reminders.done_on = excluded.done_on then ms_reminders.due_on else excluded.due_on end,
+    pushed_at = case when ms_reminders.done_on = excluded.done_on then ms_reminders.pushed_at end,
+    done_on = excluded.done_on;
+  update ms_reminders r set status = 'renewed', closed_at = now(), closed_by_name = new.no
+    from ms_maint_types ot
+   where ot.id = r.type_id and r.status = 'open' and r.vkey = v_key and r.job_card_id <> new.id and r.done_on <= v_done
+     and exists (select 1 from ms_maint_types nt where nt.id = any(new.maint_types)
+                  and (nt.id = ot.id or (nt.kind = ot.kind and nt.part is not null and nt.part = ot.part)));
+  return null;
+end $fn$;
+drop trigger if exists trg_ms_job_cards_remind on ms_job_cards;
+create trigger trg_ms_job_cards_remind after insert or update of maint_types, plate, make_model, equipment_id, site_equipment_id, in_on, out_on
+  on ms_job_cards for each row execute function ms_job_cards_remind();
+
+-- a type a card did stays: stop it instead
+create or replace function ms_maint_types_before_delete() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  if exists (select 1 from ms_reminders r where r.type_id = old.id) or exists (select 1 from ms_job_cards j where old.id = any(j.maint_types)) then
+    raise exception 'MS_TYPE_IN_USE'; end if;
+  return old;
+end $fn$;
+drop trigger if exists trg_ms_maint_types_before_delete on ms_maint_types;
+create trigger trg_ms_maint_types_before_delete before delete on ms_maint_types for each row execute function ms_maint_types_before_delete();
+
+-- the reminders as the page shows them: open only (or all), the soonest first, with the type and the card
+create or replace function ms_reminders_list(p_all boolean default false)
+returns table(id uuid, job_card_id uuid, job_no text, type_id uuid, type_name text, kind text, part text, interval_days int, vkey text, label text,
+              plate text, store_id uuid, done_on date, due_on date, days_left int, status text, closed_by_name text, closed_at timestamptz)
+language sql stable set search_path = public as $fn$
+  select r.id, r.job_card_id, j.no, r.type_id, t.name, t.kind, t.part, t.interval_days, r.vkey, r.label, j.plate, j.store_id, r.done_on, r.due_on,
+         (r.due_on - (now() at time zone 'Asia/Dubai')::date)::int, r.status, r.closed_by_name, r.closed_at
+    from ms_reminders r join ms_maint_types t on t.id = r.type_id join ms_job_cards j on j.id = r.job_card_id
+   where p_all or r.status = 'open'
+   order by (r.status = 'open') desc, r.due_on, t.name;
+$fn$;
+
+-- close a reminder (done / dismissed) or reopen it — the admins, managers and deputies
+create or replace function ms_reminder_set(p_id uuid, p_status text) returns jsonb
+language plpgsql security definer set search_path = public as $fn$
+declare r ms_reminders;
+begin
+  if not ms_admin() then raise exception 'MS_FORBIDDEN'; end if;
+  if p_status not in ('open', 'done', 'dismissed') then raise exception 'MS_STATUS_INVALID'; end if;
+  update ms_reminders set status = p_status, closed_at = case when p_status = 'open' then null else now() end,
+         closed_by_name = case when p_status = 'open' then null else ms_me_name() end
+   where id = p_id returning * into r;
+  if r.id is null then raise exception 'MS_NOT_FOUND'; end if;
+  return jsonb_build_object('ok', true, 'id', r.id, 'status', r.status);
+end $fn$;
+
+-- the phones: one row per browser subscription (endpoint), its owner, the language of its notifications
+create table if not exists ms_push_subs (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  endpoint text not null unique check (char_length(endpoint) <= 1000),
+  p256dh text not null check (char_length(p256dh) <= 200),
+  auth text not null check (char_length(auth) <= 100),
+  lang text not null default 'ar' check (lang in ('ar', 'en')),
+  ua text check (char_length(ua) <= 200),
+  created_at timestamptz not null default now(),
+  last_ok_at timestamptz
+);
+create index if not exists ms_push_subs_user on ms_push_subs (user_id);
+alter table ms_push_subs enable row level security;
+
+-- this phone on (the admins, managers, deputies) / off (anyone, his own)
+create or replace function ms_push_save(p_endpoint text, p_p256dh text, p_auth text, p_lang text default 'ar', p_ua text default null) returns jsonb
+language plpgsql security definer set search_path = public as $fn$
+begin
+  if not ms_admin() then raise exception 'MS_FORBIDDEN'; end if;
+  if coalesce(p_endpoint, '') !~ '^https://' or char_length(p_endpoint) > 1000 or coalesce(p_p256dh, '') = '' or coalesce(p_auth, '') = ''
+     or char_length(p_p256dh) > 200 or char_length(p_auth) > 100 then raise exception 'MS_PUSH_INVALID'; end if;
+  insert into ms_push_subs (user_id, endpoint, p256dh, auth, lang, ua)
+  values (auth.uid(), p_endpoint, p_p256dh, p_auth, case when p_lang = 'en' then 'en' else 'ar' end, left(p_ua, 200))
+  on conflict (endpoint) do update set user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth, lang = excluded.lang, ua = excluded.ua;
+  return jsonb_build_object('ok', true);
+end $fn$;
+create or replace function ms_push_drop(p_endpoint text) returns jsonb
+language sql security definer set search_path = public as $fn$
+  with d as (delete from ms_push_subs where endpoint = p_endpoint and user_id = auth.uid() returning 1)
+  select jsonb_build_object('ok', true, 'n', (select count(*) from d));
+$fn$;
+
+-- the server's side: the VAPID keys (made by maint-push the first time) and the secret pg_cron calls it with — no policy: service role only
+create table if not exists ms_push_conf (
+  id int primary key default 1 check (id = 1),
+  cron_secret text not null default encode(gen_random_bytes(24), 'hex'),
+  vapid_public text,
+  vapid_private text
+);
+alter table ms_push_conf enable row level security;
+insert into ms_push_conf (id) values (1) on conflict (id) do nothing;
+
+-- who reads, who writes
+drop policy if exists "ms maint types read" on ms_maint_types;
+create policy "ms maint types read" on ms_maint_types for select to authenticated using ((select ms_reader()));
+drop policy if exists "ms maint types insert" on ms_maint_types;
+create policy "ms maint types insert" on ms_maint_types for insert to authenticated with check ((select ms_admin()));
+drop policy if exists "ms maint types update" on ms_maint_types;
+create policy "ms maint types update" on ms_maint_types for update to authenticated using ((select ms_admin())) with check ((select ms_admin()));
+drop policy if exists "ms maint types delete" on ms_maint_types;
+create policy "ms maint types delete" on ms_maint_types for delete to authenticated using ((select ms_admin()));
+drop policy if exists "ms reminders read" on ms_reminders;
+create policy "ms reminders read" on ms_reminders for select to authenticated using ((select ms_reader()));
+drop policy if exists "ms push subs read" on ms_push_subs;
+create policy "ms push subs read" on ms_push_subs for select to authenticated using (user_id = (select auth.uid()));
+
+grant select, insert, update, delete on ms_maint_types to authenticated, service_role;
+grant select on ms_reminders, ms_push_subs to authenticated;
+grant select, insert, update, delete on ms_reminders, ms_push_subs, ms_push_conf to service_role;
+revoke all on ms_maint_types, ms_reminders, ms_push_subs, ms_push_conf from anon;
+revoke all on ms_push_conf from authenticated;
+grant execute on function ms_reminders_list(boolean), ms_reminder_set(uuid, text), ms_push_save(text, text, text, text, text), ms_push_drop(text) to authenticated, service_role;
+revoke execute on function ms_reminders_list(boolean), ms_reminder_set(uuid, text), ms_push_save(text, text, text, text, text), ms_push_drop(text) from public, anon;
+revoke execute on function ms_maint_types_before_write() from public, anon, authenticated;
+revoke execute on function ms_maint_types_before_delete() from public, anon, authenticated;
+revoke execute on function ms_job_cards_maint_check() from public, anon, authenticated;
+revoke execute on function ms_job_cards_remind() from public, anon, authenticated;
+notify pgrst, 'reload schema';
+
+select 'maintenance types' as item, (select count(*) from ms_maint_types)::text as n
+union all select 'open reminders', (select count(*) from ms_reminders where status = 'open')::text
+union all select 'phones', (select count(*) from ms_push_subs)::text;

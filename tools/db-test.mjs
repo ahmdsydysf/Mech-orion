@@ -260,5 +260,62 @@ check('anon reaches neither', !(await one(`select has_table_privilege('anon', 'p
 const r4 = await runFile('schema.sql');
 check('schema.sql runs again over them: the lines and the cards kept', !r4.err && (await one(`select count(*)::int n from ms_site_equipment`)).n === 759 && (await one(`select count(*)::int n from ms_job_cards`)).n === 1, r4.err);
 
+// ---------- the maintenance types, the change reminders, the phones (25 Nov 2026) ----------
+const ty = async (who, row) => run(who, `insert into ms_maint_types (name, kind, part, interval_days) values ($1, $2, $3, $4) returning id, name, kind, part, interval_days, created_by_name`, [row.name, row.kind, row.part, row.days]);
+const tBad = await ty('M', { name: '  Quartz   20W-50 ', kind: 'oil', part: 'diesel_engine', days: 15 });
+check('a manager adds a type: cleaned, stamped', Array.isArray(tBad) && tBad[0].name === 'Quartz 20W-50' && tBad[0].interval_days === 15 && tBad[0].created_by_name === 'Mona Manager', tBad);
+const tGood = await ty('D', { name: 'Rimula R4 15W-40', kind: 'oil', part: 'diesel_engine', days: 30 });
+const tAir = await ty('A', { name: 'Air filter', kind: 'filter', part: 'air', days: 60 });
+check('a deputy and an admin add types too', Array.isArray(tGood) && Array.isArray(tAir), [tGood, tAir]);
+check('a storekeeper or a mechanic cannot add a type', /row-level security/.test(await ty('K', { name: 'x', kind: 'oil', days: 5 })) && /row-level security/.test(await ty('C', { name: 'y', kind: 'oil', days: 5 })), null);
+check('a type: a name once, days 1..3650, a known part', /MS_TYPE_DUP/.test(await ty('A', { name: 'quartz 20w-50', kind: 'oil', days: 5 }))
+  && /MS_DAYS_INVALID/.test(await ty('A', { name: 'z', kind: 'oil', days: 0 })) && /MS_TYPE_INVALID/.test(await ty('A', { name: 'z', kind: 'oil', part: 'air', days: 5 })), null);
+check('a viewer reads the types', (await val('V', `select count(*)::int from ms_maint_types`)) === 3, null);
+const TB = tBad[0].id, TG = tGood[0].id, TA = tAir[0].id;
+const jr = await ins('C', { ...card, in_on: '2026-11-01', out_on: '2026-11-02', maint_types: [TB, TA, TB] });
+const rem = async id => run('V', `select type_name, due_on::text due, status from ms_reminders_list(true) where job_card_id = $1 order by type_name`, [id]);
+let rr = await rem(jr[0].id);
+check('a card with two types (one twice): two reminders, due on the day out + their days', rr.length === 2 && rr[0].type_name === 'Air filter' && rr[0].due === '2027-01-01'
+  && rr[1].type_name === 'Quartz 20W-50' && rr[1].due === '2026-11-17' && rr.every(x => x.status === 'open'), rr);
+check('an unknown type on a card → MS_TYPE_INVALID', /MS_TYPE_INVALID/.test(await ins('C', { ...card, maint_types: ['00000000-0000-0000-0000-000000000000'] })), null);
+await run('C', `update ms_job_cards set out_on = '2026-11-05' where id = $1`, [jr[0].id]);
+rr = await rem(jr[0].id);
+check('the day out moved: the reminders moved with it', rr[1].due === '2026-11-20' && rr[0].due === '2027-01-04', rr);
+await run('C', `update ms_job_cards set maint_types = $2 where id = $1`, [jr[0].id, [TB]]);
+check('a type taken off the card: its reminder gone', (await rem(jr[0].id)).length === 1, null);
+const jr2 = await ins('K', { ...card, plate: '74-522', in_on: '2026-11-20', maint_types: [TG] });
+const r1b = (await rem(jr[0].id))[0], r2b = (await rem(jr2[0].id))[0];
+check('the better oil on the same plate: the old reminder «renewed», the new one due in 30 days', r1b.status === 'renewed' && r2b.status === 'open' && r2b.due === '2026-12-20', [r1b, r2b]);
+const jr3 = await ins('K', { ...card, plate: 'OTHER 1', in_on: '2026-11-20', maint_types: [TB] });
+check('another plate renews nothing', (await rem(jr2[0].id))[0].status === 'open', null);
+const RID = (await one(`select id from ms_reminders where job_card_id = $1`, [jr3[0].id])).id;
+check('a storekeeper cannot close a reminder, a manager can, and reopen it', /MS_FORBIDDEN/.test(await val('K', `select ms_reminder_set($1, 'done')`, [RID]))
+  && (await val('M', `select ms_reminder_set($1, 'done')`, [RID])).status === 'done' && (await one(`select closed_by_name from ms_reminders where id = $1`, [RID])).closed_by_name === 'Mona Manager'
+  && (await val('D', `select ms_reminder_set($1, 'open')`, [RID])).status === 'open', null);
+check('nobody writes ms_reminders straight', /permission denied|row-level security/.test(await run('A', `update ms_reminders set status = 'done' where id = $1`, [RID]))
+  || (await run('A', `update ms_reminders set status = 'done' where id = $1 returning id`, [RID])).length === 0, null);
+check('the open list: soonest first, days left counted', (await run('V', `select due_on, days_left from ms_reminders_list()`)).every((x, i, a) => !i || a[i - 1].due_on <= x.due_on), null);
+check('a type a card did is never deleted, an unused one is', /MS_TYPE_IN_USE/.test(await run('A', `delete from ms_maint_types where id = $1`, [TB]))
+  && (await run('A', `insert into ms_maint_types (name, interval_days) values ('Temp', 9) returning id`)).length === 1
+  && (await run('A', `delete from ms_maint_types where name = 'Temp' returning id`)).length === 1, null);
+await run('A', `update ms_maint_types set active = false where id = $1`, [TG]);
+check('a stopped type: not on a new card, kept on the card that has it', /MS_TYPE_INVALID/.test(await ins('C', { ...card, maint_types: [TG] }))
+  && (await run('K', `update ms_job_cards set driver = 'Z' where id = $1 returning id`, [jr2[0].id])).length === 1, null);
+await run('A', `delete from ms_job_cards where id = $1`, [jr3[0].id]);
+check('a card deleted: its reminders with it', (await one(`select count(*)::int n from ms_reminders where job_card_id = $1`, [jr3[0].id])).n === 0, null);
+const sub = ['https://fcm.googleapis.com/fcm/send/abc', 'BPkey', 'authkey'];
+check('a manager saves his phone, a storekeeper cannot', (await val('M', `select ms_push_save($1, $2, $3, 'ar', 'test')`, sub)).ok === true
+  && /MS_FORBIDDEN/.test(await val('K', `select ms_push_save($1, $2, $3)`, ['https://x.y/1', 'a', 'b'])), null);
+check('a phone that is not https → MS_PUSH_INVALID', /MS_PUSH_INVALID/.test(await val('A', `select ms_push_save('http://x', 'a', 'b')`)), null);
+check('each one reads his own phones only', (await run('M', `select count(*)::int n from ms_push_subs`))[0].n === 1 && (await run('A', `select count(*)::int n from ms_push_subs`))[0].n === 0, null);
+check('the same phone signed in by another admin moves to him', (await val('A', `select ms_push_save($1, $2, $3, 'en')`, sub)).ok && (await run('A', `select lang from ms_push_subs`))[0]?.lang === 'en', null);
+check('his phone off', (await val('A', `select ms_push_drop($1)`, [sub[0]])).n === 1, null);
+check('ms_push_conf: a secret made, unreadable by a signed-in account', (await val(null, `select char_length(cron_secret) n from ms_push_conf`)) === 48 && /permission denied/.test(await run('A', `select * from ms_push_conf`)), null);
+check('the trigger functions are internal', !(await one(`select has_function_privilege('authenticated', 'ms_job_cards_remind()', 'execute') x`)).x
+  && !(await one(`select has_function_privilege('authenticated', 'ms_maint_types_before_write()', 'execute') x`)).x, null);
+check('anon reaches none of it', !(await one(`select has_table_privilege('anon', 'public.ms_reminders', 'select') x`)).x && !(await one(`select has_function_privilege('anon', 'ms_reminders_list(boolean)', 'execute') x`)).x, null);
+const r5 = await runFile('schema.sql');
+check('schema.sql runs again over them: the types, the reminders, the secret kept', !r5.err && (await one(`select count(*)::int n from ms_maint_types`)).n === 3 && (await one(`select count(*)::int n from ms_reminders`)).n === 2, r5.err);
+
 console.log(`\n${T.filter(Boolean).length} of ${T.length} passed`);
 process.exit(T.every(Boolean) ? 0 : 1);

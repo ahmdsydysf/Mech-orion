@@ -180,7 +180,11 @@ const AR = /[؀-ۿ]/;
     check('«issue the filters»: a new issue with the card\'s stocked filters, its plate, the card number as the reference', active() === 'scr-move' && d.querySelector('#mvKind [data-k="issue"]').classList.contains('on')
       && d.querySelectorAll('#mvLines .lrow').length === 2 && d.getElementById('mvPlate').value === '74522' && d.getElementById('mvRef').value === 'JC-000001' && d.getElementById('mvStore').value === 's2', [d.querySelectorAll('#mvLines .lrow').length, d.getElementById('mvPlate').value, d.getElementById('mvRef').value]);
     nav('jobs'); await wait(60); click(d.getElementById('btnJbNew')); await wait(40);
-    check('a new card: the eight sections, the eight safety checks, five oils, five filters', d.querySelectorAll('#editBody .jsec').length === 8 && d.querySelectorAll('#jfChecks .ckc').length === 8 && d.querySelectorAll('#editBody [id^="jo_"]').length === 5 && d.querySelectorAll('#editBody [id^="jp_"]').length === 5, d.querySelectorAll('#editBody .jsec').length);
+    check('a new card: the nine sections, the eight safety checks, five oils, five filters', d.querySelectorAll('#editBody .jsec').length === 9 && d.querySelectorAll('#jfChecks .ckc').length === 8 && d.querySelectorAll('#editBody [id^="jo_"]').length === 5 && d.querySelectorAll('#editBody [id^="jp_"]').length === 5, d.querySelectorAll('#editBody .jsec').length);
+    const mt = () => [...d.querySelectorAll('#jfMaint .mtchip')];
+    check('the card offers the active maintenance types with their days (the stopped one not)', mt().length === 3 && /Quartz 20W-50/.test(txt(mt()[0])) && /كل 15 يوم/.test(txt(mt()[0])) && !mt().some(b => /Old grease/.test(txt(b))), mt().map(b => txt(b)));
+    click(mt().find(b => /Rimula/.test(txt(b))));
+    check('a type picked: its next change shown (in + 30 days)', mt().find(b => /Rimula/.test(txt(b))).classList.contains('on') && /Rimula R4 15W-40: التغيير القادم/.test(txt(d.getElementById('jfNext'))), txt(d.getElementById('jfNext')));
     click(d.getElementById('btnEditSave')); await wait(40);
     check('nothing to work on → said in words', /اكتب رقم اللوحة أو الماركة والموديل/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
     set('jfPlate', '52676'); set('jfMake', 'Bobcat S450'); set('jfDriver', 'Anil'); set('jfReading', '880'); set('jfSite', 's3');
@@ -193,12 +197,16 @@ const AR = /[؀-ۿ]/;
       && j2.oils.length === 2 && j2.oils[1].qty === 9.5 && j2.oils[1].note === '15W-40' && j2.filters.find(f => f.type === 'air').part_no === 'FOA-2579' && j2.filters.find(f => f.type === 'air').action === 'clean'
       && j2.filters.find(f => f.type === 'oil').action === 'change' && j2.work.join() === 'electrical,routine' && j2.equipment_id === 'e2' && j2.store_id === 's3' && j2.reading === 880, j2);
     check('… and opened after saving', /JC-000002/.test(txt(d.getElementById('editTitle'))) && !!d.getElementById('jbPrintB'), txt(d.getElementById('editTitle')));
+    check('the type went with the card, its reminder made (30 days on), shown on the card', j2.maint_types.join() === 't2' && db.REMS.some(r => r.job_card_id === j2.id && r.type_id === 't2' && r.status === 'open')
+      && /Rimula R4 15W-40/.test(txt(d.getElementById('editBody'))) && /نوع الصيانة والتذكير/.test(txt(d.getElementById('editBody'))), j2.maint_types);
+    check('storekeeper: no bell', !open('btnBell'), null);
     const pn = printed.length; click(d.getElementById('jbPrintB')); await wait(20); await pl('ar');
     const pj = printed[pn] || '';
     check('the job card\'s paper in Arabic: Orion\'s own (jc), its number, Arabic only, the fuel gauge, the ticks, the filters, the policy, the print script', /class="jc"/.test(pj) && /JC-000002/.test(pj) && /dir="rtl"/.test(pj) && /كارت عمل صيانة/.test(pj) && !/Job card|WORKSHOP|ENGINE OIL|Hydraulic oil|Sign-off|class="l2"/i.test(pj)
       && (pj.match(/class="on /g) || []).length === 4 && /class="ck ok"/.test(pj) && /class="ck bad"/.test(pj) && /FOA-2579/.test(pj) && /act clean/.test(pj) && /تعليمات الصيانة الداخلية/.test(pj) && /<script src="print.js"><\/script>/.test(pj) && !/onclick=/.test(pj), pj.slice(0, 200));
     click(d.getElementById('jbPrintB')); await wait(20); await pl('en');
     const pe = printed[pn + 1] || '', peText = pe.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
+    check('the paper: the next change', /مواعيد التغيير القادمة/.test(pj) && /Rimula R4 15W-40/.test(pj), null);
     check('… and in English: English only, left to right; the page itself stays Arabic', /dir="ltr"/.test(pe) && /<h1>Job card<\/h1>/.test(pe) && /FOA-2579/.test(pe) && !AR.test(peText) && w.eval('lang') === 'ar' && /طباعة/.test(txt(d.getElementById('jbPrintB'))), peText.match(/[؀-ۿ]+/g));
     click(d.getElementById('jbTogB')); await wait(60);
     check('closing the card: done, the day out filled', j2.status === 'done' && !!j2.out_on, [j2.status, j2.out_on]);
@@ -221,7 +229,66 @@ const AR = /[؀-ۿ]/;
     check('saved as JC-000003, tied to the line', db.JOBS.some(c => c.no === 'JC-000003' && c.site_equipment_id === 'se1'), db.JOBS.map(c => c.no));
     nav('projects'); await wait(80); click(pr()[1].querySelector('.fb')); await wait(80); click(d.getElementById('pjEquipB')); await wait(60);
     check('a project\'s «site equipment» opens its lines', active() === 'scr-jobs' && d.querySelector('#seSites .chip.on')?.dataset.v === 's3' && sr().length === 1 && /TL-4/.test(txt(d.getElementById('seList'))), [active(), sr().length]);
+    click(d.querySelector('#jbPane [data-p="rem"]')); await wait(80);
+    check('storekeeper: the reminders read, no phone box', d.querySelectorAll('#remList .frow').length === 1 && d.getElementById('pushBox').innerHTML === '', d.querySelectorAll('#remList .frow').length);
+    click(d.querySelector('#remList .frow .fb')); await wait(60);
+    check('… a reminder opened: «new card» for him, no close nor dismiss', !!d.getElementById('remNewB') && !d.getElementById('remDoneB') && !d.getElementById('remDisB'), null);
+    click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="types"]')); await wait(60);
+    check('storekeeper: the types read, nothing to add', d.querySelectorAll('#tyList .frow').length === 4 && !open('btnTyNew'), null);
     check('storekeeper: no runtime errors', errors.length === 0, errors);
+  }
+  // ---------------- the manager: the bell, the reminders, the types, the phone (25 Nov 2026) ----------------
+  {
+    const B = await boot('manager'), { d, errors, wait, click, txt, set, open, active, db } = B;
+    await wait(60);
+    check('manager: the bell with one change due', open('btnBell') && txt(d.getElementById('bellN')) === '1', txt(d.getElementById('bellN')));
+    click(d.getElementById('btnBell')); await wait(100);
+    const rr = () => [...d.querySelectorAll('#remList .frow')];
+    check('the bell opens the reminders: the late one, 2 days late', active() === 'scr-jobs' && open('jbRem') && rr().length === 1 && /Quartz 20W-50/.test(txt(rr()[0])) && /متأخر 2 يوم/.test(txt(rr()[0])) && rr()[0].classList.contains('late'), rr().map(r => txt(r)));
+    check('… the phone box says this browser has none (jsdom)', /لا يدعم الإشعارات/.test(txt(d.getElementById('pushBox'))), txt(d.getElementById('pushBox')));
+    click(d.querySelector('#remShow [data-v="soon"]')); await wait(20);
+    check('«coming»: the air filter in 10 days', rr().length === 1 && /Air filter/.test(txt(rr()[0])) && /بعد 10 يوم/.test(txt(rr()[0])), rr().map(r => txt(r)));
+    click(d.querySelector('#remShow [data-v="due"]')); await wait(20); click(rr()[0].querySelector('.fb')); await wait(60);
+    check('a reminder opened: its card, «new card», changed, dismiss', !!d.getElementById('remJobB') && !!d.getElementById('remNewB') && !!d.getElementById('remDoneB') && !!d.getElementById('remDisB'), null);
+    click(d.getElementById('remNewB')); await wait(60);
+    const mt = () => [...d.querySelectorAll('#jfMaint .mtchip')];
+    check('«new card for the same vehicle»: the plate, the make, the site, the same type ticked', d.getElementById('jfPlate').value === '74522' && d.getElementById('jfMake').value === 'Bobcat S650' && d.getElementById('jfSite').value === 's2'
+      && mt().filter(b => b.classList.contains('on')).map(b => b.dataset.v).join() === 't1', mt().filter(b => b.classList.contains('on')).map(b => b.dataset.v));
+    click(mt().find(b => b.dataset.v === 't1')); click(mt().find(b => b.dataset.v === 't2'));
+    click(d.getElementById('btnEditSave')); await wait(120);
+    const r1 = db.REMS.find(r => r.id === 'r1');
+    check('the better oil on the same plate: the late reminder renewed, the bell quiet', r1.status === 'renewed' && r1.closed_by_name === 'JC-000002' && d.getElementById('bellN').classList.contains('hidden'), [r1.status, txt(d.getElementById('bellN'))]);
+    click(d.getElementById('editBackdrop')); B.nav('jobs'); await wait(20); click(d.querySelector('#jbPane [data-p="rem"]')); await wait(100);
+    click(d.querySelector('#remShow [data-v="closed"]')); await wait(20);
+    check('«closed»: renewed by card JC-000002', rr().length === 1 && /تجدد بالكارت JC-000002/.test(txt(rr()[0])), rr().map(r => txt(r)));
+    click(rr()[0].querySelector('.fb')); await wait(60); click(d.getElementById('remOpenB')); await wait(100);
+    check('reopened', r1.status === 'open' && txt(d.getElementById('bellN')) === '1', r1.status);
+    click(d.querySelector('#remShow [data-v="due"]')); await wait(20); click(rr()[0].querySelector('.fb')); await wait(60); click(d.getElementById('remDoneB')); await wait(100);
+    check('«changed»: closed with his name', r1.status === 'done' && r1.closed_by_name === 'Mona Manager', [r1.status, r1.closed_by_name]);
+    // the types
+    click(d.querySelector('#jbPane [data-p="types"]')); await wait(60);
+    const tr = () => [...d.querySelectorAll('#tyList .frow')];
+    check('the types: four, the stopped one marked, «add» for him', tr().length === 4 && d.querySelectorAll('#tyList .frow.off').length === 1 && open('btnTyNew'), tr().map(r => txt(r)));
+    click(d.getElementById('btnTyNew')); await wait(40);
+    set('tyName', 'Gear oil 80W-90'); set('tyKind', 'oil'); set('tyPart', 'gear'); set('tyDays', '0'); click(d.getElementById('btnEditSave')); await wait(40);
+    check('days 0 → said in words', /من 1 إلى 3650/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
+    set('tyDays', '45'); click(d.getElementById('btnEditSave')); await wait(80);
+    check('a type added: oil, gear, 45 days', db.TYPES.some(x => x.name === 'Gear oil 80W-90' && x.kind === 'oil' && x.part === 'gear' && x.interval_days === 45) && tr().length === 5, db.TYPES.map(x => x.name));
+    click(d.getElementById('btnTyNew')); await wait(40); set('tyName', 'air FILTER'); set('tyDays', '10'); click(d.getElementById('btnEditSave')); await wait(60);
+    check('the same name twice → said in words', /يوجد نوع بنفس الاسم/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
+    click(d.getElementById('editBackdrop')); click(tr().find(r => /Quartz/.test(txt(r))).querySelector('.fb')); await wait(40);
+    check('a type opened for editing: the kind\'s parts offered', d.getElementById('tyName').value === 'Quartz 20W-50' && d.getElementById('tyPart').value === 'diesel_engine' && !!d.getElementById('tyDelB'), null);
+    set('tyKind', 'filter'); await wait(10);
+    check('… another kind: its parts', [...d.getElementById('tyPart').options].map(o => o.value).join() === ',hydraulic,oil,fuel,air,cabin', [...d.getElementById('tyPart').options].map(o => o.value));
+    set('tyKind', 'oil'); click(d.getElementById('tyDelB')); click(d.getElementById('tyDelB')); await wait(60);
+    check('a type cards used is never deleted — said in words', /أوقفه بدلًا من حذفه/.test(txt(d.getElementById('editMsg'))) && db.TYPES.some(x => x.id === 't1'), txt(d.getElementById('editMsg')));
+    set('tyDays', '20'); d.getElementById('tyActive').checked = false; click(d.getElementById('btnEditSave')); await wait(80);
+    check('edited: 20 days, stopped', db.TYPES.find(x => x.id === 't1').interval_days === 20 && db.TYPES.find(x => x.id === 't1').active === false, db.TYPES.find(x => x.id === 't1'));
+    check('manager: no runtime errors', errors.length === 0, errors);
+  }
+  {
+    const B = await boot('admin', { qs: '&tab=jobs&pane=rem' }); await B.wait(80);
+    check('a notification\'s link opens the reminders', B.active() === 'scr-jobs' && B.open('jbRem') && B.d.querySelectorAll('#remList .frow').length === 1, [B.active(), B.open('jbRem')]);
   }
   // ---------------- the admin cancels ----------------
   {
@@ -351,6 +418,7 @@ const AR = /[؀-ۿ]/;
       check('mechanic: edits his own card', B.db.JOBS[0].out_on === '2026-11-16', B.db.JOBS[0].out_on); }
     click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="equip"]')); await wait(60);
     check(role + ': the site equipment read, nothing to add', d.querySelectorAll('#seList .frow').length === 4 && !open('btnSeAdd'), null);
+    check(role + ': no bell, no «add type»', !open('btnBell') && !open('btnTyNew'), null);
     B.nav('projects'); await wait(80);
     click([...d.querySelectorAll('#pjList .frow')][0].querySelector('.fb')); await wait(80);
     check(role + ': a project opened shows its store and no button that writes', /مخزن المشروع/.test(txt(d.getElementById('editBody'))) && !d.getElementById('pjGoSend') && !d.getElementById('pjTogB') && !B.open('btnPjNew'), null);

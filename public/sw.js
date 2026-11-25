@@ -1,5 +1,5 @@
 // The shell from the network first (4 s), the copy kept when the signal is weak or gone. Supabase and the CDN are never cached here.
-const VERSION = '2026.11.17-2';
+const VERSION = '2026.11.25-1';
 const CACHE = 'mech-' + VERSION;
 const SHELL = ['./', 'app.js', 'theme.js', 'config.js', 'print.js', 'manifest.webmanifest', 'logo.png', 'mark.svg', 'icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); });
@@ -16,4 +16,19 @@ self.addEventListener('fetch', e => {
     if (!kept) return net.catch(() => cache.match('./'));
     return Promise.race([net.catch(() => kept), new Promise(r => setTimeout(() => r(kept), 4000))]);
   })());
+});
+// the maintenance reminders on the phone (Web Push from the Edge Function maint-push): shown, and a tap opens the reminders
+self.addEventListener('push', e => {
+  let d = {}; try { d = e.data ? e.data.json() : {}; } catch { d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || '🔧 Orion', { body: d.body || '', tag: d.tag || 'ms-rem', renotify: true, icon: 'icon-192.png', badge: 'badge-96.png',
+    dir: 'auto', data: { url: d.url || './?tab=jobs&pane=rem' } }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || './?tab=jobs&pane=rem', self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    const c = cs.find(x => x.url.startsWith(self.registration.scope));
+    if (c) { c.postMessage({ type: 'ms-open-rem' }); return c.focus(); }
+    return self.clients.openWindow(url);
+  }));
 });
