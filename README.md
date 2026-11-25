@@ -49,10 +49,20 @@ A stopped account (active = false) signs in to «no access». Sign-in is `userna
   run that file (again on a newer sheet: only the new lines go in). It is a register: it never moves the stock. A line can open a job
   card; a job card's stocked filters can be issued from the store in one tap (the card number as the reference).
 
+- Maintenance types and change reminders (section 12, 25 Nov 2026): an admin / manager / deputy keeps the **types**
+  (`ms_maint_types`: «Quartz 20W-50 engine oil — 15 days», kind oil / filter / service, the part it is) under Maintenance → Types. A job
+  card ticks the types done; the server keeps one **reminder** per (card, type) due on the day out (or in) + the type's days, and the
+  same part done again on the same vehicle closes the older reminder as «renewed». The admins / managers / deputies see the due ones
+  (the 🔔 in the header, Maintenance → Reminders), mark them changed or dismiss them, and get them on their phones:
+  1. run `supabase/schema.sql` again (section 12); 2. deploy the Edge Function `maint-push` (`supabase/functions/maint-push/index.ts`,
+  **Verify JWT off** — it checks the caller itself; no secret to set, it makes its VAPID keys the first time); 3. run
+  `supabase/push-cron.sql` once (pg_cron + pg_net: every day 09:00 Dubai); 4. on each phone: open the app (on an iPhone, from the
+  Home Screen icon) → Maintenance → Reminders → «Turn on notifications», then «Send a test».
+
 ## Development
 ```
 npm install
-npm test            # the database in PGlite (103 checks) + the page in jsdom (130 checks)
+npm test            # the database in PGlite (129 checks) + the page in jsdom (170 checks)
 npm run preview     # writes public/_preview.html with Supabase mocked
 npm run serve       # then open http://localhost:8788/_preview.html?role=admin|manager|deputy|storekeeper|mechanic|viewer|stopped
 ```

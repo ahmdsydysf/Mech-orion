@@ -109,6 +109,22 @@ const I18N = {
     ppSiteEq: "كشف معدات الموقع", pjEquip: "🏗 معدات الموقع", thSite: "الموقع", thRef: "الرقم", thRecv: "المستلم", thRemarks: "ملاحظات",
     errJobWhat: "اكتب رقم اللوحة أو الماركة والموديل", errJobInvalid: "بيانات الكارت غير صحيحة — راجع الزيوت والفلاتر", errOutBeforeIn: "تاريخ الخروج قبل تاريخ الدخول",
     errReading: "قراءة العداد غير صحيحة", errRefLong: "الرقم طويل جدًا", errPlateLong: "رقم اللوحة طويل جدًا", lg_site_equipment: "معدة موقع", lg_job_card: "كارت صيانة",
+    jbRemP: "🔔 التذكيرات", jbTypesP: "⚙️ الأنواع", remDesc: "مواعيد التغيير القادمة: كل نوع صيانة في كارت له تذكير بعد عدد أيامه. يتجدد تلقائيًا عند تسجيل نفس النوع لنفس المعدة.",
+    remDue: "حان موعدها", remSoon: "القادمة", remClosed: "المغلقة", remNone: "لا توجد تذكيرات هنا", remLate: "متأخر {n} يوم", remToday: "اليوم", remIn: "بعد {n} يوم",
+    remDoneOn: "تمت في {d}", remDueOn: "موعد التغيير {d}", remMarkDone: "✓ تم التغيير", remDismiss: "تجاهل التذكير", remReopen: "↺ إعادة فتح التذكير", remOpenJob: "🔧 فتح الكارت {no}",
+    remNewJob: "＋ كارت صيانة جديد لنفس المعدة", st_open: "مفتوح", st_done: "تم التغيير", st_dismissed: "تم تجاهله", st_renewed: "تجدد بالكارت {no}", remClosedBy: "{s} — {n} {d}", remSaved: "تم ✓",
+    remBell: "التذكيرات", remJob: "الكارت", remType: "النوع", remWhat: "المعدة",
+    pushOn: "📱 تفعيل الإشعارات على هذا الجهاز", pushIsOn: "🔔 الإشعارات مفعّلة على هذا الجهاز", pushOff: "إيقاف", pushTest: "إرسال تجربة",
+    pushNo: "هذا المتصفح لا يدعم الإشعارات. على الآيفون: أضف التطبيق إلى الشاشة الرئيسية أولًا ثم افتحه منها.", pushDenied: "الإشعارات ممنوعة لهذا الموقع — اسمح بها من إعدادات المتصفح ثم حاول مرة أخرى.",
+    pushDone: "تم تفعيل الإشعارات على هذا الجهاز ✓", pushOffT: "تم إيقاف الإشعارات على هذا الجهاز", pushTestSent: "أُرسلت التجربة إلى {n} جهاز", pushFnMissing: "دالة maint-push غير منشورة على Supabase — انشرها أولًا",
+    pushHint: "يصلك إشعار كل يوم الساعة 9 صباحًا بالصيانة التي حان موعدها (للسوبر أدمن والمدير والأدمن).",
+    tyDesc: "أنواع الصيانة (نوع الزيت، الفلتر، الخدمة) وعدد الأيام حتى التغيير القادم — تُختار في كارت الصيانة.", tyNew: "＋ نوع", tyNewT: "نوع صيانة جديد", tyEditT: "تعديل النوع",
+    tyName: "اسم النوع", tyNamePh: "مثال: زيت محرك Quartz 20W-50", tyKind: "الفئة", tk_oil: "🛢 زيت", tk_filter: "🔘 فلتر", tk_service: "🔧 خدمة", tyPart: "الجزء", tyPartAny: "— عام —",
+    tyItem: "صنف المخزن المرتبط", tyItemNone: "— بدون —", tyDays: "التذكير بعد (يوم)", tyEvery: "كل {n} يوم", tyNone: "لا توجد أنواع بعد", tyStopped: "موقوف", tyActiveL: "مفعّل (يظهر في الكروت)",
+    tySaved: "تم حفظ النوع ✓", tyDel: "🗑 حذف النوع", tyDelQ: "اضغط مرة أخرى للحذف", tyNote: "ملاحظة",
+    jsMaint: "نوع الصيانة والتذكير", jfMaintHint: "اختر ما تم في هذا الكارت — يصل تذكير للإدارة عند موعد التغيير.", jfNextDue: "{n}: التغيير القادم {d}", jfNoTypes: "لا توجد أنواع صيانة بعد — يضيفها الأدمن من «الأنواع».",
+    ppNext: "مواعيد التغيير القادمة",
+    errTypeInvalid: "نوع الصيانة غير صحيح أو موقوف", errTypeDup: "يوجد نوع بنفس الاسم", errDays: "عدد الأيام من 1 إلى 3650", errTypeInUse: "هذا النوع مستخدم في كروت — أوقفه بدلًا من حذفه", errPush: "تعذّر تفعيل الإشعارات",
   },
   en: {
     dir: "ltr", locale: "en-GB",
@@ -216,6 +232,22 @@ const I18N = {
     ppSiteEq: "Site equipment sheet", pjEquip: "🏗 Site equipment", thSite: "Site", thRef: "No.", thRecv: "Received by", thRemarks: "Remarks",
     errJobWhat: "Type the plate or the make & model", errJobInvalid: "Invalid card data — check the oils and filters", errOutBeforeIn: "The date out is before the date in",
     errReading: "Invalid reading", errRefLong: "The number is too long", errPlateLong: "The plate is too long", lg_site_equipment: "Site equipment", lg_job_card: "Job card",
+    jbRemP: "🔔 Reminders", jbTypesP: "⚙️ Types", remDesc: "The coming changes: each maintenance type on a card reminds after its days. Renewed by itself when the same type is recorded for the same vehicle.",
+    remDue: "Due", remSoon: "Coming", remClosed: "Closed", remNone: "No reminders here", remLate: "{n} days late", remToday: "Today", remIn: "In {n} days",
+    remDoneOn: "Done on {d}", remDueOn: "Change due {d}", remMarkDone: "✓ Changed", remDismiss: "Dismiss the reminder", remReopen: "↺ Reopen the reminder", remOpenJob: "🔧 Open card {no}",
+    remNewJob: "＋ New job card for the same vehicle", st_open: "Open", st_done: "Changed", st_dismissed: "Dismissed", st_renewed: "Renewed by card {no}", remClosedBy: "{s} — {n} {d}", remSaved: "Done ✓",
+    remBell: "Reminders", remJob: "Card", remType: "Type", remWhat: "Vehicle",
+    pushOn: "📱 Turn on notifications on this device", pushIsOn: "🔔 Notifications are on for this device", pushOff: "Turn off", pushTest: "Send a test",
+    pushNo: "This browser has no notifications. On an iPhone: add the app to the Home Screen first, then open it from there.", pushDenied: "Notifications are blocked for this site — allow them in the browser settings, then try again.",
+    pushDone: "Notifications are on for this device ✓", pushOffT: "Notifications are off for this device", pushTestSent: "Test sent to {n} device(s)", pushFnMissing: "The maint-push function is not deployed on Supabase — deploy it first",
+    pushHint: "A notification every day at 9 AM with the maintenance that is due (super admins, managers and admins).",
+    tyDesc: "The maintenance types (an oil, a filter, a service) and the days until the next change — picked on the job card.", tyNew: "＋ Type", tyNewT: "New maintenance type", tyEditT: "Edit the type",
+    tyName: "Type name", tyNamePh: "e.g. Engine oil Quartz 20W-50", tyKind: "Kind", tk_oil: "🛢 Oil", tk_filter: "🔘 Filter", tk_service: "🔧 Service", tyPart: "Part", tyPartAny: "— general —",
+    tyItem: "Linked store item", tyItemNone: "— none —", tyDays: "Remind after (days)", tyEvery: "Every {n} days", tyNone: "No types yet", tyStopped: "Stopped", tyActiveL: "Active (offered on the cards)",
+    tySaved: "Type saved ✓", tyDel: "🗑 Delete the type", tyDelQ: "Tap again to delete", tyNote: "Note",
+    jsMaint: "Maintenance type & reminder", jfMaintHint: "Pick what was done on this card — the management is reminded when the change is due.", jfNextDue: "{n}: next change {d}", jfNoTypes: "No maintenance types yet — an admin adds them under «Types».",
+    ppNext: "Next changes due",
+    errTypeInvalid: "Unknown or stopped maintenance type", errTypeDup: "A type with this name exists", errDays: "Days from 1 to 3650", errTypeInUse: "Cards use this type — stop it instead of deleting it", errPush: "Could not turn on notifications",
   },
 };
 let lang = localStorage.getItem('lang') || 'ar'; if (!I18N[lang]) lang = 'ar';
@@ -238,7 +270,7 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.17-2';
+const APP_VERSION = '2026.11.25-1';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
@@ -317,6 +349,20 @@ class StoreRepository {
   addJob(row) { return this.#one(this.#db.from('ms_job_cards').insert(row).select().single()); }
   updJob(id, patch) { return this.#some(this.#db.from('ms_job_cards').update(patch).eq('id', id).select()); }
   delJob(id) { return this.#some(this.#db.from('ms_job_cards').delete().eq('id', id).select('id')); }
+  // the maintenance types, their reminders, the phones (25 Nov 2026)
+  maintTypes() { return this.#rows(this.#db.from('ms_maint_types').select('*').order('kind').order('sort').order('name')); }
+  addType(row) { return this.#one(this.#db.from('ms_maint_types').insert(row).select().single()); }
+  updType(id, patch) { return this.#some(this.#db.from('ms_maint_types').update(patch).eq('id', id).select()); }
+  delType(id) { return this.#some(this.#db.from('ms_maint_types').delete().eq('id', id).select('id')); }
+  async reminders(all) { return (await this.#rpc('ms_reminders_list', { p_all: !!all })) ?? []; }
+  setReminder(id, status) { return this.#rpc('ms_reminder_set', { p_id: id, p_status: status }); }
+  pushSave(s, l) { return this.#rpc('ms_push_save', { p_endpoint: s.endpoint, p_p256dh: s.keys.p256dh, p_auth: s.keys.auth, p_lang: l, p_ua: navigator.userAgent.slice(0, 200) }); }
+  pushDrop(endpoint) { return this.#rpc('ms_push_drop', { p_endpoint: endpoint }); }
+  async push(action) {
+    const { data, error } = await this.#db.functions.invoke('maint-push', { body: { action } });
+    if (error) { let j = null; try { j = await error.context?.json?.(); } catch {} if (j?.error) throw new Error(j.error);
+      if (/404|not found|Failed to send/i.test(String(error.message))) throw new Error(t('pushFnMissing')); throw error; }
+    if (data?.error) throw new Error(data.error); return data; }
   async changePassword(password) { const { error } = await this.#db.auth.updateUser({ password }); if (error) throw error; }
 }
 const repo = CONFIGURED ? new StoreRepository(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
@@ -363,7 +409,8 @@ const errText = e => { const m = String(e?.message ?? e ?? ''), code = String(e?
     MS_TOO_MANY_LINES: 'errTooMany', MS_ITEM_UNKNOWN: 'errItemUnknown', MS_NOTHING_CHANGED: 'errNothing', MS_REASON_REQUIRED: 'errReason', MS_ALREADY_VOID: 'errAlreadyVoid',
     MS_ITEM_IN_USE: 'errItemInUse', MS_STORE_IN_USE: 'errStoreInUse', MS_MOVE_UNKNOWN: 'errMoveUnknown', MS_MAIN_STORE: 'errMainStore', MS_STORE_CODE_DUP: 'errStoreCodeDup',
     MS_CODE_TOO_LONG: 'errCodeLong', MS_LOCATION_TOO_LONG: 'errLocationLong', MS_PROJECT_HAS_STOCK: 'errProjectHasStock', MS_PROJECT_CLOSED: 'errProjectClosed',
-    MS_JOB_WHAT_REQUIRED: 'errJobWhat', MS_JOB_INVALID: 'errJobInvalid', MS_OUT_BEFORE_IN: 'errOutBeforeIn', MS_READING_INVALID: 'errReading', MS_REF_TOO_LONG: 'errRefLong', MS_PLATE_TOO_LONG: 'errPlateLong' };
+    MS_JOB_WHAT_REQUIRED: 'errJobWhat', MS_JOB_INVALID: 'errJobInvalid', MS_OUT_BEFORE_IN: 'errOutBeforeIn', MS_READING_INVALID: 'errReading', MS_REF_TOO_LONG: 'errRefLong', MS_PLATE_TOO_LONG: 'errPlateLong',
+    MS_TYPE_INVALID: 'errTypeInvalid', MS_TYPE_DUP: 'errTypeDup', MS_DAYS_INVALID: 'errDays', MS_TYPE_IN_USE: 'errTypeInUse', MS_PUSH_INVALID: 'errPush' };
   for (const k in M) if (m.includes(k)) return t(M[k]);
   if (/MS_FORBIDDEN|FORBIDDEN|row-level security|permission denied|not allowed/i.test(m)) return t('errForbidden');
   if (code === '23505' || /duplicate key|unique/i.test(m)) return t('errDup');
@@ -453,6 +500,8 @@ const FT = { q: '', grp: 'all' };
 const PJ = { q: '', show: 'open', sum: {}, seq: 0 };   // the projects screen: search, open / closed, ms_store_summary by store id
 const JB = { pane: 'cards', q: '', show: 'open', rows: [], loaded: false, seq: 0, err: '' };   // the maintenance screen: its pane, the job cards
 const SE = { site: 'all', q: '', rows: [], loaded: false, n: 120, seq: 0, err: '' };      // the site equipment: the site on show, the search
+const TY = { rows: [], loaded: false, ok: false, q: '', seq: 0, err: '' };               // the maintenance types (ms_maint_types)
+const RM = { rows: [], loaded: false, show: 'due', seq: 0, err: '' };                    // the change reminders (ms_reminders_list, all of them)
 const CATS = ['machine', 'tool', 'consumable', 'oil', 'filter', 'spare'];
 const UNITS = ['pcs', 'set', 'pair', 'roll', 'box', 'can', 'drum', 'litre', 'kg', 'm'];
 const FTYPES = ['oil', 'fuel', 'water_sep', 'air', 'cabin'];
@@ -885,8 +934,12 @@ async function loadSiteEq() {
 function renderJobs() {
   document.querySelectorAll('#jbPane button').forEach(b => b.classList.toggle('on', b.dataset.p === JB.pane));
   $('jbCards').classList.toggle('hidden', JB.pane !== 'cards'); $('jbEquip').classList.toggle('hidden', JB.pane !== 'equip');
-  $('btnJbNew').classList.toggle('hidden', !canJob()); $('btnSeAdd').classList.toggle('hidden', !canEdit());
+  $('jbRem').classList.toggle('hidden', JB.pane !== 'rem'); $('jbTypes').classList.toggle('hidden', JB.pane !== 'types');
+  $('btnJbNew').classList.toggle('hidden', !canJob()); $('btnSeAdd').classList.toggle('hidden', !canEdit()); $('btnTyNew').classList.toggle('hidden', !canAdmin());
+  if (!TY.loaded) loadTypes();
   if (JB.pane === 'cards') { if (!JB.loaded) { $('jbList').innerHTML = skeleton(4); loadJobs(); } else renderJobList(); if (!SE.loaded) loadSiteEq(); }
+  else if (JB.pane === 'rem') { if (!RM.loaded) { $('remList').innerHTML = skeleton(4); loadRem(); } else renderRem(); if (!JB.loaded) loadJobs(); if (!SE.loaded) loadSiteEq(); pushBox(); }
+  else if (JB.pane === 'types') { if (!TY.loaded) $('tyList').innerHTML = skeleton(3); else renderTypes(); }
   else { if (!SE.loaded) { $('seList').innerHTML = skeleton(5); loadSiteEq(); } else renderSiteEq(); }
 }
 function jobRows() {
@@ -917,7 +970,7 @@ $('jbList').onclick = e => { const r = e.target.closest('.frow'); if (r) openJob
 $('btnJbNew').onclick = () => { if (canJob()) jobSheet(null); };
 
 // the form: one sheet, the paper's sections in its order
-const JF = { checks: {}, work: [], fuel: null };
+const JF = { checks: {}, work: [], fuel: null, maint: [] };
 const secH = (n, k) => `<div class="jsec"><span>${String(n).padStart(2, '0')}</span><b>${esc(t(k))}</b></div>`;
 function jobFormHtml(c, pre) {
   const v = k => esc(c?.[k] ?? pre?.[k] ?? '');
@@ -951,11 +1004,13 @@ function jobFormHtml(c, pre) {
     <datalist id="jfParts">${parts.map(p => `<option value="${esc(p)}"></option>`).join('')}</datalist>
     ${JFILTERS.map(f => `<div class="jline"><span>${esc(t('fl_' + f))}</span><input id="jp_${f}" class="ltr" maxlength="40" list="jfParts" placeholder="${esc(t('jfPartNo'))}" autocapitalize="characters" autocomplete="off" value="${esc(flt(f).part_no || '')}">
       <select id="ja_${f}"><option value="">—</option>${['change', 'clean'].map(a => `<option value="${a}" ${flt(f).type && (flt(f).action || 'change') === a ? 'selected' : ''}>${esc(t('ac_' + a))}</option>`).join('')}</select></div>`).join('')}
-    ${secH(6, 'jsWork')}
+    ${secH(6, 'jsMaint')}
+    ${maintChips(c, pre)}
+    ${secH(7, 'jsWork')}
     <div class="chips wrap" id="jfWork">${WORKS.map(w => `<button type="button" class="chip" data-v="${w}">${esc(t('w_' + w))}</button>`).join('')}</div>
-    ${secH(7, 'jsDiag')}<textarea id="jfDiag" rows="3" maxlength="2000">${v('diagnosis')}</textarea>
+    ${secH(8, 'jsDiag')}<textarea id="jfDiag" rows="3" maxlength="2000">${v('diagnosis')}</textarea>
     <label for="jfParts2">${esc(t('jsParts'))}</label><textarea id="jfParts2" rows="3" maxlength="2000">${v('parts')}</textarea>
-    ${secH(8, 'jsSign')}
+    ${secH(9, 'jsSign')}
     <div class="row"><div><label for="jfMech">${esc(t('jfMech'))}</label><input id="jfMech" maxlength="80" autocomplete="off" value="${esc(c?.mechanic ?? pre?.mechanic ?? (profile?.role === 'mechanic' ? profile.name : ''))}"></div>
       <div><label for="jfFleet">${esc(t('jfFleet'))}</label><input id="jfFleet" maxlength="80" autocomplete="off" value="${v('fleet_officer')}"></div></div>
     <label for="jfSup">${esc(t('jfSup'))}</label><input id="jfSup" maxlength="80" autocomplete="off" value="${v('supervisor')}">
@@ -965,6 +1020,9 @@ function jfPaint() {
   document.querySelectorAll('#jfFuel button').forEach(b => b.classList.toggle('on', Number(b.dataset.v) === JF.fuel));
   document.querySelectorAll('#jfChecks .ckc').forEach(b => { const s = JF.checks[b.dataset.k]; b.className = 'ckc ' + (s || ''); b.querySelector('i').textContent = s === 'ok' ? '✓' : s === 'bad' ? '✗' : ''; });
   document.querySelectorAll('#jfWork .chip').forEach(b => b.classList.toggle('on', JF.work.includes(b.dataset.v)));
+  document.querySelectorAll('#jfMaint .mtchip').forEach(b => b.classList.toggle('on', JF.maint.includes(b.dataset.v)));
+  if ($('jfNext')) { const base = ($('jfOutOn')?.value) || ($('jfInOn')?.value) || dubaiToday();
+    $('jfNext').innerHTML = JF.maint.map(typeOf).filter(Boolean).map(x => esc(t('jfNextDue', { n: x.name, d: dSlash(addDays(base, x.interval_days)) }))).join('<br>'); }
 }
 function jobRead(c, pre) {
   const txt = id => $(id).value.trim();
@@ -982,15 +1040,18 @@ function jobRead(c, pre) {
     in_on: inOn, in_time: $('jfInTime').value || null, out_on: outOn, out_time: outOn ? ($('jfOutTime').value || null) : null,
     reading, reading_unit: reading == null ? null : $('jfUnit').value, fuel: JF.fuel, checks: { ...JF.checks }, oils, filters, work: WORKS.filter(w => JF.work.includes(w)),
     diagnosis: txt('jfDiag') || null, parts: txt('jfParts2') || null, final_notes: txt('jfNotes') || null,
-    mechanic: txt('jfMech') || null, fleet_officer: txt('jfFleet') || null, supervisor: txt('jfSup') || null };
+    mechanic: txt('jfMech') || null, fleet_officer: txt('jfFleet') || null, supervisor: txt('jfSup') || null,
+    ...(TY.ok || c?.maint_types?.length ? { maint_types: [...JF.maint] } : {}) };
 }
-function jobSheet(c, pre) {
-  JF.checks = { ...(c?.checks || {}) }; JF.work = [...(c?.work || [])]; JF.fuel = c?.fuel ?? null;
+async function jobSheet(c, pre) {
+  if (!TY.loaded) await loadTypes();
+  JF.checks = { ...(c?.checks || {}) }; JF.work = [...(c?.work || [])]; JF.fuel = c?.fuel ?? null; JF.maint = [...(c?.maint_types || pre?.maint_types || [])];
   Edit.open(c ? t('jbEditT', { no: c.no }) : t('jbNewT'), jobFormHtml(c, pre), async () => {
     const row = jobRead(c, pre);
     const saved = c ? await repo.updJob(c.id, row) : await repo.addJob({ ...row, status: 'open' });
     const i = JB.rows.findIndex(x => x.id === saved.id); if (i >= 0) JB.rows[i] = saved; else JB.rows.unshift(saved);
     toast(t('jbSaved', { no: saved.no })); if (JB.pane === 'cards' && $('scr-jobs').classList.contains('active')) renderJobList();
+    if (row.maint_types || c?.maint_types?.length) { RM.loaded = false; if (canAdmin() || JB.pane === 'rem') loadRem(); }
     openJob(saved.id); return 'keep';
   });
   jfPaint();
@@ -998,6 +1059,8 @@ function jobSheet(c, pre) {
   $('jfChecks').onclick = e => { const b = e.target.closest('.ckc'); if (!b) return; const k = b.dataset.k, s = JF.checks[k];
     if (!s) JF.checks[k] = 'ok'; else if (s === 'ok') JF.checks[k] = 'bad'; else delete JF.checks[k]; jfPaint(); };
   $('jfWork').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; const w = b.dataset.v; JF.work = JF.work.includes(w) ? JF.work.filter(x => x !== w) : [...JF.work, w]; jfPaint(); };
+  if ($('jfMaint')) $('jfMaint').onclick = e => { const b = e.target.closest('.mtchip'); if (!b) return; const v = b.dataset.v; JF.maint = JF.maint.includes(v) ? JF.maint.filter(x => x !== v) : [...JF.maint, v]; jfPaint(); };
+  ['jfInOn', 'jfOutOn'].forEach(id => $(id).addEventListener('change', jfPaint));
 }
 function openJob(id) {
   const c = jobOf(id); if (!c) return;
@@ -1011,6 +1074,7 @@ function openJob(id) {
       ${kv('jfInOn', esc(dSlash(c.in_on) + (c.in_time ? ' ' + hhmm(c.in_time) : '')))}${kv('jfOutOn', c.out_on ? esc(dSlash(c.out_on) + (c.out_time ? ' ' + hhmm(c.out_time) : '')) : '')}
       ${kv('jfReading', c.reading != null ? esc(fmtQ(c.reading) + ' ' + t('ru_' + (c.reading_unit || 'km'))) : '')}${kv('jfFuel', c.fuel != null ? esc(fuelLbl(c.fuel)) : '')}</div>
     ${(c.work || []).length ? `<div class="fs">${c.work.map(w => `<span class="kpill f">${esc(t('w_' + w))}</span>`).join('')}</div>` : ''}
+    ${nextOf(c).length ? `<div class="lhead"><span>${esc(t('jsMaint'))}</span></div><div class="card" style="margin-top:6px">${nextOf(c).map(x => `<div class="kv"><span>${esc(x.name)} <small class="muted">${esc(t('tyEvery', { n: x.interval_days }))}</small></span><b class="ltr">${esc(dSlash(x.due))}</b></div>`).join('')}</div>` : ''}
     ${(c.oils || []).length ? `<div class="lhead"><span>${esc(t('jsOils'))}</span></div><div class="card" style="margin-top:6px">${c.oils.map(o => `<div class="kv"><span>${esc(t('o_' + o.type))}${o.note ? ` <small class="muted">${esc(o.note)}</small>` : ''}</span><b class="ltr">${o.qty != null ? esc(fmtQ(o.qty)) + ' ' + esc(t('jfLitres')) : '—'}</b></div>`).join('')}</div>` : ''}
     ${(c.filters || []).length ? `<div class="lhead"><span>${esc(t('jsFilters'))}</span></div><div class="card" style="margin-top:6px">${c.filters.map(f => `<div class="kv"><span>${esc(t('fl_' + f.type))} <small class="muted ltr">${esc(f.part_no || '')}</small></span><b>${esc(t('ac_' + (f.action || 'change')))}</b></div>`).join('')}</div>` : ''}
     ${c.diagnosis ? `<div class="lhead"><span>${esc(t('jsDiag'))}</span></div><div class="infobox" style="white-space:pre-wrap">${esc(c.diagnosis)}</div>` : ''}
@@ -1038,6 +1102,162 @@ function openJob(id) {
     if (!armed) { armed = true; $('jbDelB').textContent = t('jbDelQ', { no: c.no }); return; }
     try { await repo.delJob(c.id); JB.rows = JB.rows.filter(x => x.id !== c.id); Edit.close(); toast(t('deleted')); renderJobList(); } catch (e) { msg('editMsg', errText(e), 'err'); } }; }
 }
+
+// THE MAINTENANCE TYPES AND THEIR CHANGE REMINDERS (25 Nov 2026). A type (ms_maint_types: «Quartz 20W-50 engine oil, 15 days») is
+// picked on the job card; the server keeps one reminder per (card, type), due on the day out (or in) + its days, and closes an older
+// one of the same part on the same vehicle as «renewed». The admins / managers / deputies see the due ones (the bell, «Reminders»),
+// close or dismiss them, and get them on their phones every morning (Web Push: the Edge Function maint-push, pg_cron).
+const addDays = (d, n) => { const [y, m, dd] = String(d).slice(0, 10).split('-').map(Number); return new Date(Date.UTC(y, m - 1, dd + Number(n || 0))).toISOString().slice(0, 10); };
+const typeOf = id => TY.rows.find(x => x.id === id) || null;
+const tyPartLbl = x => !x.part ? '' : t((x.kind === 'oil' ? 'o_' : 'fl_') + x.part);
+const tyParts = k => k === 'oil' ? OILS.map(o => [o, t('o_' + o)]) : k === 'filter' ? JFILTERS.map(f => [f, t('fl_' + f)]) : [];
+const partOpts = (k, cur) => `<option value="">${esc(t('tyPartAny'))}</option>` + tyParts(k).map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('');
+// a card's types with their next change: the reminder's day when it is known, else the day out (or in) + the type's days
+const nextOf = c => (c?.maint_types || []).map(typeOf).filter(Boolean).map(x => ({ name: x.name, interval_days: x.interval_days,
+  due: RM.rows.find(r => r.job_card_id === c.id && r.type_id === x.id)?.due_on || addDays(c.out_on || c.in_on, x.interval_days) }));
+function maintChips(c, pre) {
+  const on = c?.maint_types || pre?.maint_types || [];
+  const list = TY.rows.filter(x => x.active || on.includes(x.id));
+  if (!list.length) return TY.ok ? `<div class="hint">${esc(t('jfNoTypes'))}</div>` : '';
+  return `<div class="hint">${esc(t('jfMaintHint'))}</div><div class="chips wrap" id="jfMaint">${list.map(x => `<button type="button" class="mtchip" data-v="${esc(x.id)}">${esc(x.name)}<small>${esc(t('tyEvery', { n: x.interval_days }))}</small></button>`).join('')}</div><div class="nextdue" id="jfNext"></div>`;
+}
+async function loadTypes() {
+  const seq = ++TY.seq;
+  try { const rows = await repo.maintTypes(); if (seq !== TY.seq) return; TY.rows = rows; TY.ok = true; TY.err = ''; }
+  catch (e) { if (seq !== TY.seq) return; TY.ok = false; TY.err = errText(e); }
+  TY.loaded = true;
+  if (JB.pane === 'types' && $('scr-jobs').classList.contains('active')) renderTypes();
+}
+const tySort = () => TY.rows.sort((a, b) => a.kind.localeCompare(b.kind) || (a.sort || 0) - (b.sort || 0) || a.name.localeCompare(b.name));
+function tyRow(x) {
+  const it = x.item_id ? itemOf(x.item_id) : null;
+  return `<div class="frow ty ${x.active ? '' : 'off'}" data-id="${esc(x.id)}"><div class="fb">
+    <div class="fn">${esc(x.name)}</div>
+    <div class="fs"><span class="kpill f">${esc(t('tk_' + x.kind))}</span>${x.part ? `<span class="kpill">${esc(tyPartLbl(x))}</span>` : ''}${it ? `<small class="muted ltr">${esc(it.code)}</small>` : ''}${x.active ? '' : `<span class="pill">${esc(t('tyStopped'))}</span>`}</div>
+    ${x.note ? `<div class="fx">${esc(x.note)}</div>` : ''}</div>
+    <div class="fa"><span class="pill ok">${esc(t('tyEvery', { n: x.interval_days }))}</span></div></div>`;
+}
+function renderTypes() {
+  if (TY.err) { $('tyList').innerHTML = `<div class="msg err">${esc(TY.err)}</div>`; return; }
+  const q = TY.q.trim(), rows = TY.rows.filter(x => qHit(q, x.name, t('tk_' + x.kind), tyPartLbl(x), x.note));
+  $('tyList').innerHTML = rows.length ? rows.map(tyRow).join('') : `<div class="empty">${esc(t(TY.rows.length ? 'noMatch' : 'tyNone'))}</div>`;
+}
+function typeSheet(x) {
+  if (!canAdmin()) return;
+  const k = x?.kind || 'oil';
+  const items = STOCK.filter(i => ['oil', 'filter'].includes(i.category) && (i.active || i.item_id === x?.item_id));
+  const body = `<label for="tyName">${esc(t('tyName'))}</label><input id="tyName" maxlength="80" autocomplete="off" placeholder="${esc(t('tyNamePh'))}" value="${esc(x?.name || '')}">
+    <div class="row"><div><label for="tyKind">${esc(t('tyKind'))}</label><select id="tyKind">${['oil', 'filter', 'service'].map(v => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(t('tk_' + v))}</option>`).join('')}</select></div>
+      <div><label for="tyPart">${esc(t('tyPart'))}</label><select id="tyPart">${partOpts(k, x?.part)}</select></div></div>
+    <div class="row"><div><label for="tyDays">${esc(t('tyDays'))}</label><input id="tyDays" class="ltr" inputmode="numeric" autocomplete="off" value="${esc(x?.interval_days ?? '')}"></div>
+      <div><label for="tyItem">${esc(t('tyItem'))}<span class="opt-t">${esc(t('optional'))}</span></label><select id="tyItem"><option value="">${esc(t('tyItemNone'))}</option>${items.map(i => `<option value="${esc(i.item_id)}" ${i.item_id === x?.item_id ? 'selected' : ''}>${esc(i.code + ' — ' + i.name)}</option>`).join('')}</select></div></div>
+    <label for="tyNote">${esc(t('tyNote'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="tyNote" maxlength="200" autocomplete="off" value="${esc(x?.note || '')}">
+    ${x ? `<label class="chk"><input type="checkbox" id="tyActive" ${x.active ? 'checked' : ''}> ${esc(t('tyActiveL'))}</label><button type="button" class="ghost danger" id="tyDelB">${esc(t('tyDel'))}</button>` : ''}`;
+  Edit.open(x ? t('tyEditT') : t('tyNewT'), body, async () => {
+    const name = $('tyName').value.trim(); if (!name) throw new Error(t('errNameReq'));
+    const days = qNum($('tyDays').value); if (!(Number.isInteger(days) && days >= 1 && days <= 3650)) throw new Error(t('errDays'));
+    const row = { name, kind: $('tyKind').value, part: $('tyPart').value || null, interval_days: days, item_id: $('tyItem').value || null, note: $('tyNote').value.trim() || null };
+    if (x) row.active = $('tyActive').checked;
+    const saved = x ? await repo.updType(x.id, row) : await repo.addType(row);
+    const i = TY.rows.findIndex(r => r.id === saved.id); if (i >= 0) TY.rows[i] = saved; else TY.rows.push(saved);
+    tySort(); toast(t('tySaved')); renderTypes(); return false;
+  });
+  $('tyKind').onchange = () => { $('tyPart').innerHTML = partOpts($('tyKind').value); Picker.refresh($('tyPart')); };
+  if ($('tyDelB')) { let armed = false; $('tyDelB').onclick = async () => {
+    if (!armed) { armed = true; $('tyDelB').textContent = t('tyDelQ'); return; }
+    try { await repo.delType(x.id); TY.rows = TY.rows.filter(r => r.id !== x.id); Edit.close(); toast(t('deleted')); renderTypes(); } catch (e) { msg('editMsg', errText(e), 'err'); } }; }
+}
+$('tySearch').oninput = e => { TY.q = e.target.value; renderTypes(); };
+$('tyList').onclick = e => { const r = e.target.closest('.frow'); if (r && canAdmin()) typeSheet(typeOf(r.dataset.id)); };
+$('btnTyNew').onclick = () => typeSheet(null);
+
+// the reminders: due (today or late), coming, closed
+const remKey = r => r.status !== 'open' ? 'closed' : r.days_left <= 0 ? 'due' : 'soon';
+const remCls = r => r.status !== 'open' ? 'closed' : r.days_left < 0 ? 'late' : r.days_left === 0 ? 'today' : 'soon';
+const remWhen = r => r.days_left < 0 ? t('remLate', { n: -r.days_left }) : r.days_left === 0 ? t('remToday') : t('remIn', { n: r.days_left });
+const remSt = r => r.status === 'open' ? remWhen(r) : r.status === 'renewed' ? t('st_renewed', { no: r.closed_by_name || '' }) : t('st_' + r.status);
+const remPill = r => `<span class="pill ${r.status !== 'open' ? '' : r.days_left < 0 ? 'late' : r.days_left === 0 ? 'warn' : 'ok'}">${esc(remSt(r))}</span>`;
+const remRest = r => (r.label || '').split(' · ').filter(x => x && x !== r.plate).join(' · ');
+async function loadRem() {
+  const seq = ++RM.seq;
+  try { const rows = await repo.reminders(true); if (seq !== RM.seq) return; RM.rows = rows; RM.err = ''; }
+  catch (e) { if (seq !== RM.seq) return; RM.err = errText(e); }
+  RM.loaded = true; updateBell();
+  if (JB.pane === 'rem' && $('scr-jobs').classList.contains('active')) renderRem();
+}
+function updateBell() {
+  const n = RM.err ? 0 : RM.rows.filter(r => remKey(r) === 'due').length;
+  $('btnBell').classList.toggle('hidden', !(profile && canAdmin() && RM.loaded && !RM.err));
+  $('bellN').textContent = n > 99 ? '99+' : String(n); $('bellN').classList.toggle('hidden', !n);
+  $('remN').textContent = String(n); $('remN').classList.toggle('hidden', !n);
+}
+function remRow(r) {
+  return `<div class="frow rem ${remCls(r)}" data-id="${esc(r.id)}"><div class="fb">
+    <div class="fn">${esc(r.type_name)}</div>
+    <div class="fs">${r.plate ? plateHtml(r.plate) : ''}<span>${esc(remRest(r))}</span></div>
+    <div class="fx">${esc(t('remDueOn', { d: dSlash(r.due_on) }))} · ${esc(t('remDoneOn', { d: dSlash(r.done_on) }))} · <span class="ltr">${esc(r.job_no)}</span></div></div>
+    <div class="fa">${remPill(r)}</div></div>`;
+}
+function renderRem() {
+  const n = v => RM.rows.filter(r => remKey(r) === v).length;
+  $('remShow').innerHTML = ['due', 'soon', 'closed'].map(v => `<button type="button" class="chip ${RM.show === v ? 'on' : ''}" data-v="${v}">${esc(t(v === 'due' ? 'remDue' : v === 'soon' ? 'remSoon' : 'remClosed'))} <small>${n(v)}</small></button>`).join('');
+  if (RM.err) { $('remList').innerHTML = `<div class="msg err">${esc(RM.err)}</div>`; return; }
+  const rows = RM.rows.filter(r => remKey(r) === RM.show);
+  if (RM.show === 'closed') rows.sort((a, b) => String(b.closed_at || '').localeCompare(String(a.closed_at || '')));
+  $('remList').innerHTML = rows.length ? rows.map(remRow).join('') : `<div class="empty">${esc(t('remNone'))}</div>`;
+}
+async function remSheet(id) {
+  const r = RM.rows.find(x => x.id === id); if (!r) return;
+  if (!JB.loaded) await loadJobs();
+  const c = jobOf(r.job_card_id), st = storeOf(r.store_id);
+  const kv = (k, v) => v ? `<div><small>${esc(t(k))}</small><b>${v}</b></div>` : '';
+  const body = `<div class="fs" style="margin-bottom:8px">${remPill(r)}${r.status !== 'open' && r.closed_by_name && r.status !== 'renewed' ? `<span class="muted">${esc(r.closed_by_name)} · ${esc(fmtDT(r.closed_at))}</span>` : ''}</div>
+    <div class="pinfo">${kv('remWhat', (r.plate ? plateHtml(r.plate) + ' ' : '') + esc(remRest(r)))}${kv('jfSite', st ? esc(storeLbl(st)) : '')}${kv('remJob', `<span class="ltr">${esc(r.job_no)}</span>`)}${kv('remType', esc(r.type_name))}</div>
+    <div class="infobox">${esc(t('remDoneOn', { d: dSlash(r.done_on) }))} · ${esc(t('tyEvery', { n: r.interval_days }))}<br><b>${esc(t('remDueOn', { d: dSlash(r.due_on) }))}</b></div>
+    ${c ? `<button type="button" class="ghost" id="remJobB">${esc(t('remOpenJob', { no: r.job_no }))}</button>` : ''}
+    ${canJob() ? `<button type="button" class="${r.status === 'open' ? 'primary' : 'ghost'}" id="remNewB">${esc(t('remNewJob'))}</button>` : ''}
+    ${canAdmin() ? (r.status === 'open' ? `<div class="row2b"><button type="button" class="ghost" id="remDoneB">${esc(t('remMarkDone'))}</button><button type="button" class="ghost danger" id="remDisB">${esc(t('remDismiss'))}</button></div>`
+      : `<button type="button" class="ghost" id="remOpenB">${esc(t('remReopen'))}</button>`) : ''}`;
+  Edit.open('🔔 ' + r.type_name, body, null);
+  if ($('remJobB')) $('remJobB').onclick = () => openJob(c.id);
+  if ($('remNewB')) $('remNewB').onclick = () => jobSheet(null, { plate: c?.plate ?? r.plate, make_model: c?.make_model, eq_type: c?.eq_type, driver: c?.driver, store_id: c?.store_id ?? r.store_id,
+    site_equipment_id: c?.site_equipment_id ?? null, maint_types: [r.type_id] });
+  const set = (id, s) => { if ($(id)) $(id).onclick = async () => { busy($(id), true);
+    try { await repo.setReminder(r.id, s); await loadRem(); Edit.close(); toast(t('remSaved')); } catch (e) { msg('editMsg', errText(e), 'err'); } finally { if ($(id)) busy($(id), false); } }; };
+  set('remDoneB', 'done'); set('remDisB', 'dismissed'); set('remOpenB', 'open');
+}
+$('remShow').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; RM.show = b.dataset.v; renderRem(); };
+$('remList').onclick = e => { const r = e.target.closest('.frow'); if (r) remSheet(r.dataset.id); };
+const openReminders = () => { if (!profile || !can('jobs')) return; Edit.close(); JB.pane = 'rem'; RM.show = 'due'; RM.loaded = false; openTab('jobs', true); };
+$('btnBell').onclick = openReminders;
+
+// this phone's notifications (Web Push): on / off / a test — the admins, managers and deputies
+const pushOK = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && location.protocol.startsWith('http');
+const b64u = s => { const b = atob((s + '='.repeat((4 - s.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(b, ch => ch.charCodeAt(0)); };
+async function pushSub() {
+  try { const reg = await Promise.race([navigator.serviceWorker.ready, new Promise(r => setTimeout(() => r(null), 4000))]);
+    return { reg, sub: reg ? await reg.pushManager.getSubscription() : null }; } catch { return { reg: null, sub: null }; }
+}
+async function pushBox() {
+  const box = $('pushBox'); if (!profile || !canAdmin()) { box.innerHTML = ''; return; }
+  if (!pushOK()) { box.innerHTML = `<div class="pushbox"><small>${esc(t('pushNo'))}</small></div>`; return; }
+  const { sub } = await pushSub();
+  box.innerHTML = sub ? `<div class="pushbox"><b>${esc(t('pushIsOn'))}</b><button type="button" class="btn-sm" id="pushTestB">${esc(t('pushTest'))}</button><button type="button" class="btn-sm" id="pushOffB">${esc(t('pushOff'))}</button><small>${esc(t('pushHint'))}</small></div>`
+    : `<div class="pushbox"><button type="button" class="primary" id="pushOnB">${esc(t('pushOn'))}</button><small>${esc(t(Notification.permission === 'denied' ? 'pushDenied' : 'pushHint'))}</small></div>`;
+}
+async function pushOn() {
+  const perm = await Notification.requestPermission(); if (perm !== 'granted') throw new Error(t('pushDenied'));   // first, inside the tap
+  const { reg } = await pushSub(); if (!reg) throw new Error(t('pushNo'));
+  const { key } = await repo.push('key'); if (!key) throw new Error(t('errPush'));
+  const sub = (await reg.pushManager.getSubscription()) || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(key) });
+  await repo.pushSave(sub.toJSON(), lang); toast(t('pushDone'));
+}
+async function pushOff() { const { sub } = await pushSub(); if (!sub) return; const ep = sub.endpoint; await sub.unsubscribe().catch(() => {}); await repo.pushDrop(ep).catch(() => {}); toast(t('pushOffT')); }
+// on every sign-in: this phone, if on, is his (and in his language)
+async function pushRefresh() { if (!canAdmin() || !pushOK() || Notification.permission !== 'granted') return; const { sub } = await pushSub(); if (sub) repo.pushSave(sub.toJSON(), lang).catch(() => {}); }
+$('pushBox').onclick = async e => { const b = e.target.closest('button'); if (!b) return; busy(b, true);
+  try { if (b.id === 'pushOnB') await pushOn(); else if (b.id === 'pushOffB') await pushOff(); else if (b.id === 'pushTestB') { const r = await repo.push('test'); toast(t('pushTestSent', { n: r.sent || 0 })); } }
+  catch (er) { toast(errText(er)); } finally { busy(b, false); } if (b.id !== 'pushTestB') pushBox(); };
 
 // the site equipment
 function seRowsOf() {
@@ -1306,6 +1526,7 @@ function jobPdf(c) {
       <table><thead><tr><th>${L2('thFilter')}</th><th>${L2('jfPartNo')}</th><th>${L2('jfAction')}</th></tr></thead><tbody>${JFILTERS.map(f => { const x = flt(f); return `<tr class="${x ? '' : 'off'}"><td>${L2('fl_' + f)}</td><td class="q">${esc(x?.part_no || (x ? '' : '—'))}</td><td>${x ? `<span class="act ${esc(x.action || 'change')}">${esc(t('ac_' + (x.action || 'change')))}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${sec(5, 'jsWork')}
     <div class="works">${WORKS.map(w => `<span class="wk ${(c.work || []).includes(w) ? 'on' : ''}"><i></i>${esc(t('w_' + w))}</span>`).join('')}</div>
+    ${nextOf(c).length ? `<div class="box" style="min-height:0;margin-top:6px"><span class="bh">${L2('ppNext')}</span>${nextOf(c).map(x => `${esc(x.name)} — <span class="ltr">${esc(dSlash(x.due))}</span>`).join(' · ')}</div>` : ''}
     ${sec(6, 'jsDiag')}
     <div class="two"><div class="box"><span class="bh">${L2('jsDiag')}</span><span dir="auto">${esc(c.diagnosis || '')}</span></div><div class="box"><span class="bh">${L2('jsParts')}</span><span dir="auto">${esc(c.parts || '')}</span></div></div>
     ${sec(7, 'jsSign')}
@@ -1442,7 +1663,7 @@ function openTab(id, keep) {
   show(id);
   if (id === 'stock') renderStock(); else if (id === 'move') { if (!keep) renderMove(); else { storeOpts($('mvStore'), $('mvStore').value || (STORES.find(s => s.active) || {}).id); plateOpts(); if (!$('mvDate').value) $('mvDate').value = dubaiToday(); } }
   else if (id === 'moves') renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') loadUsers(); else if (id === 'projects') { PJ.loaded = false; renderProjects(); }
-  else if (id === 'jobs') { if (!keep) { JB.loaded = false; SE.loaded = false; } renderJobs(); }
+  else if (id === 'jobs') { if (!keep) { JB.loaded = false; SE.loaded = false; RM.loaded = false; TY.loaded = false; } renderJobs(); }
 }
 async function rerender() { const a = document.querySelector('.screen.active'); const id = a ? a.id.replace('scr-', '') : 'stock';
   if (id === 'stock') renderStock(); else if (id === 'move') renderMove(); else if (id === 'moves') await renderMoves(); else if (id === 'filters') renderFilters(); else if (id === 'users') renderUsers(); else if (id === 'projects') renderProjects(); else if (id === 'jobs') renderJobs(); }
@@ -1465,16 +1686,19 @@ async function enter(user) {
   try { await loadAll(); loadedAt = Date.now(); }
   catch (e) { refreshSheetRows(); $('noAccessMsg').textContent = errText(e); $('noAccessMsg').className = 'msg err'; $('nav').classList.add('hidden'); show('noaccess'); return; }
   refreshSheetRows();
-  const q = new URLSearchParams(location.search), tab = q.get('tab');
+  const q = new URLSearchParams(location.search), tab = q.get('tab'), pane = q.get('pane');
+  if (tab === 'jobs' && ['cards', 'rem', 'types', 'equip'].includes(pane)) JB.pane = pane;
+  if (canAdmin()) { loadRem(); pushRefresh(); }
   openTab(tab && can(tab) ? tab : 'stock');
   if (tab) history.replaceState(null, '', location.pathname);
 }
 function leave() {
   bootSeq++; HS.seq++; profile = null; userId = null; loaded = false; STORES = []; STOCK = []; EQUIP = []; FITS = []; PLATES = [];
   Object.assign(SK, { store: 'all', cat: 'all', q: '', n: 80 }); Object.assign(MV, { kind: 'issue', lines: [] }); Object.assign(HS, { from: '', to: '', kind: 'all', store: 'all', q: '', rows: [] }); Object.assign(FT, { q: '', grp: 'all' }); Object.assign(PJ, { q: '', show: 'open', sum: {}, loaded: false, seq: PJ.seq + 1 }); Object.assign(US, { rows: [], q: '', role: 'all', del: null, seq: US.seq + 1 });
-  Object.assign(JB, { pane: 'cards', q: '', show: 'open', rows: [], loaded: false, seq: JB.seq + 1 }); Object.assign(SE, { site: 'all', q: '', rows: [], loaded: false, n: 120, seq: SE.seq + 1 });
-  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'pjShow', 'pjList', 'usRoles', 'usList', 'jbShow', 'jbList', 'seSites', 'seList', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
-  ['skSearch', 'hsSearch', 'ftSearch', 'pjSearch', 'usSearch', 'jbSearch', 'seSearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
+  Object.assign(JB, { pane: 'cards', q: '', show: 'open', rows: [], loaded: false, seq: JB.seq + 1 });
+  Object.assign(TY, { rows: [], loaded: false, ok: false, q: '', seq: TY.seq + 1, err: '' }); Object.assign(RM, { rows: [], loaded: false, show: 'due', seq: RM.seq + 1, err: '' }); updateBell(); Object.assign(SE, { site: 'all', q: '', rows: [], loaded: false, n: 120, seq: SE.seq + 1 });
+  ['skHero', 'skStores', 'skCats', 'skList', 'mvLines', 'mvFits', 'hsKinds', 'hsStores', 'hsList', 'ftGroups', 'ftList', 'pjShow', 'pjList', 'usRoles', 'usList', 'jbShow', 'jbList', 'seSites', 'seList', 'remShow', 'remList', 'tyList', 'pushBox', 'editBody'].forEach(id => { const el = $(id); if (el) el.innerHTML = ''; });
+  ['skSearch', 'hsSearch', 'ftSearch', 'pjSearch', 'usSearch', 'jbSearch', 'seSearch', 'tySearch', 'mvParty', 'mvRef', 'mvNote', 'mvDate'].forEach(id => { $(id).value = ''; }); msg('mvMsg', '', '');
   Edit.close(); openSheet(false); $('btnMenu').classList.add('hidden'); $('lang').classList.remove('hidden'); $('who').textContent = ''; $('nav').classList.add('hidden'); show('login');
 }
 
@@ -1515,7 +1739,7 @@ async function checkVersion() {
 }
 $('btnUpdate').onclick = applyUpdate;
 checkVersion(); setInterval(checkVersion, 10 * 60 * 1000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkVersion(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { checkVersion(); if (profile && canAdmin() && RM.loaded) loadRem(); } });
 // the phone's BACK button closes an open sheet before it leaves the app (one history step per open sheet, as on every page)
 (() => {
   const bds = [...document.querySelectorAll('.sheet-backdrop')];
@@ -1598,5 +1822,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('sw.js').then(r => { swReg = r;
     r.addEventListener('updatefound', () => { const nw = r.installing; nw && nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate(); }); });
   }).catch(() => {});
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'ms-open-rem') openReminders(); });
   let reloaded = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (updatePending && !reloaded) { reloaded = true; location.reload(); } });
 }

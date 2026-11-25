@@ -9,5 +9,7 @@ orion-diesel project (the owner, 1 Nov 2026). Work on `main`.
   the manager's powers but never over a manager or admin account (MANAGER_ONLY) —, storekeeper,
   mechanic, viewer, active). RLS everywhere; stock is written only by `ms_post` / `ms_void`. `seed.sql` — the owner's item sheets.
 - `supabase/functions/admin-users` — the only way accounts change (service role). Only an active admin; never himself, never the last admin.
+- `supabase/functions/maint-push` — the maintenance reminders as Web Push (VAPID keys + cron secret in `ms_push_conf`, service role only);
+  pg_cron calls it daily (`supabase/push-cron.sql`). Deployed with Verify JWT off: it checks the cron secret or the caller's role itself.
 - Tests: `npm test` (tools/db-test.mjs in PGlite over schema + seed; tools/app-test.js in jsdom over tools/preview.js's mock).
   A new rule gets a check in both. Release: bump version.json, sw.js VERSION, app.js APP_VERSION.
