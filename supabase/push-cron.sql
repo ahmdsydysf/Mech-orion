@@ -14,5 +14,15 @@ select cron.schedule('ms-maint-push', '0 5 * * *', $job$
     timeout_milliseconds := 30000);
 $job$);
 
+-- the weekly summary, Saturday 09:00 Dubai (added 25 Nov 2026): what is due, what comes in 7 days, the items below their minimum
+select cron.unschedule(jobid) from cron.job where jobname = 'ms-maint-weekly';
+select cron.schedule('ms-maint-weekly', '0 5 * * 6', $job$
+  select net.http_post(
+    url := 'https://kvdrdtuqfmtwihebmnih.supabase.co/functions/v1/maint-push',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-ms-cron', (select cron_secret from public.ms_push_conf where id = 1)),
+    body := '{"action":"weekly"}'::jsonb,
+    timeout_milliseconds := 30000);
+$job$);
+
 -- what is scheduled now
-select jobid, jobname, schedule, active from cron.job where jobname = 'ms-maint-push';
+select jobid, jobname, schedule, active from cron.job where jobname in ('ms-maint-push', 'ms-maint-weekly');

@@ -59,6 +59,15 @@ A stopped account (active = false) signs in to «no access». Sign-in is `userna
   `supabase/push-cron.sql` once (pg_cron + pg_net: every day 09:00 Dubai); 4. on each phone: open the app (on an iPhone, from the
   Home Screen icon) → Maintenance → Reminders → «Turn on notifications», then «Send a test».
 
+- Round 2 (section 13, 25 Nov 2026): a type may remind by **days, km and / or running hours** (whichever comes first; the card's
+  reading + the type's km or hours, measured against the vehicle's latest reading). A job card's oils are **picked from the oil types**
+  (no typed names: the server refuses a new one, `MS_JOB_NOTE_LOCKED`; an old typed name stays as it was); the oil picked and a changed
+  filter (when one active type has its part) are reminded by themselves, and «issue» brings the type's store oil (with the litres when
+  the item is counted in litres). 📋 **Vehicle file** (from a card or a reminder): its cards, open reminders, what was issued to its
+  plate. Push: 2 days before the date, then every 3 days while due; a weekly summary on Saturday (due, coming, low stock).
+  To apply: run section 13 of `schema.sql`, then `supabase/maint-merge.sql` once (typed oil names → their types), redeploy
+  `maint-push`, and run `supabase/push-cron.sql` again (adds the weekly job).
+
 ## Development
 ```
 npm install
