@@ -229,7 +229,7 @@ check('a storekeeper cannot delete a line, an admin can', (await run('K', `delet
   && (await run('A', `delete from ms_site_equipment where id = $1 returning id`, [se[0].id])).length === 1, null);
 check('a site holding equipment is never deleted', /MS_STORE_IN_USE/.test(await run('A', `delete from ms_stores where id = $1`, [SITE6])), null);
 const card = { store_id: SITE6, plate: ' 74522 ', make_model: 'Bobcat S650', eq_type: 'Skid steer', driver: 'Ravi', in_time: '08:30', reading: 1520.5, reading_unit: 'hr', fuel: 50,
-  checks: { tyres: 'ok', brakes: 'bad' }, oils: [{ type: 'hydraulic', qty: 20 }, { type: 'diesel_engine', qty: 9.5, note: '15W-40' }],
+  checks: { tyres: 'ok', brakes: 'bad' }, oils: [{ type: 'hydraulic', qty: 20 }, { type: 'diesel_engine', qty: 9.5 }],
   filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
   diagnosis: 'Hydraulic hose leaking', parts: 'Hose 1/2"', mechanic: 'Mech One' };
 const ins = (who, c) => { const ks = Object.keys(c).join(', '); return run(who, `insert into ms_job_cards (${ks}) select ${ks} from jsonb_populate_record(null::ms_job_cards, $1::jsonb) returning id, no, plate, created_by_name, status`, [JSON.stringify(c)]); };
@@ -316,6 +316,47 @@ check('the trigger functions are internal', !(await one(`select has_function_pri
 check('anon reaches none of it', !(await one(`select has_table_privilege('anon', 'public.ms_reminders', 'select') x`)).x && !(await one(`select has_function_privilege('anon', 'ms_reminders_list(boolean)', 'execute') x`)).x, null);
 const r5 = await runFile('schema.sql');
 check('schema.sql runs again over them: the types, the reminders, the secret kept', !r5.err && (await one(`select count(*)::int n from ms_maint_types`)).n === 3 && (await one(`select count(*)::int n from ms_reminders`)).n === 2, r5.err);
+
+// ---------- the meter, the oils from the list, the merge (25 Nov 2026, second round) ----------
+const tHr = await run('A', `insert into ms_maint_types (name, kind, part, interval_hr) values ('Bobcat engine oil 250h', 'oil', 'diesel_engine', 250) returning id, interval_days`);
+check('a type by running hours only (no days)', Array.isArray(tHr) && tHr[0].interval_days === null, tHr);
+check('a type with no interval at all → MS_DAYS_INVALID; 0 km → MS_METER_INVALID', /MS_DAYS_INVALID/.test(await run('A', `insert into ms_maint_types (name) values ('none')`))
+  && /MS_METER_INVALID|check/.test(await run('A', `insert into ms_maint_types (name, interval_km) values ('zero', 0)`)), null);
+const TH = tHr[0].id;
+check('a typed oil name on a new card → MS_JOB_NOTE_LOCKED', /MS_JOB_NOTE_LOCKED/.test(await ins('C', { ...card, oils: [{ type: 'diesel_engine', qty: 9, note: 'RIDA' }] })), null);
+check('an oil picked from a filter type → MS_TYPE_INVALID', /MS_TYPE_INVALID/.test(await ins('C', { ...card, oils: [{ type: 'diesel_engine', qty: 9, type_id: TA }] })), null);
+const jm = await ins('C', { ...card, plate: 'HR 1', in_on: '2026-11-01', reading: 1000, reading_unit: 'hr', oils: [{ type: 'diesel_engine', qty: 9, type_id: TH }], filters: [{ type: 'air', action: 'change' }] });
+const jmt = await one(`select maint_types from ms_job_cards where id = $1`, [jm[0].id]);
+check('the oil\'s type and the changed air filter\'s type become reminders by themselves', jmt.maint_types.length === 2 && jmt.maint_types.includes(TH) && jmt.maint_types.includes(TA), jmt);
+let rh = (await run('V', `select * from ms_reminders_list() where job_card_id = $1 and type_id = $2`, [jm[0].id, TH]))[0];
+check('by hours: due at 1250 hr, no day', Number(rh.due_reading) === 1250 && rh.due_on === null && rh.reading_unit === 'hr' && Number(rh.meter_left) === 250 && rh.due === false, rh);
+await ins('K', { ...card, plate: 'HR-1', in_on: '2026-11-20', reading: 1300, reading_unit: 'hr', oils: [], filters: [], work: [] });
+rh = (await run('V', `select * from ms_reminders_list() where job_card_id = $1 and type_id = $2`, [jm[0].id, TH]))[0];
+check('a later card reads 1300 hr: the reminder is due, 50 hr over', Number(rh.cur_reading) === 1300 && Number(rh.meter_left) === -50 && rh.due === true, rh);
+check('the due ones first in the open list', (await run('V', `select due from ms_reminders_list()`))[0].due === true, null);
+await as(null); await db.exec(`alter table ms_job_cards disable trigger trg_ms_job_cards_maint`);
+const old = (await q(`insert into ms_job_cards (plate, in_on, oils) values ('OLD 1', '2026-11-03', '[{"type":"diesel_engine","qty":8,"note":"RIDA ENGINE OIL + GREASE"},{"type":"petrol_engine","qty":4,"note":"QUARTZ20W-50"},{"type":"coolant","note":"blue stuff"}]') returning id`))[0];
+await db.exec(`alter table ms_job_cards enable trigger trg_ms_job_cards_maint`);
+check('an old card keeps its typed name on an edit, a new name refused', Array.isArray(await run('K', `update ms_job_cards set driver = 'Z' where id = $1 returning id`, [old.id]))
+  && /MS_JOB_NOTE_LOCKED/.test(await run('K', `update ms_job_cards set oils = '[{"type":"coolant","note":"red stuff"}]' where id = $1`, [old.id])), null);
+// the merge: the typed names onto the types (the owner's sheet-made types, linked to the store's oils)
+await as(null);
+const OI = async (code, name, cat) => (await q(`insert into ms_items (code, name, category, unit) values ($1, $2, $3, 'can') on conflict do nothing returning id`, [code, name, cat]));
+for (const [c, n] of [['OIL-9265', 'RIDA DIESEL ENGINE OIL'], ['OIL-9009', 'QUARTZ 20W-50'], ['OIL-9021', 'GREASE(DRUM)']]) await OI(c, n, 'oil');
+const idOf = async c => (await one(`select id from ms_items where code = $1`, [c])).id;
+await q(`insert into ms_maint_types (name, kind, part, interval_days, item_id) values ('RIDA', 'oil', 'diesel_engine', 30, $1), ('QUARTZ', 'oil', 'petrol_engine', 15, $2), ('Grease', 'service', null, 7, $3)`,
+  [await idOf('OIL-9265'), await idOf('OIL-9009'), await idOf('OIL-9021')]);
+const merge = fs.readFileSync(path.join(ROOT, 'supabase', 'maint-merge.sql'), 'utf8').replace(/'OIL-0265'/g, "'OIL-9265'").replace(/'OIL-0009'/g, "'OIL-9009'").replace(/'OIL-0021'/g, "'OIL-9021'");
+let me = null; try { for (const st of splitSql(merge)) await db.query(st); } catch (e) { me = e.message; }
+const om = await one(`select oils, maint_types from ms_job_cards where id = $1`, [old.id]);
+const tn = async id => (await one(`select name from ms_maint_types where id = $1`, [id])).name;
+check('maint-merge.sql: «RIDA … + GREASE» → RIDA + the grease reminder, «QUARTZ20W-50» → QUARTZ, an unknown name kept', !me && om.oils[0].type_id && await tn(om.oils[0].type_id) === 'RIDA' && !om.oils[0].note
+  && await tn(om.oils[1].type_id) === 'QUARTZ' && om.oils[2].note === 'blue stuff' && om.maint_types.length === 3, [me, om]);
+let me2 = null; try { for (const st of splitSql(merge)) await db.query(st); } catch (e) { me2 = e.message; }
+check('maint-merge.sql runs again: nothing changes', !me2 && JSON.stringify((await one(`select oils from ms_job_cards where id = $1`, [old.id])).oils) === JSON.stringify(om.oils), me2);
+check('ms_vkey is the same key the reminders store', (await one(`select vkey from ms_reminders where job_card_id = $1 limit 1`, [jm[0].id])).vkey === 'P:HR1', null);
+const r6 = await runFile('schema.sql');
+check('schema.sql runs again over section 13', !r6.err, r6.err);
 
 console.log(`\n${T.filter(Boolean).length} of ${T.length} passed`);
 process.exit(T.every(Boolean) ? 0 : 1);

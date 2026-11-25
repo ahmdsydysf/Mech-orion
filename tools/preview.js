@@ -66,7 +66,7 @@ const SITE_EQ = [{ id: 'se1', store_id: 's2', section: 'civil', name: 'Generator
 let jseq = 1;
 const JOBS = [{ id: 'j1', seq: 1, no: 'JC-000001', status: 'open', store_id: 's2', equipment_id: 'e1', site_equipment_id: null, plate: '74522', make_model: 'Bobcat S650', eq_type: 'Skid steer', driver: 'Ravi',
   in_on: '2026-11-15', in_time: '08:30:00', out_on: null, out_time: null, reading: 1520.5, reading_unit: 'hr', fuel: 50, checks: { tyres: 'ok', brakes: 'bad' },
-  oils: [{ type: 'hydraulic', qty: 20 }], filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
+  oils: [{ type: 'hydraulic', qty: 20, note: 'asico hydraulic' }], filters: [{ type: 'oil', part_no: 'FO-3143', action: 'change' }, { type: 'air', part_no: 'FOA-2579', action: 'clean' }], work: ['routine', 'hydraulic'],
   diagnosis: 'Hydraulic hose leaking', parts: 'Hose 1/2"', final_notes: null, mechanic: 'Mech One', fleet_officer: null, supervisor: null,
   created_by: 'u-mechanic', created_by_name: 'Mech One', created_at: '2026-11-15T05:00:00Z' }];
 // the maintenance types and their reminders (25 Nov 2026): REMS kept as the server's trigger keeps ms_reminders
@@ -74,7 +74,9 @@ const addD = (d, n) => { const [y, m, dd] = d.split('-').map(Number); return new
 const TYPES = [{ id: 't1', name: 'Quartz 20W-50', kind: 'oil', part: 'diesel_engine', item_id: 'i-OIL-0006', interval_days: 15, active: true, note: null, sort: 0 },
   { id: 't2', name: 'Rimula R4 15W-40', kind: 'oil', part: 'diesel_engine', item_id: null, interval_days: 30, active: true, note: null, sort: 0 },
   { id: 't3', name: 'Air filter', kind: 'filter', part: 'air', item_id: null, interval_days: 60, active: true, note: null, sort: 0 },
-  { id: 't4', name: 'Old grease', kind: 'service', part: null, item_id: null, interval_days: 90, active: false, note: null, sort: 0 }];
+  { id: 't4', name: 'Old grease', kind: 'service', part: null, item_id: null, interval_days: 90, active: false, note: null, sort: 0 },
+  { id: 't5', name: 'Hydraulic HV46', kind: 'oil', part: 'hydraulic', item_id: 'i-OIL-0007', interval_days: null, interval_hr: 250, active: true, note: null, sort: 0 }];
+TYPES.forEach(x => { x.interval_km = x.interval_km ?? null; x.interval_hr = x.interval_hr ?? null; });
 JOBS[0].maint_types = ['t1'];
 const REMS = [{ id: 'r1', job_card_id: 'j1', type_id: 't1', vkey: 'P:74522', label: '74522 · Bobcat S650', done_on: addD(today(), -17), due_on: addD(today(), -2), status: 'open', closed_by_name: null, closed_at: null },
   { id: 'r2', job_card_id: 'j1', type_id: 't3', vkey: 'P:74522', label: '74522 · Bobcat S650', done_on: addD(today(), -50), due_on: addD(today(), 10), status: 'open', closed_by_name: null, closed_at: null }];
@@ -84,13 +86,20 @@ function syncRem(c) {
   for (let i = REMS.length - 1; i >= 0; i--) if (REMS[i].job_card_id === c.id && !mt.includes(REMS[i].type_id)) REMS.splice(i, 1);
   mt.forEach(tid => { const ty = TYPES.find(x => x.id === tid); if (!ty) return; let r = REMS.find(x => x.job_card_id === c.id && x.type_id === tid);
     if (!r) REMS.push(r = { id: 'r' + (++nid), job_card_id: c.id, type_id: tid, status: 'open', closed_by_name: null, closed_at: null });
-    Object.assign(r, { vkey: vk, label: [c.plate, c.make_model].filter(Boolean).join(' · '), done_on: done, due_on: addD(done, ty.interval_days) });
+    const iv = c.reading_unit === 'hr' ? ty.interval_hr : ty.interval_km;
+    Object.assign(r, { vkey: vk, label: [c.plate, c.make_model].filter(Boolean).join(' · '), done_on: done, due_on: ty.interval_days ? addD(done, ty.interval_days) : null,
+      reading_unit: c.reading_unit || null, done_reading: c.reading ?? null, due_reading: c.reading != null && iv ? Number(c.reading) + iv : null });
     REMS.filter(o => o.job_card_id !== c.id && o.status === 'open' && o.vkey === vk && o.done_on <= done && (o.type_id === tid || (() => { const ot = TYPES.find(x => x.id === o.type_id); return ot && ty.part && ot.kind === ty.kind && ot.part === ty.part; })()))
       .forEach(o => Object.assign(o, { status: 'renewed', closed_by_name: c.no, closed_at: new Date().toISOString() })); });
 }
 const remList = () => REMS.map(r => { const ty = TYPES.find(x => x.id === r.type_id), j = JOBS.find(x => x.id === r.job_card_id) || {};
-  return { ...r, job_no: j.no, type_name: ty.name, kind: ty.kind, part: ty.part, interval_days: ty.interval_days, plate: j.plate || null, store_id: j.store_id || null,
-    days_left: Math.round((Date.parse(r.due_on) - Date.parse(today())) / 864e5) }; }).sort((a, b) => (b.status === 'open') - (a.status === 'open') || a.due_on.localeCompare(b.due_on));
+  const days_left = r.due_on ? Math.round((Date.parse(r.due_on) - Date.parse(today())) / 864e5) : null;
+  const cur = r.reading_unit ? Math.max(...JOBS.filter(x => x.plate && key(x.plate) === key(j.plate) && x.reading_unit === r.reading_unit && x.reading != null).map(x => Number(x.reading)), r.done_reading ?? 0) : null;
+  const meter_left = r.due_reading != null && cur != null ? r.due_reading - cur : null;
+  return { ...r, job_no: j.no, type_name: ty.name, kind: ty.kind, part: ty.part, interval_days: ty.interval_days, interval_km: ty.interval_km, interval_hr: ty.interval_hr,
+    plate: j.plate || null, store_id: j.store_id || null, days_left, cur_reading: r.due_reading != null ? cur : null, meter_left,
+    due: (days_left != null && days_left <= 0) || (meter_left != null && meter_left <= 0) }; })
+  .sort((a, b) => (b.status === 'open') - (a.status === 'open') || b.due - a.due || String(a.due_on || '9').localeCompare(String(b.due_on || '9')));
 const PUSH = [];
 const STOCK = new Map();          // store|item → qty
 const MOVES = [], LINES = [], LOG = [];
@@ -160,7 +169,7 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
       const canW = tbl === 'ms_stores' || tbl === 'ms_maint_types' ? ADMIN : tbl === 'ms_job_cards' ? JOB : EDIT;
       if (tbl === 'ms_maint_types' && st.op === 'delete' && canW && T.filter(hit).some(x => REMS.some(r => r.type_id === x.id) || JOBS.some(j => (j.maint_types || []).includes(x.id)))) return res(err('MS_TYPE_IN_USE'));
       if (tbl === 'ms_maint_types' && st.v && st.op !== 'delete' && canW) { const self = st.f[0] ? TYPES.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || {}), ...st.v };
-        if (!String(nx.name || '').trim()) return res(err('MS_NAME_REQUIRED')); if (!(nx.interval_days >= 1 && nx.interval_days <= 3650)) return res(err('MS_DAYS_INVALID'));
+        if (!String(nx.name || '').trim()) return res(err('MS_NAME_REQUIRED')); if (nx.interval_days == null && nx.interval_km == null && nx.interval_hr == null) return res(err('MS_DAYS_INVALID')); if (nx.interval_days != null && !(nx.interval_days >= 1 && nx.interval_days <= 3650)) return res(err('MS_DAYS_INVALID'));
         if (TYPES.some(x => x !== self && x.name.toLowerCase() === String(nx.name).trim().toLowerCase())) return res(err('MS_TYPE_DUP')); }
       if (tbl === 'ms_job_cards' && st.v && st.v.maint_types && st.op !== 'delete' && st.v.maint_types.some(id => { const x = TYPES.find(y => y.id === id); return !x || !x.active; })
         && !(st.f[0] && st.v.maint_types.every(id => (JOBS.find(j => j.id === st.f[0][1]) || {}).maint_types?.includes(id) || TYPES.find(y => y.id === id)?.active))) return res(err('MS_TYPE_INVALID')); if (!canW || (st.op === 'delete' && !ADMIN)) return res(st.op === 'insert' ? err('new row violates row-level security policy for table "' + tbl + '"') : { data: [] });
@@ -177,6 +186,10 @@ const q = tbl => { const st = { op: 'select', f: [] }; const T = { ms_stores: ST
       if (tbl === 'ms_job_cards' && st.v && st.op !== 'delete') { const self = st.f[0] ? JOBS.find(x => x.id === st.f[0][1]) : null, nx = { ...(self || {}), ...st.v };
         if (!nx.plate && !nx.make_model && !nx.site_equipment_id && !nx.equipment_id) return res(err('MS_JOB_WHAT_REQUIRED'));
         if (nx.out_on && nx.out_on < nx.in_on) return res(err('MS_OUT_BEFORE_IN'));
+        if (st.v.oils) { for (const o of st.v.oils) { const was = (self?.oils || []).find(x => x.type === o.type);
+            if (o.type_id) { const ty = TYPES.find(y => y.id === o.type_id); if (!ty || ty.kind !== 'oil' || (!ty.active && was?.type_id !== o.type_id)) return res(err('MS_TYPE_INVALID')); }
+            if (o.note && o.note !== was?.note) return res(err('MS_JOB_NOTE_LOCKED')); }
+          const mt = [...(st.v.maint_types || self?.maint_types || [])]; st.v.oils.forEach(o => { if (o.type_id && !mt.includes(o.type_id)) mt.push(o.type_id); }); st.v.maint_types = mt; }
         if (st.op === 'insert') Object.assign(st.v, { seq: ++jseq, no: 'JC-' + String(jseq).padStart(6, '0'), created_by: ME_ID, created_by_name: NAMES[ROLE], created_at: new Date().toISOString(), status: st.v.status || 'open' });
         else ['seq', 'no', 'created_by', 'created_by_name', 'created_at'].forEach(k => delete st.v[k]); }
       if (tbl === 'ms_site_equipment' && st.v && st.op !== 'delete' && 'name' in st.v && !String(st.v.name || '').trim()) return res(err('MS_NAME_REQUIRED'));
@@ -206,7 +219,7 @@ window.supabase = { createClient: () => ({
     if (n === 'ms_stock_list') return { data: stockList() };
     if (n === 'ms_plates') return { data: PLATES.map(x => ({ ...x })) };
     if (n === 'ms_history') return { data: history(a.p_item) };
-    if (n === 'ms_moves_in') return { data: movesIn(a.p_from, a.p_to).filter(m => !a.p_store || m.store_id === a.p_store || m.to_store_id === a.p_store) };
+    if (n === 'ms_moves_in') return { data: movesIn(a.p_from, a.p_to).filter(m => (!a.p_store || m.store_id === a.p_store || m.to_store_id === a.p_store) && (!a.p_plate || key(m.plate) === key(a.p_plate))) };
     if (n === 'ms_store_summary') return { data: STORES.map(s => { const mv = MOVES.filter(m => m.status === 'posted' && (m.store_id === s.id || m.to_store_id === s.id));
       return { store_id: s.id, items: ITEMS.filter(i => have(s.id, i.id) !== 0).length, units: ITEMS.reduce((a, i) => a + have(s.id, i.id), 0), moves: mv.length,
         last_move: mv.map(m => m.moved_on).sort().pop() || null, sent_in: mv.filter(m => m.kind === 'transfer' && m.to_store_id === s.id).length, sent_out: mv.filter(m => m.kind === 'transfer' && m.store_id === s.id).length }; }) };

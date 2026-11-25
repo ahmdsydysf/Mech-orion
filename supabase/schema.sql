@@ -1149,7 +1149,8 @@ end $fn$;
 drop trigger if exists trg_ms_maint_types_before_delete on ms_maint_types;
 create trigger trg_ms_maint_types_before_delete before delete on ms_maint_types for each row execute function ms_maint_types_before_delete();
 
--- the reminders as the page shows them: open only (or all), the soonest first, with the type and the card
+-- the reminders as the page shows them: open only (or all), the soonest first, with the type and the card (section 13 widens it)
+drop function if exists ms_reminders_list(boolean);
 create or replace function ms_reminders_list(p_all boolean default false)
 returns table(id uuid, job_card_id uuid, job_no text, type_id uuid, type_name text, kind text, part text, interval_days int, vkey text, label text,
               plate text, store_id uuid, done_on date, due_on date, days_left int, status text, closed_by_name text, closed_at timestamptz)
@@ -1248,3 +1249,139 @@ notify pgrst, 'reload schema';
 select 'maintenance types' as item, (select count(*) from ms_maint_types)::text as n
 union all select 'open reminders', (select count(*) from ms_reminders where status = 'open')::text
 union all select 'phones', (select count(*) from ms_push_subs)::text;
+
+-- ---------- 13. the meter, the oils from the list, the merge of the typed names (25 Nov 2026, second round) ----------
+-- The owner: «اريد التعديلات ان تنفذ و ادمج اي تكرارات و احكم موضوع الكتابه الحره».
+-- A type reminds after its days and / or its kilometres / running hours (whichever comes first): the card's reading + the type's
+--   interval in the card's unit; the vehicle's current reading is the highest one on its cards.
+-- An oil on a card is picked from the oil types (oils[].type_id) — no typed name on a new card (MS_JOB_NOTE_LOCKED); an old card
+--   keeps its old name until it is merged (supabase/maint-merge.sql). An oil type on a card is a reminder by itself, and so is a filter
+--   changed when one active filter type has that part.
+
+alter table ms_maint_types alter column interval_days drop not null;
+alter table ms_maint_types add column if not exists interval_km int check (interval_km between 1 and 1000000);
+alter table ms_maint_types add column if not exists interval_hr int check (interval_hr between 1 and 100000);
+alter table ms_reminders alter column due_on drop not null;
+alter table ms_reminders add column if not exists reading_unit text check (reading_unit in ('km', 'hr'));
+alter table ms_reminders add column if not exists done_reading numeric(12,1);
+alter table ms_reminders add column if not exists due_reading numeric(12,1);
+
+-- the vehicle a card is about, as the reminders key it (internal)
+create or replace function ms_vkey(p_plate text, p_se uuid, p_eq uuid, p_make text, p_id uuid) returns text
+language sql immutable set search_path = public as $fn$
+  select coalesce('P:' || plate_key(p_plate), 'S:' || p_se::text, 'E:' || p_eq::text, 'M:' || lower(p_make), 'J:' || p_id::text);
+$fn$;
+
+create or replace function ms_maint_types_before_write() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+begin
+  new.name := ms_clean(new.name); new.note := ms_clean(new.note);
+  if new.name is null then raise exception 'MS_NAME_REQUIRED'; end if;
+  if char_length(new.name) > 80 then raise exception 'MS_NAME_TOO_LONG'; end if;
+  if char_length(coalesce(new.note, '')) > 200 then raise exception 'MS_NOTE_TOO_LONG'; end if;
+  if new.interval_days is null and new.interval_km is null and new.interval_hr is null then raise exception 'MS_DAYS_INVALID'; end if;
+  if new.interval_days is not null and (new.interval_days < 1 or new.interval_days > 3650) then raise exception 'MS_DAYS_INVALID'; end if;
+  if (new.interval_km is not null and (new.interval_km < 1 or new.interval_km > 1000000)) or (new.interval_hr is not null and (new.interval_hr < 1 or new.interval_hr > 100000)) then
+    raise exception 'MS_METER_INVALID'; end if;
+  new.kind := coalesce(nullif(lower(btrim(coalesce(new.kind, ''))), ''), 'oil');
+  new.part := nullif(lower(btrim(coalesce(new.part, ''))), '');
+  if new.kind not in ('oil', 'filter', 'service')
+     or (new.kind = 'oil' and new.part is not null and new.part not in ('hydraulic', 'diesel_engine', 'petrol_engine', 'gear', 'coolant'))
+     or (new.kind = 'filter' and new.part is not null and new.part not in ('hydraulic', 'oil', 'fuel', 'air', 'cabin'))
+     or (new.kind = 'service' and new.part is not null) then raise exception 'MS_TYPE_INVALID'; end if;
+  if exists (select 1 from ms_maint_types t where lower(t.name) = lower(new.name) and t.id <> new.id) then raise exception 'MS_TYPE_DUP'; end if;
+  new.sort := coalesce(new.sort, 0); new.active := coalesce(new.active, true);
+  if tg_op = 'INSERT' then new.created_by_name := ms_me_name(); new.created_at := now();
+  else new.created_by_name := old.created_by_name; new.created_at := old.created_at; end if;
+  new.updated_by_name := ms_me_name(); new.updated_at := now();
+  return new;
+end $fn$;
+
+-- a card's oils: each picked from the oil types, no typed name on a new one; its types: the ticked ones + its oils' + its changed
+-- filters' (one active type of that part), each known, once (internal)
+create or replace function ms_job_cards_maint_check() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare x uuid; e jsonb; v_t uuid; v_add uuid[] := '{}';
+begin
+  for e in select * from jsonb_array_elements(coalesce(new.oils, '[]'::jsonb)) loop
+    if (e->>'type_id') is not null then
+      if (e->>'type_id') !~ '^[0-9a-fA-F-]{36}$' then raise exception 'MS_TYPE_INVALID'; end if;
+      v_t := (e->>'type_id')::uuid;
+      if not exists (select 1 from ms_maint_types t where t.id = v_t and t.kind = 'oil'
+                       and (t.active or (tg_op = 'UPDATE' and exists (select 1 from jsonb_array_elements(old.oils) o where o->>'type_id' = v_t::text)))) then
+        raise exception 'MS_TYPE_INVALID'; end if;
+      v_add := v_add || v_t;
+    end if;
+    -- a typed name: only the one the card already had on that oil
+    if nullif(btrim(coalesce(e->>'note', '')), '') is not null
+       and not (tg_op = 'UPDATE' and exists (select 1 from jsonb_array_elements(old.oils) o where o->>'type' = e->>'type' and o->>'note' = e->>'note')) then
+      raise exception 'MS_JOB_NOTE_LOCKED'; end if;
+  end loop;
+  for e in select * from jsonb_array_elements(coalesce(new.filters, '[]'::jsonb)) loop
+    if coalesce(e->>'action', 'change') = 'change' and (select count(*) from ms_maint_types t where t.kind = 'filter' and t.part = e->>'type' and t.active) = 1 then
+      v_add := v_add || (select t.id from ms_maint_types t where t.kind = 'filter' and t.part = e->>'type' and t.active);
+    end if;
+  end loop;
+  new.maint_types := coalesce((select array_agg(distinct u) from unnest(coalesce(new.maint_types, '{}') || v_add) u where u is not null), '{}');
+  foreach x in array new.maint_types loop
+    if not exists (select 1 from ms_maint_types t where t.id = x and (t.active or x = any(v_add) or (tg_op = 'UPDATE' and x = any(old.maint_types)))) then
+      raise exception 'MS_TYPE_INVALID'; end if;
+  end loop;
+  return new;
+end $fn$;
+
+-- the reminders follow the card: due on the day out (or in) + the type's days, and / or at the card's reading + the type's interval
+-- in the card's unit; the same part done again on the same vehicle closes the older open ones as «renewed» (internal)
+create or replace function ms_job_cards_remind() returns trigger
+language plpgsql security definer set search_path = public as $fn$
+declare v_key text := ms_vkey(new.plate, new.site_equipment_id, new.equipment_id, new.make_model, new.id); v_label text;
+        v_done date := coalesce(new.out_on, new.in_on); v_unit text := case when new.reading is null then null else coalesce(new.reading_unit, 'km') end;
+begin
+  v_label := nullif(concat_ws(' · ', new.plate, new.make_model, (select e.name from ms_site_equipment e where e.id = new.site_equipment_id)), '');
+  delete from ms_reminders r where r.job_card_id = new.id and not (r.type_id = any(new.maint_types));
+  insert into ms_reminders as r (job_card_id, type_id, vkey, label, done_on, due_on, reading_unit, done_reading, due_reading)
+    select new.id, t.id, v_key, v_label, v_done, v_done + t.interval_days, v_unit, new.reading,
+           new.reading + case v_unit when 'km' then t.interval_km when 'hr' then t.interval_hr end
+      from ms_maint_types t where t.id = any(new.maint_types)
+  on conflict (job_card_id, type_id) do update set vkey = excluded.vkey, label = excluded.label,
+    due_on = case when r.done_on = excluded.done_on then r.due_on else excluded.due_on end,
+    due_reading = case when r.done_reading is not distinct from excluded.done_reading and r.reading_unit is not distinct from excluded.reading_unit then r.due_reading else excluded.due_reading end,
+    pushed_at = case when r.done_on = excluded.done_on and r.done_reading is not distinct from excluded.done_reading then r.pushed_at end,
+    done_on = excluded.done_on, done_reading = excluded.done_reading, reading_unit = excluded.reading_unit;
+  update ms_reminders r set status = 'renewed', closed_at = now(), closed_by_name = new.no
+    from ms_maint_types ot
+   where ot.id = r.type_id and r.status = 'open' and r.vkey = v_key and r.job_card_id <> new.id and r.done_on <= v_done
+     and exists (select 1 from ms_maint_types nt where nt.id = any(new.maint_types)
+                  and (nt.id = ot.id or (nt.kind = ot.kind and nt.part is not null and nt.part = ot.part)));
+  return null;
+end $fn$;
+drop trigger if exists trg_ms_job_cards_remind on ms_job_cards;
+create trigger trg_ms_job_cards_remind after insert or update of maint_types, plate, make_model, equipment_id, site_equipment_id, in_on, out_on, reading, reading_unit
+  on ms_job_cards for each row execute function ms_job_cards_remind();
+
+-- the reminders as the page (and maint-push) reads them: the days left, the vehicle's reading now and what is left of the interval,
+-- «due» when either one is spent
+drop function if exists ms_reminders_list(boolean);
+create or replace function ms_reminders_list(p_all boolean default false)
+returns table(id uuid, job_card_id uuid, job_no text, type_id uuid, type_name text, kind text, part text, interval_days int, interval_km int, interval_hr int,
+              vkey text, label text, plate text, store_id uuid, done_on date, due_on date, days_left int, reading_unit text, done_reading numeric,
+              due_reading numeric, cur_reading numeric, meter_left numeric, due boolean, status text, closed_by_name text, closed_at timestamptz, pushed_at timestamptz)
+language sql stable set search_path = public as $fn$
+  select x.*, coalesce(x.days_left <= 0, false) or coalesce(x.meter_left <= 0, false), x2.status, x2.closed_by_name, x2.closed_at, x2.pushed_at
+    from (select r.id, r.job_card_id, j.no, r.type_id, t.name, t.kind, t.part, t.interval_days, t.interval_km, t.interval_hr, r.vkey, r.label, j.plate, j.store_id,
+                 r.done_on, r.due_on, (r.due_on - (now() at time zone 'Asia/Dubai')::date)::int days_left, r.reading_unit, r.done_reading, r.due_reading,
+                 c.cur, r.due_reading - c.cur meter_left
+            from ms_reminders r join ms_maint_types t on t.id = r.type_id join ms_job_cards j on j.id = r.job_card_id
+            left join lateral (select max(k.reading) cur from ms_job_cards k
+                                where r.reading_unit is not null and k.reading_unit = r.reading_unit
+                                  and ms_vkey(k.plate, k.site_equipment_id, k.equipment_id, k.make_model, k.id) = r.vkey) c on true
+           where p_all or r.status = 'open') x
+    join ms_reminders x2 on x2.id = x.id
+   order by (x2.status = 'open') desc, coalesce(x.days_left <= 0, false) or coalesce(x.meter_left <= 0, false) desc, x.due_on nulls last, x.name;
+$fn$;
+grant execute on function ms_reminders_list(boolean) to authenticated, service_role;
+revoke execute on function ms_reminders_list(boolean) from public, anon;
+revoke execute on function ms_maint_types_before_write() from public, anon, authenticated;
+revoke execute on function ms_job_cards_maint_check() from public, anon, authenticated;
+revoke execute on function ms_job_cards_remind() from public, anon, authenticated;
+notify pgrst, 'reload schema';

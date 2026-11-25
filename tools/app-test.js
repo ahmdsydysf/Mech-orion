@@ -182,19 +182,21 @@ const AR = /[؀-ۿ]/;
     nav('jobs'); await wait(60); click(d.getElementById('btnJbNew')); await wait(40);
     check('a new card: the nine sections, the eight safety checks, five oils, five filters', d.querySelectorAll('#editBody .jsec').length === 9 && d.querySelectorAll('#jfChecks .ckc').length === 8 && d.querySelectorAll('#editBody [id^="jo_"]').length === 5 && d.querySelectorAll('#editBody [id^="jp_"]').length === 5, d.querySelectorAll('#editBody .jsec').length);
     const mt = () => [...d.querySelectorAll('#jfMaint .mtchip')];
-    check('the card offers the active maintenance types with their days (the stopped one not)', mt().length === 3 && /Quartz 20W-50/.test(txt(mt()[0])) && /كل 15 يوم/.test(txt(mt()[0])) && !mt().some(b => /Old grease/.test(txt(b))), mt().map(b => txt(b)));
+    check('the card offers the active maintenance types with their days or hours (the stopped one not)', mt().length === 4 && /Quartz 20W-50/.test(txt(mt()[0])) && /كل 15 يوم/.test(txt(mt()[0])) && /كل 250 ساعة/.test(txt(mt().find(b => /HV46/.test(txt(b))))) && !mt().some(b => /Old grease/.test(txt(b))), mt().map(b => txt(b)));
+    const oo = id => [...d.getElementById(id).options].map(o => o.value).join();
+    check('no free typing of the oil: each oil row picks from its oil types (the stopped and other parts not)', !d.getElementById('jn_diesel_engine') && oo('jt_diesel_engine') === ',t1,t2' && oo('jt_hydraulic') === ',t5', [oo('jt_diesel_engine'), oo('jt_hydraulic')]);
     click(mt().find(b => /Rimula/.test(txt(b))));
     check('a type picked: its next change shown (in + 30 days)', mt().find(b => /Rimula/.test(txt(b))).classList.contains('on') && /Rimula R4 15W-40: التغيير القادم/.test(txt(d.getElementById('jfNext'))), txt(d.getElementById('jfNext')));
     click(d.getElementById('btnEditSave')); await wait(40);
     check('nothing to work on → said in words', /اكتب رقم اللوحة أو الماركة والموديل/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
     set('jfPlate', '52676'); set('jfMake', 'Bobcat S450'); set('jfDriver', 'Anil'); set('jfReading', '880'); set('jfSite', 's3');
     click(d.querySelector('#jfFuel [data-v="75"]')); click(d.querySelector('#jfChecks [data-k="tyres"]')); click(d.querySelector('#jfChecks [data-k="horn"]')); click(d.querySelector('#jfChecks [data-k="horn"]'));
-    set('jo_hydraulic', '12'); set('jo_diesel_engine', '9.5'); set('jn_diesel_engine', '15W-40'); set('jp_air', 'foa-2579'); set('ja_air', 'clean'); set('jp_oil', 'FO-3143');
+    set('jo_hydraulic', '12'); set('jo_diesel_engine', '9.5'); set('jt_diesel_engine', 't2'); set('jp_air', 'foa-2579'); set('ja_air', 'clean'); set('jp_oil', 'FO-3143');
     click(d.querySelector('#jfWork [data-v="routine"]')); click(d.querySelector('#jfWork [data-v="electrical"]')); set('jfDiag', 'Horn not working'); set('jfMech', 'Mech One');
     click(d.getElementById('btnEditSave')); await wait(100);
     const j2 = db.JOBS.find(c => c.no === 'JC-000002');
     check('saved as JC-000002: the plate, the fuel, the checks, the oils, the filters (part upper, action), the work', !!j2 && j2.plate === '52676' && j2.fuel === 75 && j2.checks.tyres === 'ok' && j2.checks.horn === 'bad'
-      && j2.oils.length === 2 && j2.oils[1].qty === 9.5 && j2.oils[1].note === '15W-40' && j2.filters.find(f => f.type === 'air').part_no === 'FOA-2579' && j2.filters.find(f => f.type === 'air').action === 'clean'
+      && j2.oils.length === 2 && j2.oils[1].qty === 9.5 && j2.oils[1].type_id === 't2' && !j2.oils[1].note && j2.filters.find(f => f.type === 'air').part_no === 'FOA-2579' && j2.filters.find(f => f.type === 'air').action === 'clean'
       && j2.filters.find(f => f.type === 'oil').action === 'change' && j2.work.join() === 'electrical,routine' && j2.equipment_id === 'e2' && j2.store_id === 's3' && j2.reading === 880, j2);
     check('… and opened after saving', /JC-000002/.test(txt(d.getElementById('editTitle'))) && !!d.getElementById('jbPrintB'), txt(d.getElementById('editTitle')));
     check('the type went with the card, its reminder made (30 days on), shown on the card', j2.maint_types.join() === 't2' && db.REMS.some(r => r.job_card_id === j2.id && r.type_id === 't2' && r.status === 'open')
@@ -234,7 +236,7 @@ const AR = /[؀-ۿ]/;
     click(d.querySelector('#remList .frow .fb')); await wait(60);
     check('… a reminder opened: «new card» for him, no close nor dismiss', !!d.getElementById('remNewB') && !d.getElementById('remDoneB') && !d.getElementById('remDisB'), null);
     click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="types"]')); await wait(60);
-    check('storekeeper: the types read, nothing to add', d.querySelectorAll('#tyList .frow').length === 4 && !open('btnTyNew'), null);
+    check('storekeeper: the types read, nothing to add', d.querySelectorAll('#tyList .frow').length === 5 && !open('btnTyNew'), null);
     check('storekeeper: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- the manager: the bell, the reminders, the types, the phone (25 Nov 2026) ----------------
@@ -268,12 +270,17 @@ const AR = /[؀-ۿ]/;
     // the types
     click(d.querySelector('#jbPane [data-p="types"]')); await wait(60);
     const tr = () => [...d.querySelectorAll('#tyList .frow')];
-    check('the types: four, the stopped one marked, «add» for him', tr().length === 4 && d.querySelectorAll('#tyList .frow.off').length === 1 && open('btnTyNew'), tr().map(r => txt(r)));
+    check('the types: five, the stopped one marked, «add» for him', tr().length === 5 && d.querySelectorAll('#tyList .frow.off').length === 1 && open('btnTyNew'), tr().map(r => txt(r)));
     click(d.getElementById('btnTyNew')); await wait(40);
     set('tyName', 'Gear oil 80W-90'); set('tyKind', 'oil'); set('tyPart', 'gear'); set('tyDays', '0'); click(d.getElementById('btnEditSave')); await wait(40);
     check('days 0 → said in words', /من 1 إلى 3650/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
     set('tyDays', '45'); click(d.getElementById('btnEditSave')); await wait(80);
-    check('a type added: oil, gear, 45 days', db.TYPES.some(x => x.name === 'Gear oil 80W-90' && x.kind === 'oil' && x.part === 'gear' && x.interval_days === 45) && tr().length === 5, db.TYPES.map(x => x.name));
+    check('a type added: oil, gear, 45 days', db.TYPES.some(x => x.name === 'Gear oil 80W-90' && x.kind === 'oil' && x.part === 'gear' && x.interval_days === 45) && tr().length === 6, db.TYPES.map(x => x.name));
+    click(d.getElementById('btnTyNew')); await wait(40); set('tyName', 'Engine oil by km'); set('tyKind', 'oil'); set('tyDays', ''); click(d.getElementById('btnEditSave')); await wait(40);
+    check('no days, no km, no hours → said in words', /اكتب الأيام أو الكيلومترات أو الساعات/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
+    set('tyKm', '10000'); click(d.getElementById('btnEditSave')); await wait(80);
+    check('a type by km only: no days, 10000 km, shown «every 10,000 km»', db.TYPES.some(x => x.name === 'Engine oil by km' && x.interval_days == null && x.interval_km === 10000) && tr().some(r => /كل 10[,٬]?000 كم/.test(txt(r))), tr().map(r => txt(r)));
+    click(d.getElementById('editBackdrop'));
     click(d.getElementById('btnTyNew')); await wait(40); set('tyName', 'air FILTER'); set('tyDays', '10'); click(d.getElementById('btnEditSave')); await wait(60);
     check('the same name twice → said in words', /يوجد نوع بنفس الاسم/.test(txt(d.getElementById('editMsg'))), txt(d.getElementById('editMsg')));
     click(d.getElementById('editBackdrop')); click(tr().find(r => /Quartz/.test(txt(r))).querySelector('.fb')); await wait(40);
@@ -289,6 +296,35 @@ const AR = /[؀-ۿ]/;
   {
     const B = await boot('admin', { qs: '&tab=jobs&pane=rem' }); await B.wait(80);
     check('a notification\'s link opens the reminders', B.active() === 'scr-jobs' && B.open('jbRem') && B.d.querySelectorAll('#remList .frow').length === 1, [B.active(), B.open('jbRem')]);
+  }
+  // ---------------- the oils from the list, the meter, the vehicle file (25 Nov 2026, round 2) ----------------
+  {
+    const B = await boot('admin'), { d, errors, wait, click, txt, set, nav, db, active } = B;
+    nav('jobs'); await wait(80); const j1 = db.JOBS.find(c => c.id === 'j1');
+    click(d.querySelector('#jbList .frow .fb')); await wait(40); click(d.getElementById('jbEditB')); await wait(40);
+    check('an oil typed before: kept as its own choice, marked «typed before»', d.getElementById('jt_hydraulic').value === '__note' && /asico hydraulic \(مكتوب قديمًا\)/.test(txt(d.getElementById('jt_hydraulic'))), d.getElementById('jt_hydraulic').value);
+    click(d.getElementById('btnEditSave')); await wait(100);
+    check('… saved untouched: the old name stays', j1.oils[0].note === 'asico hydraulic' && !j1.oils[0].type_id && !d.getElementById('editMsg')?.textContent, j1.oils);
+    click(d.getElementById('jbEditB')); await wait(40); set('jt_hydraulic', 't5');
+    check('an oil picked: its type ticked for the reminder, the next change by the hours (1520.5 + 250)', d.querySelector('#jfMaint .mtchip[data-v="t5"]').classList.contains('on') && /Hydraulic HV46: عند 1[,٬]?770[.٫]5 ساعة/.test(txt(d.getElementById('jfNext'))), txt(d.getElementById('jfNext')));
+    click(d.getElementById('btnEditSave')); await wait(100);
+    const r5 = db.REMS.find(r => r.job_card_id === 'j1' && r.type_id === 't5');
+    check('… saved: the type instead of the name, its reminder by the meter (no date)', j1.oils[0].type_id === 't5' && !j1.oils[0].note && j1.maint_types.includes('t5') && !!r5 && r5.due_reading === 1770.5 && r5.due_on === null, [j1.oils, r5]);
+    check('the card: the oil by its type\'s name; «issue» brings the oil too', /Hydraulic HV46/.test(txt(d.getElementById('editBody'))) && !!d.getElementById('jbIssueB'), null);
+    click(d.getElementById('jbIssueB')); await wait(80);
+    check('«issue»: the two stocked filters and the type\'s oil item', active() === 'scr-move' && d.querySelectorAll('#mvLines .lrow').length === 3 && /GREASE/.test(txt(d.getElementById('mvLines'))), d.querySelectorAll('#mvLines .lrow').length);
+    nav('jobs'); await wait(60); click(d.getElementById('btnJbNew')); await wait(40);
+    set('jfPlate', '74522'); set('jfMake', 'Bobcat S650'); set('jfReading', '1800'); set('jfUnit', 'hr'); set('jfMech', 'Mech One'); click(d.getElementById('btnEditSave')); await wait(120);
+    check('a newer card on the same plate, 1800 hours, saved', db.JOBS.length === 2 && db.JOBS[1].reading === 1800 && db.JOBS[1].reading_unit === 'hr', db.JOBS.length);
+    check('a new typed oil name refused by the server → said in words', B.w.eval("errText({ message: 'MS_JOB_NOTE_LOCKED' })") === 'اختر الزيت من القائمة — الكتابة الحرة غير مسموحة', B.w.eval("errText({ message: 'MS_JOB_NOTE_LOCKED' })"));
+    click(d.getElementById('editBackdrop')); click(d.querySelector('#jbPane [data-p="rem"]')); await wait(100);
+    const rr = () => [...d.querySelectorAll('#remList .frow')];
+    check('the reminders: the hydraulic oil due by the meter, «at 1,770.5 hours (now 1,800)»', rr().some(r => /Hydraulic HV46/.test(txt(r)) && /تجاوز العداد بـ 29[.٫]5 ساعة/.test(txt(r)) && /عند 1[,٬]?770[.٫]5 ساعة \(الآن 1[,٬]?800\)/.test(txt(r))), rr().map(r => txt(r)));
+    click(rr().find(r => /Hydraulic HV46/.test(txt(r))).querySelector('.fb')); await wait(60); click(d.getElementById('remVehB')); await wait(100);
+    check('the vehicle file: its open reminders, its two cards, what was issued to it', /ملف المعدة/.test(txt(d.getElementById('editTitle'))) && d.querySelectorAll('#vhCardsL .frow').length === 2 && /Hydraulic HV46/.test(txt(d.getElementById('editBody'))) && !!d.getElementById('vhMoves'), txt(d.getElementById('editBody')).slice(0, 300));
+    click(d.querySelector('#vhCardsL .frow[data-job="j1"]')); await wait(40);
+    check('… a card in it opens', /JC-000001/.test(txt(d.getElementById('editTitle'))), txt(d.getElementById('editTitle')));
+    check('oils & meter: no runtime errors', errors.length === 0, errors);
   }
   // ---------------- the admin cancels ----------------
   {

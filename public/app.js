@@ -124,6 +124,11 @@ const I18N = {
     tySaved: "تم حفظ النوع ✓", tyDel: "🗑 حذف النوع", tyDelQ: "اضغط مرة أخرى للحذف", tyNote: "ملاحظة",
     jsMaint: "نوع الصيانة والتذكير", jfMaintHint: "اختر ما تم في هذا الكارت — يصل تذكير للإدارة عند موعد التغيير.", jfNextDue: "{n}: التغيير القادم {d}", jfNoTypes: "لا توجد أنواع صيانة بعد — يضيفها الأدمن من «الأنواع».",
     ppNext: "مواعيد التغيير القادمة",
+    tyKm: "أو بعد (كم)", tyHr: "أو بعد (ساعة تشغيل)", tyIvlHint: "اكتب الأيام و/أو الكيلومترات أو الساعات — التذكير بأيهم يأتي أولًا.", ivEvery: "كل {s}", ivDays: "{n} يوم", ivKm: "{n} كم", ivHr: "{n} ساعة",
+    remAtMeter: "عند {n} {u}", remNow: "الآن {n}", remMeterOver: "تجاوز العداد بـ {n} {u}", remMeterLeft: "باقي {n} {u}", u_km: "كم", u_hr: "ساعة",
+    jfOilPick: "— اختر الزيت —", jfOilOld: "✎ {n} (مكتوب قديمًا)", jfNextAt: "{n}: عند {r} {u}", jfOilAuto: "الزيت المختار والفلتر المغيَّر يُضافان للتذكير تلقائيًا.",
+    vhOpen: "📋 ملف المعدة", vhCards: "كروت الصيانة ({n})", vhLast: "آخر تغيير ونوعه", vhNext: "التذكيرات المفتوحة", vhIssued: "ما صُرف لها من المخزن", vhNone: "لا شيء بعد", vhReading: "آخر قراءة",
+    errNoteLocked: "اختر الزيت من القائمة — الكتابة الحرة غير مسموحة", errMeter: "الكيلومترات أو الساعات غير صحيحة", errIvlReq: "اكتب الأيام أو الكيلومترات أو الساعات",
     errTypeInvalid: "نوع الصيانة غير صحيح أو موقوف", errTypeDup: "يوجد نوع بنفس الاسم", errDays: "عدد الأيام من 1 إلى 3650", errTypeInUse: "هذا النوع مستخدم في كروت — أوقفه بدلًا من حذفه", errPush: "تعذّر تفعيل الإشعارات",
   },
   en: {
@@ -247,6 +252,11 @@ const I18N = {
     tySaved: "Type saved ✓", tyDel: "🗑 Delete the type", tyDelQ: "Tap again to delete", tyNote: "Note",
     jsMaint: "Maintenance type & reminder", jfMaintHint: "Pick what was done on this card — the management is reminded when the change is due.", jfNextDue: "{n}: next change {d}", jfNoTypes: "No maintenance types yet — an admin adds them under «Types».",
     ppNext: "Next changes due",
+    tyKm: "or after (km)", tyHr: "or after (running hours)", tyIvlHint: "Type the days and / or the km or the hours — the reminder comes at whichever is first.", ivEvery: "every {s}", ivDays: "{n} days", ivKm: "{n} km", ivHr: "{n} hr",
+    remAtMeter: "at {n} {u}", remNow: "now {n}", remMeterOver: "meter {n} {u} over", remMeterLeft: "{n} {u} left", u_km: "km", u_hr: "hr",
+    jfOilPick: "— pick the oil —", jfOilOld: "✎ {n} (typed before)", jfNextAt: "{n}: at {r} {u}", jfOilAuto: "The oil picked and a filter changed are added to the reminders by themselves.",
+    vhOpen: "📋 Vehicle file", vhCards: "Job cards ({n})", vhLast: "Last change by type", vhNext: "Open reminders", vhIssued: "Issued to it from the store", vhNone: "Nothing yet", vhReading: "Last reading",
+    errNoteLocked: "Pick the oil from the list — typing a name is not allowed", errMeter: "Invalid km or hours", errIvlReq: "Type the days, the km or the hours",
     errTypeInvalid: "Unknown or stopped maintenance type", errTypeDup: "A type with this name exists", errDays: "Days from 1 to 3650", errTypeInUse: "Cards use this type — stop it instead of deleting it", errPush: "Could not turn on notifications",
   },
 };
@@ -270,7 +280,7 @@ function applyTheme(mode) {
 const savedTheme = localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
 /* ---------------- 1) الإعدادات ---------------- */
-const APP_VERSION = '2026.11.25-1';
+const APP_VERSION = '2026.11.25-2';
 const CONFIG = Object.assign({ SUPABASE_URL: '', SUPABASE_ANON_KEY: '', USER_DOMAIN: 'orioncc.com' }, window.MS_CONFIG || {});
 const CONFIGURED = /^https:\/\/[^/]+/.test(CONFIG.SUPABASE_URL) && CONFIG.SUPABASE_ANON_KEY.length > 20 && !/YOUR_/.test(CONFIG.SUPABASE_URL + CONFIG.SUPABASE_ANON_KEY);
 const toEmail = u => { const s = String(u || '').trim().toLowerCase().replace(/\s+/g, '').replace(/^@/, ''); return s.includes('@') ? s : `${s}@${CONFIG.USER_DOMAIN}`; };
@@ -327,7 +337,7 @@ class StoreRepository {
   fits() { return this.#paged(() => this.#db.from('ms_fits').select('*').order('equipment_id').order('filter_type')); }
   async plates() { return (await this.#rpc('ms_plates')) ?? []; }
   async history(item) { return (await this.#rpc('ms_history', { p_item: item })) ?? []; }
-  async movesIn(a, b, store) { const args = store ? { p_from: a, p_to: b, p_store: store } : { p_from: a, p_to: b }; const out = []; for (let from = 0; ; from += 1000) { const { data, error } = await this.#db.rpc('ms_moves_in', args).range(from, from + 999); this.#chk(error); out.push(...(data || [])); if ((data || []).length < 1000) return out; } }
+  async movesIn(a, b, store, plate) { const args = { p_from: a, p_to: b }; if (store) args.p_store = store; if (plate) args.p_plate = plate; const out = []; for (let from = 0; ; from += 1000) { const { data, error } = await this.#db.rpc('ms_moves_in', args).range(from, from + 999); this.#chk(error); out.push(...(data || [])); if ((data || []).length < 1000) return out; } }
   async check() { return (await this.#rpc('ms_stock_check')) ?? []; }
   async storeSummary() { return (await this.#rpc('ms_store_summary')) ?? []; }
   post(p) { return this.#rpc('ms_post', { p }); }
@@ -410,7 +420,7 @@ const errText = e => { const m = String(e?.message ?? e ?? ''), code = String(e?
     MS_ITEM_IN_USE: 'errItemInUse', MS_STORE_IN_USE: 'errStoreInUse', MS_MOVE_UNKNOWN: 'errMoveUnknown', MS_MAIN_STORE: 'errMainStore', MS_STORE_CODE_DUP: 'errStoreCodeDup',
     MS_CODE_TOO_LONG: 'errCodeLong', MS_LOCATION_TOO_LONG: 'errLocationLong', MS_PROJECT_HAS_STOCK: 'errProjectHasStock', MS_PROJECT_CLOSED: 'errProjectClosed',
     MS_JOB_WHAT_REQUIRED: 'errJobWhat', MS_JOB_INVALID: 'errJobInvalid', MS_OUT_BEFORE_IN: 'errOutBeforeIn', MS_READING_INVALID: 'errReading', MS_REF_TOO_LONG: 'errRefLong', MS_PLATE_TOO_LONG: 'errPlateLong',
-    MS_TYPE_INVALID: 'errTypeInvalid', MS_TYPE_DUP: 'errTypeDup', MS_DAYS_INVALID: 'errDays', MS_TYPE_IN_USE: 'errTypeInUse', MS_PUSH_INVALID: 'errPush' };
+    MS_TYPE_INVALID: 'errTypeInvalid', MS_TYPE_DUP: 'errTypeDup', MS_DAYS_INVALID: 'errDays', MS_TYPE_IN_USE: 'errTypeInUse', MS_PUSH_INVALID: 'errPush', MS_JOB_NOTE_LOCKED: 'errNoteLocked', MS_METER_INVALID: 'errMeter' };
   for (const k in M) if (m.includes(k)) return t(M[k]);
   if (/MS_FORBIDDEN|FORBIDDEN|row-level security|permission denied|not allowed/i.test(m)) return t('errForbidden');
   if (code === '23505' || /duplicate key|unique/i.test(m)) return t('errDup');
@@ -999,7 +1009,8 @@ function jobFormHtml(c, pre) {
     <label>${esc(t('jsChecks'))}</label><div class="ckgrid" id="jfChecks">${CHECKS.map(k => `<button type="button" class="ckc" data-k="${k}"><i></i><span>${esc(t('ck_' + k))}</span></button>`).join('')}</div>
     <div class="hint">${esc(t('ckHint'))}</div>
     ${secH(4, 'jsOils')}
-    ${OILS.map(o => `<div class="jline"><span>${esc(t('o_' + o))}</span><input id="jo_${o}" class="ltr" inputmode="decimal" placeholder="${esc(t('jfLitres'))}" autocomplete="off" value="${oil(o).qty != null ? esc(oil(o).qty) : ''}"><input id="jn_${o}" maxlength="120" placeholder="${esc(t('jfNote'))}" autocomplete="off" value="${esc(oil(o).note || '')}"></div>`).join('')}
+    ${OILS.map(o => `<div class="jline"><span>${esc(t('o_' + o))}</span><input id="jo_${o}" class="ltr" inputmode="decimal" placeholder="${esc(t('jfLitres'))}" autocomplete="off" value="${oil(o).qty != null ? esc(oil(o).qty) : ''}"><select id="jt_${o}" data-oil="${o}">${oilOpts(o, oil(o))}</select></div>`).join('')}
+    <div class="hint">${esc(t('jfOilAuto'))}</div>
     ${secH(5, 'jsFilters')}
     <datalist id="jfParts">${parts.map(p => `<option value="${esc(p)}"></option>`).join('')}</datalist>
     ${JFILTERS.map(f => `<div class="jline"><span>${esc(t('fl_' + f))}</span><input id="jp_${f}" class="ltr" maxlength="40" list="jfParts" placeholder="${esc(t('jfPartNo'))}" autocapitalize="characters" autocomplete="off" value="${esc(flt(f).part_no || '')}">
@@ -1021,8 +1032,9 @@ function jfPaint() {
   document.querySelectorAll('#jfChecks .ckc').forEach(b => { const s = JF.checks[b.dataset.k]; b.className = 'ckc ' + (s || ''); b.querySelector('i').textContent = s === 'ok' ? '✓' : s === 'bad' ? '✗' : ''; });
   document.querySelectorAll('#jfWork .chip').forEach(b => b.classList.toggle('on', JF.work.includes(b.dataset.v)));
   document.querySelectorAll('#jfMaint .mtchip').forEach(b => b.classList.toggle('on', JF.maint.includes(b.dataset.v)));
-  if ($('jfNext')) { const base = ($('jfOutOn')?.value) || ($('jfInOn')?.value) || dubaiToday();
-    $('jfNext').innerHTML = JF.maint.map(typeOf).filter(Boolean).map(x => esc(t('jfNextDue', { n: x.name, d: dSlash(addDays(base, x.interval_days)) }))).join('<br>'); }
+  if ($('jfNext')) { const base = ($('jfOutOn')?.value) || ($('jfInOn')?.value) || dubaiToday(), rv = String($('jfReading')?.value || '').trim(), rd = rv ? qNum(rv) : null, u = $('jfUnit')?.value || 'km';
+    $('jfNext').innerHTML = JF.maint.map(typeOf).filter(Boolean).map(x => { const iv = u === 'hr' ? x.interval_hr : x.interval_km;
+      return [x.interval_days ? esc(t('jfNextDue', { n: x.name, d: dSlash(addDays(base, x.interval_days)) })) : '', iv && rd != null && rd >= 0 ? esc(t('jfNextAt', { n: x.name, r: fmtQ(rd + iv), u: t('u_' + u) })) : ''].filter(Boolean).join(' · '); }).filter(Boolean).join('<br>'); }
 }
 function jobRead(c, pre) {
   const txt = id => $(id).value.trim();
@@ -1030,8 +1042,9 @@ function jobRead(c, pre) {
   const se = c?.site_equipment_id ?? pre?.site_equipment_id ?? null;
   if (!plate && !make && !se) throw new Error(t('errJobWhat'));
   const rd = txt('jfReading'), reading = rd === '' ? null : qNum(rd); if (rd !== '' && !(reading >= 0)) throw new Error(t('errReading'));
-  const oils = OILS.map(o => { const q = txt('jo_' + o), note = txt('jn_' + o); if (q === '' && !note) return null; const n = q === '' ? null : qNum(q);
-    if (q !== '' && !(n >= 0)) throw new Error(t('errQty', { c: t('o_' + o) })); const r = { type: o }; if (n != null) r.qty = n; if (note) r.note = note; return r; }).filter(Boolean);
+  const oils = OILS.map(o => { const q = txt('jo_' + o), pick = $('jt_' + o).value; if (q === '' && !pick) return null; const n = q === '' ? null : qNum(q);
+    if (q !== '' && !(n >= 0)) throw new Error(t('errQty', { c: t('o_' + o) })); const r = { type: o }; if (n != null) r.qty = n;
+    if (pick === '__note') { const was = (c?.oils || []).find(x => x.type === o); if (was?.note) r.note = was.note; } else if (pick) r.type_id = pick; return r; }).filter(Boolean);
   const filters = JFILTERS.map(f => { const p = txt('jp_' + f).toUpperCase(), a = $('ja_' + f).value; if (!p && !a) return null; const r = { type: f, action: a || 'change' }; if (p) r.part_no = p; return r; }).filter(Boolean);
   const inOn = $('jfInOn').value || dubaiToday(), outOn = $('jfOutOn').value || null;
   if (outOn && outOn < inOn) throw new Error(t('errOutBeforeIn'));
@@ -1060,12 +1073,41 @@ async function jobSheet(c, pre) {
     if (!s) JF.checks[k] = 'ok'; else if (s === 'ok') JF.checks[k] = 'bad'; else delete JF.checks[k]; jfPaint(); };
   $('jfWork').onclick = e => { const b = e.target.closest('.chip'); if (!b) return; const w = b.dataset.v; JF.work = JF.work.includes(w) ? JF.work.filter(x => x !== w) : [...JF.work, w]; jfPaint(); };
   if ($('jfMaint')) $('jfMaint').onclick = e => { const b = e.target.closest('.mtchip'); if (!b) return; const v = b.dataset.v; JF.maint = JF.maint.includes(v) ? JF.maint.filter(x => x !== v) : [...JF.maint, v]; jfPaint(); };
-  ['jfInOn', 'jfOutOn'].forEach(id => $(id).addEventListener('change', jfPaint));
+  ['jfInOn', 'jfOutOn', 'jfReading', 'jfUnit'].forEach(id => { $(id).addEventListener('change', jfPaint); $(id).addEventListener('input', jfPaint); });
+  OILS.forEach(o => $('jt_' + o).addEventListener('change', e => { const v = e.target.value; if (v && v !== '__note' && !JF.maint.includes(v)) JF.maint.push(v); jfPaint(); }));
+  JFILTERS.forEach(f => $('ja_' + f).addEventListener('change', e => { const v = filterType(f); if (e.target.value === 'change' && v && !JF.maint.includes(v.id)) { JF.maint.push(v.id); jfPaint(); } }));
 }
+// a vehicle's file: the same key as the server's ms_vkey (plate, else site equipment, else equipment, else make)
+const vkeyOf = c => nkey(c.plate) ? 'P:' + nkey(c.plate) : c.site_equipment_id ? 'S:' + c.site_equipment_id : c.equipment_id ? 'E:' + c.equipment_id : c.make_model ? 'M:' + String(c.make_model).toLowerCase() : 'J:' + c.id;
+async function vehSheet(c) {
+  const k = vkeyOf(c), cards = JB.rows.filter(x => vkeyOf(x) === k).sort((a, b) => String(b.in_on).localeCompare(String(a.in_on)));
+  const ids = new Set(cards.map(x => x.id)), rems = RM.rows.filter(r => ids.has(r.job_card_id));
+  const open = rems.filter(r => r.status === 'open'), lastRd = cards.find(x => x.reading != null);
+  const head = [c.plate ? plateHtml(c.plate) : '', esc(c.make_model || ''), esc(c.eq_type || '')].filter(Boolean).join(' · ');
+  const none = `<div class="empty">${esc(t('vhNone'))}</div>`;
+  const body = `<div class="infobox">${head}${lastRd ? `<br>${esc(t('vhReading'))}: <b class="ltr">${esc(fmtQ(lastRd.reading) + ' ' + t('ru_' + (lastRd.reading_unit || 'km')))}</b> · ${esc(dSlash(lastRd.in_on))}` : ''}</div>
+    <div class="lhead"><span>${esc(t('vhNext'))}</span></div>
+    ${open.length ? `<div class="list">${open.map(remRow).join('')}</div>` : none}
+    <div class="lhead"><span>${esc(t('vhCards', { n: cards.length }))}</span></div>
+    <div class="list" id="vhCardsL">${cards.map(x => `<button type="button" class="frow" data-job="${esc(x.id)}"><div class="fm"><b class="ltr">${esc(x.job_no || '')}</b>
+      <div class="fx">${esc(dSlash(x.in_on))}${(x.oils || []).filter(oilName).length ? ' · ' + esc(x.oils.map(oilName).filter(Boolean).join('، ')) : ''}${(x.maint_types || []).length ? ' · ' + esc(x.maint_types.map(typeOf).filter(Boolean).map(y => y.name).join('، ')) : ''}</div></div></button>`).join('')}</div>
+    ${c.plate ? `<div class="lhead"><span>${esc(t('vhIssued'))}</span></div><div id="vhMoves">${skeleton(2)}</div>` : ''}`;
+  Edit.open(t('vhOpen'), body, null);
+  $('vhCardsL').onclick = e => { const b = e.target.closest('[data-job]'); if (b) openJob(b.dataset.job); };
+  document.querySelectorAll('#editBody .list .frow[data-id]').forEach(b => b.onclick = () => remSheet(b.dataset.id));
+  if (!c.plate) return;
+  try { const to = dubaiToday(), from = addDays(to, -730), mv = (await repo.movesIn(from, to, null, c.plate)).filter(m => m.status !== 'void' && m.kind === 'issue');
+    if (!$('vhMoves')) return;
+    $('vhMoves').innerHTML = mv.length ? `<div class="card">${mv.map(m => (m.lines || []).map(l => `<div class="kv"><span>${esc(l.name)} <small class="muted ltr">${esc(m.no || '')} · ${esc(dSlash(m.moved_on))}</small></span><b class="ltr">${esc(fmtQ(l.qty))} ${esc(l.unit || '')}</b></div>`).join('')).join('')}</div>` : none;
+  } catch (e) { if ($('vhMoves')) $('vhMoves').innerHTML = `<div class="msg err">${esc(errText(e))}</div>`; }
+}
+
 function openJob(id) {
   const c = jobOf(id); if (!c) return;
   const st = storeOf(c.store_id), se = seOf(c.site_equipment_id), ed = canEditJob(c);
   const fitsStock = (c.filters || []).map(f => f.part_no && STOCK.find(i => i.category === 'filter' && nkey(i.part_no) === nkey(f.part_no))).filter(Boolean);
+  // the oils picked from their types, each type linked to its store oil: issued with the litres when the store counts in litres
+  const oilStock = (c.oils || []).map(o => { const ty = o.type_id && typeOf(o.type_id), it = ty?.item_id && itemOf(ty.item_id); return it ? { it, qty: it.unit === 'litre' && o.qty != null ? String(o.qty) : '' } : null; }).filter(Boolean);
   const kv = (k, v) => v ? `<div><small>${esc(t(k))}</small><b>${v}</b></div>` : '';
   const body = `<div class="fs" style="margin-bottom:8px"><span class="pill ${c.status === 'done' ? 'ok' : 'warn'}">${esc(t(c.status === 'done' ? 'jbStDone' : 'jbStOpen'))}</span>
       <span class="muted">${esc(t('jbBy', { n: c.created_by_name || '', d: fmtDT(c.created_at) }))}</span></div>
@@ -1074,17 +1116,19 @@ function openJob(id) {
       ${kv('jfInOn', esc(dSlash(c.in_on) + (c.in_time ? ' ' + hhmm(c.in_time) : '')))}${kv('jfOutOn', c.out_on ? esc(dSlash(c.out_on) + (c.out_time ? ' ' + hhmm(c.out_time) : '')) : '')}
       ${kv('jfReading', c.reading != null ? esc(fmtQ(c.reading) + ' ' + t('ru_' + (c.reading_unit || 'km'))) : '')}${kv('jfFuel', c.fuel != null ? esc(fuelLbl(c.fuel)) : '')}</div>
     ${(c.work || []).length ? `<div class="fs">${c.work.map(w => `<span class="kpill f">${esc(t('w_' + w))}</span>`).join('')}</div>` : ''}
-    ${nextOf(c).length ? `<div class="lhead"><span>${esc(t('jsMaint'))}</span></div><div class="card" style="margin-top:6px">${nextOf(c).map(x => `<div class="kv"><span>${esc(x.name)} <small class="muted">${esc(t('tyEvery', { n: x.interval_days }))}</small></span><b class="ltr">${esc(dSlash(x.due))}</b></div>`).join('')}</div>` : ''}
-    ${(c.oils || []).length ? `<div class="lhead"><span>${esc(t('jsOils'))}</span></div><div class="card" style="margin-top:6px">${c.oils.map(o => `<div class="kv"><span>${esc(t('o_' + o.type))}${o.note ? ` <small class="muted">${esc(o.note)}</small>` : ''}</span><b class="ltr">${o.qty != null ? esc(fmtQ(o.qty)) + ' ' + esc(t('jfLitres')) : '—'}</b></div>`).join('')}</div>` : ''}
+    ${nextOf(c).length ? `<div class="lhead"><span>${esc(t('jsMaint'))}</span></div><div class="card" style="margin-top:6px">${nextOf(c).map(x => `<div class="kv"><span>${esc(x.name)} <small class="muted">${esc(ivl(x))}</small></span><b class="ltr">${esc(x.dueTxt)}</b></div>`).join('')}</div>` : ''}
+    ${(c.oils || []).length ? `<div class="lhead"><span>${esc(t('jsOils'))}</span></div><div class="card" style="margin-top:6px">${c.oils.map(o => `<div class="kv"><span>${esc(t('o_' + o.type))}${oilName(o) ? ` <small class="muted">${esc(oilName(o))}</small>` : ''}</span><b class="ltr">${o.qty != null ? esc(fmtQ(o.qty)) + ' ' + esc(t('jfLitres')) : '—'}</b></div>`).join('')}</div>` : ''}
     ${(c.filters || []).length ? `<div class="lhead"><span>${esc(t('jsFilters'))}</span></div><div class="card" style="margin-top:6px">${c.filters.map(f => `<div class="kv"><span>${esc(t('fl_' + f.type))} <small class="muted ltr">${esc(f.part_no || '')}</small></span><b>${esc(t('ac_' + (f.action || 'change')))}</b></div>`).join('')}</div>` : ''}
     ${c.diagnosis ? `<div class="lhead"><span>${esc(t('jsDiag'))}</span></div><div class="infobox" style="white-space:pre-wrap">${esc(c.diagnosis)}</div>` : ''}
     ${c.parts ? `<div class="lhead"><span>${esc(t('jsParts'))}</span></div><div class="infobox" style="white-space:pre-wrap">${esc(c.parts)}</div>` : ''}
     <button type="button" class="primary" id="jbPrintB">${esc(t('jbPrint'))}</button>
     ${ed ? `<div class="row2b"><button type="button" class="ghost" id="jbEditB">${esc(t('jbEdit'))}</button><button type="button" class="ghost" id="jbTogB">${esc(t(c.status === 'done' ? 'jbReopen' : 'jbMarkDone'))}</button></div>` : ''}
-    ${canEdit() && fitsStock.length ? `<button type="button" class="ghost" id="jbIssueB">${esc(t('jbIssue'))}</button>` : ''}
+    ${canEdit() && (fitsStock.length || oilStock.length) ? `<button type="button" class="ghost" id="jbIssueB">${esc(t('jbIssue'))}</button>` : ''}
+    <button type="button" class="ghost" id="jbVehB">${esc(t('vhOpen'))}</button>
     ${canAdmin() ? `<button type="button" class="ghost danger" id="jbDelB">${esc(t('jbDelete'))}</button>` : ''}`;
   Edit.open('🔧 ' + c.no, body, null);
   $('jbPrintB').onclick = () => printIn(() => jobPdf(c));
+  $('jbVehB').onclick = () => vehSheet(c);
   if ($('jbEditB')) {
     $('jbEditB').onclick = () => jobSheet(c);
     $('jbTogB').onclick = async () => { busy($('jbTogB'), true);
@@ -1094,7 +1138,9 @@ function openJob(id) {
   }
   if ($('jbIssueB')) $('jbIssueB').onclick = () => {
     const from = st && st.active ? st.id : mainStore()?.id;
-    Edit.close(); startMove('issue', [...new Set(fitsStock.map(i => i.item_id))].map(id => ({ item_id: id, qty: '1' })), { from });
+    const lines = [...new Set(fitsStock.map(i => i.item_id))].map(id => ({ item_id: id, qty: '1' }));
+    oilStock.forEach(o => { if (!lines.some(l => l.item_id === o.it.item_id)) lines.push({ item_id: o.it.item_id, qty: o.qty }); });
+    Edit.close(); startMove('issue', lines, { from });
     if (c.plate && [...$('mvPlate').options].some(o => o.value === c.plate)) { $('mvPlate').value = c.plate; Picker.refresh($('mvPlate')); renderFits(); }
     $('mvRef').value = c.no; if (c.mechanic) $('mvParty').value = c.mechanic;
   };
@@ -1113,13 +1159,22 @@ const tyPartLbl = x => !x.part ? '' : t((x.kind === 'oil' ? 'o_' : 'fl_') + x.pa
 const tyParts = k => k === 'oil' ? OILS.map(o => [o, t('o_' + o)]) : k === 'filter' ? JFILTERS.map(f => [f, t('fl_' + f)]) : [];
 const partOpts = (k, cur) => `<option value="">${esc(t('tyPartAny'))}</option>` + tyParts(k).map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('');
 // a card's types with their next change: the reminder's day when it is known, else the day out (or in) + the type's days
-const nextOf = c => (c?.maint_types || []).map(typeOf).filter(Boolean).map(x => ({ name: x.name, interval_days: x.interval_days,
-  due: RM.rows.find(r => r.job_card_id === c.id && r.type_id === x.id)?.due_on || addDays(c.out_on || c.in_on, x.interval_days) }));
+const ivl = x => t('ivEvery', { s: [x.interval_days ? t('ivDays', { n: x.interval_days }) : '', x.interval_km ? t('ivKm', { n: fmtInt(x.interval_km) }) : '', x.interval_hr ? t('ivHr', { n: fmtInt(x.interval_hr) }) : ''].filter(Boolean).join(' / ') });
+const nextOf = c => (c?.maint_types || []).map(typeOf).filter(Boolean).map(x => { const r = RM.rows.find(y => y.job_card_id === c.id && y.type_id === x.id), u = c.reading_unit || 'km';
+  const due = r ? r.due_on : x.interval_days ? addDays(c.out_on || c.in_on, x.interval_days) : null, iv = u === 'hr' ? x.interval_hr : x.interval_km;
+  const at = r ? r.due_reading : c.reading != null && iv ? Number(c.reading) + iv : null;
+  return { ...x, due, dueTxt: [due ? dSlash(due) : '', at != null ? t('remAtMeter', { n: fmtQ(at), u: t('u_' + (r?.reading_unit || u)) }) : ''].filter(Boolean).join(' · ') || '—' }; });
+// an oil's name: its type's, else what was typed before; the filter type a changed filter reminds by (the one active type of its part)
+const oilName = o => (o.type_id && typeOf(o.type_id)?.name) || o.note || '';
+const filterType = f => { const l = TY.rows.filter(x => x.kind === 'filter' && x.part === f && x.active); return l.length === 1 ? l[0] : null; };
+const oilOpts = (o, cur) => { const l = TY.rows.filter(x => x.kind === 'oil' && (!x.part || x.part === o) && (x.active || x.id === cur?.type_id));
+  return `<option value="">${esc(t('jfOilPick'))}</option>${cur?.note && !cur.type_id ? `<option value="__note" selected>${esc(t('jfOilOld', { n: cur.note }))}</option>` : ''}`
+    + l.map(x => `<option value="${esc(x.id)}" ${x.id === cur?.type_id ? 'selected' : ''}>${esc(x.name)}</option>`).join(''); };
 function maintChips(c, pre) {
   const on = c?.maint_types || pre?.maint_types || [];
   const list = TY.rows.filter(x => x.active || on.includes(x.id));
   if (!list.length) return TY.ok ? `<div class="hint">${esc(t('jfNoTypes'))}</div>` : '';
-  return `<div class="hint">${esc(t('jfMaintHint'))}</div><div class="chips wrap" id="jfMaint">${list.map(x => `<button type="button" class="mtchip" data-v="${esc(x.id)}">${esc(x.name)}<small>${esc(t('tyEvery', { n: x.interval_days }))}</small></button>`).join('')}</div><div class="nextdue" id="jfNext"></div>`;
+  return `<div class="hint">${esc(t('jfMaintHint'))}</div><div class="chips wrap" id="jfMaint">${list.map(x => `<button type="button" class="mtchip" data-v="${esc(x.id)}">${esc(x.name)}<small>${esc(ivl(x))}</small></button>`).join('')}</div><div class="nextdue" id="jfNext"></div>`;
 }
 async function loadTypes() {
   const seq = ++TY.seq;
@@ -1135,7 +1190,7 @@ function tyRow(x) {
     <div class="fn">${esc(x.name)}</div>
     <div class="fs"><span class="kpill f">${esc(t('tk_' + x.kind))}</span>${x.part ? `<span class="kpill">${esc(tyPartLbl(x))}</span>` : ''}${it ? `<small class="muted ltr">${esc(it.code)}</small>` : ''}${x.active ? '' : `<span class="pill">${esc(t('tyStopped'))}</span>`}</div>
     ${x.note ? `<div class="fx">${esc(x.note)}</div>` : ''}</div>
-    <div class="fa"><span class="pill ok">${esc(t('tyEvery', { n: x.interval_days }))}</span></div></div>`;
+    <div class="fa"><span class="pill ok">${esc(ivl(x))}</span></div></div>`;
 }
 function renderTypes() {
   if (TY.err) { $('tyList').innerHTML = `<div class="msg err">${esc(TY.err)}</div>`; return; }
@@ -1150,13 +1205,20 @@ function typeSheet(x) {
     <div class="row"><div><label for="tyKind">${esc(t('tyKind'))}</label><select id="tyKind">${['oil', 'filter', 'service'].map(v => `<option value="${v}" ${v === k ? 'selected' : ''}>${esc(t('tk_' + v))}</option>`).join('')}</select></div>
       <div><label for="tyPart">${esc(t('tyPart'))}</label><select id="tyPart">${partOpts(k, x?.part)}</select></div></div>
     <div class="row"><div><label for="tyDays">${esc(t('tyDays'))}</label><input id="tyDays" class="ltr" inputmode="numeric" autocomplete="off" value="${esc(x?.interval_days ?? '')}"></div>
+      <div><label for="tyKm">${esc(t('tyKm'))}</label><input id="tyKm" class="ltr" inputmode="numeric" autocomplete="off" value="${esc(x?.interval_km ?? '')}"></div></div>
+    <div class="row"><div><label for="tyHr">${esc(t('tyHr'))}</label><input id="tyHr" class="ltr" inputmode="numeric" autocomplete="off" value="${esc(x?.interval_hr ?? '')}"></div>
       <div><label for="tyItem">${esc(t('tyItem'))}<span class="opt-t">${esc(t('optional'))}</span></label><select id="tyItem"><option value="">${esc(t('tyItemNone'))}</option>${items.map(i => `<option value="${esc(i.item_id)}" ${i.item_id === x?.item_id ? 'selected' : ''}>${esc(i.code + ' — ' + i.name)}</option>`).join('')}</select></div></div>
+    <div class="hint">${esc(t('tyIvlHint'))}</div>
     <label for="tyNote">${esc(t('tyNote'))}<span class="opt-t">${esc(t('optional'))}</span></label><input id="tyNote" maxlength="200" autocomplete="off" value="${esc(x?.note || '')}">
     ${x ? `<label class="chk"><input type="checkbox" id="tyActive" ${x.active ? 'checked' : ''}> ${esc(t('tyActiveL'))}</label><button type="button" class="ghost danger" id="tyDelB">${esc(t('tyDel'))}</button>` : ''}`;
   Edit.open(x ? t('tyEditT') : t('tyNewT'), body, async () => {
     const name = $('tyName').value.trim(); if (!name) throw new Error(t('errNameReq'));
-    const days = qNum($('tyDays').value); if (!(Number.isInteger(days) && days >= 1 && days <= 3650)) throw new Error(t('errDays'));
-    const row = { name, kind: $('tyKind').value, part: $('tyPart').value || null, interval_days: days, item_id: $('tyItem').value || null, note: $('tyNote').value.trim() || null };
+    const num = id => { const v = $(id).value.trim(); return v === '' ? null : qNum(v); };
+    const days = num('tyDays'), km = num('tyKm'), hr = num('tyHr');
+    if (days == null && km == null && hr == null) throw new Error(t('errIvlReq'));
+    if (days != null && !(Number.isInteger(days) && days >= 1 && days <= 3650)) throw new Error(t('errDays'));
+    if ((km != null && !(Number.isInteger(km) && km >= 1 && km <= 1000000)) || (hr != null && !(Number.isInteger(hr) && hr >= 1 && hr <= 100000))) throw new Error(t('errMeter'));
+    const row = { name, kind: $('tyKind').value, part: $('tyPart').value || null, interval_days: days, interval_km: km, interval_hr: hr, item_id: $('tyItem').value || null, note: $('tyNote').value.trim() || null };
     if (x) row.active = $('tyActive').checked;
     const saved = x ? await repo.updType(x.id, row) : await repo.addType(row);
     const i = TY.rows.findIndex(r => r.id === saved.id); if (i >= 0) TY.rows[i] = saved; else TY.rows.push(saved);
@@ -1172,11 +1234,15 @@ $('tyList').onclick = e => { const r = e.target.closest('.frow'); if (r && canAd
 $('btnTyNew').onclick = () => typeSheet(null);
 
 // the reminders: due (today or late), coming, closed
-const remKey = r => r.status !== 'open' ? 'closed' : r.days_left <= 0 ? 'due' : 'soon';
-const remCls = r => r.status !== 'open' ? 'closed' : r.days_left < 0 ? 'late' : r.days_left === 0 ? 'today' : 'soon';
-const remWhen = r => r.days_left < 0 ? t('remLate', { n: -r.days_left }) : r.days_left === 0 ? t('remToday') : t('remIn', { n: r.days_left });
+const remKey = r => r.status !== 'open' ? 'closed' : r.due ? 'due' : 'soon';
+const remCls = r => r.status !== 'open' ? 'closed' : (r.days_left != null && r.days_left < 0) || r.meter_left < 0 ? 'late' : r.due ? 'today' : 'soon';
+const remU = r => t('u_' + (r.reading_unit || 'km'));
+const remWhen = r => r.meter_left != null && r.meter_left <= 0 ? t('remMeterOver', { n: fmtQ(-r.meter_left), u: remU(r) })
+  : r.days_left == null ? (r.meter_left != null ? t('remMeterLeft', { n: fmtQ(r.meter_left), u: remU(r) }) : '—')
+  : r.days_left < 0 ? t('remLate', { n: -r.days_left }) : r.days_left === 0 ? t('remToday') : t('remIn', { n: r.days_left });
+const remDueTxt = r => [r.due_on ? t('remDueOn', { d: dSlash(r.due_on) }) : '', r.due_reading != null ? t('remAtMeter', { n: fmtQ(r.due_reading), u: remU(r) }) + (r.cur_reading != null ? ` (${t('remNow', { n: fmtQ(r.cur_reading) })})` : '') : ''].filter(Boolean).join(' · ');
 const remSt = r => r.status === 'open' ? remWhen(r) : r.status === 'renewed' ? t('st_renewed', { no: r.closed_by_name || '' }) : t('st_' + r.status);
-const remPill = r => `<span class="pill ${r.status !== 'open' ? '' : r.days_left < 0 ? 'late' : r.days_left === 0 ? 'warn' : 'ok'}">${esc(remSt(r))}</span>`;
+const remPill = r => `<span class="pill ${r.status !== 'open' ? '' : remCls(r) === 'late' ? 'late' : r.due ? 'warn' : 'ok'}">${esc(remSt(r))}</span>`;
 const remRest = r => (r.label || '').split(' · ').filter(x => x && x !== r.plate).join(' · ');
 async function loadRem() {
   const seq = ++RM.seq;
@@ -1195,7 +1261,7 @@ function remRow(r) {
   return `<div class="frow rem ${remCls(r)}" data-id="${esc(r.id)}"><div class="fb">
     <div class="fn">${esc(r.type_name)}</div>
     <div class="fs">${r.plate ? plateHtml(r.plate) : ''}<span>${esc(remRest(r))}</span></div>
-    <div class="fx">${esc(t('remDueOn', { d: dSlash(r.due_on) }))} · ${esc(t('remDoneOn', { d: dSlash(r.done_on) }))} · <span class="ltr">${esc(r.job_no)}</span></div></div>
+    <div class="fx">${esc(remDueTxt(r))} · ${esc(t('remDoneOn', { d: dSlash(r.done_on) }))} · <span class="ltr">${esc(r.job_no)}</span></div></div>
     <div class="fa">${remPill(r)}</div></div>`;
 }
 function renderRem() {
@@ -1213,13 +1279,13 @@ async function remSheet(id) {
   const kv = (k, v) => v ? `<div><small>${esc(t(k))}</small><b>${v}</b></div>` : '';
   const body = `<div class="fs" style="margin-bottom:8px">${remPill(r)}${r.status !== 'open' && r.closed_by_name && r.status !== 'renewed' ? `<span class="muted">${esc(r.closed_by_name)} · ${esc(fmtDT(r.closed_at))}</span>` : ''}</div>
     <div class="pinfo">${kv('remWhat', (r.plate ? plateHtml(r.plate) + ' ' : '') + esc(remRest(r)))}${kv('jfSite', st ? esc(storeLbl(st)) : '')}${kv('remJob', `<span class="ltr">${esc(r.job_no)}</span>`)}${kv('remType', esc(r.type_name))}</div>
-    <div class="infobox">${esc(t('remDoneOn', { d: dSlash(r.done_on) }))} · ${esc(t('tyEvery', { n: r.interval_days }))}<br><b>${esc(t('remDueOn', { d: dSlash(r.due_on) }))}</b></div>
-    ${c ? `<button type="button" class="ghost" id="remJobB">${esc(t('remOpenJob', { no: r.job_no }))}</button>` : ''}
+    <div class="infobox">${esc(t('remDoneOn', { d: dSlash(r.done_on) }))}${r.done_reading != null ? ` · ${esc(fmtQ(r.done_reading) + ' ' + remU(r))}` : ''} · ${esc(ivl(r))}<br><b>${esc(remDueTxt(r))}</b></div>
+    ${c ? `<div class="row2b"><button type="button" class="ghost" id="remJobB">${esc(t('remOpenJob', { no: r.job_no }))}</button><button type="button" class="ghost" id="remVehB">${esc(t('vhOpen'))}</button></div>` : ''}
     ${canJob() ? `<button type="button" class="${r.status === 'open' ? 'primary' : 'ghost'}" id="remNewB">${esc(t('remNewJob'))}</button>` : ''}
     ${canAdmin() ? (r.status === 'open' ? `<div class="row2b"><button type="button" class="ghost" id="remDoneB">${esc(t('remMarkDone'))}</button><button type="button" class="ghost danger" id="remDisB">${esc(t('remDismiss'))}</button></div>`
       : `<button type="button" class="ghost" id="remOpenB">${esc(t('remReopen'))}</button>`) : ''}`;
   Edit.open('🔔 ' + r.type_name, body, null);
-  if ($('remJobB')) $('remJobB').onclick = () => openJob(c.id);
+  if ($('remJobB')) { $('remJobB').onclick = () => openJob(c.id); $('remVehB').onclick = () => vehSheet(c); }
   if ($('remNewB')) $('remNewB').onclick = () => jobSheet(null, { plate: c?.plate ?? r.plate, make_model: c?.make_model, eq_type: c?.eq_type, driver: c?.driver, store_id: c?.store_id ?? r.store_id,
     site_equipment_id: c?.site_equipment_id ?? null, maint_types: [r.type_id] });
   const set = (id, s) => { if ($(id)) $(id).onclick = async () => { busy($(id), true);
@@ -1521,12 +1587,12 @@ function jobPdf(c) {
     <div class="cond"><div class="gauge"><small>${L2('jfFuel')}</small><div class="bars">${FUELS.map((f, i) => `<span class="${i <= fuel && fuel >= 0 ? 'on' : ''} ${fuel === 0 ? 'lo' : ''}"></span>`).join('')}</div><div class="ticks">${FUELS.map(f => `<span>${fuelLbl(f)}</span>`).join('')}</div></div>
       <div class="cks">${CHECKS.map(k => { const s = (c.checks || {})[k]; return `<div class="ck ${s || ''}"><i>${s === 'ok' ? '✓' : s === 'bad' ? '✗' : ''}</i><span>${L2('ck_' + k)}</span></div>`; }).join('')}</div></div>
     <div class="two"><div>${sec(3, 'jsOils')}
-      <table><thead><tr><th>${L2('thOil')}</th><th>${L2('jfLitres')}</th><th>${L2('jfNote')}</th></tr></thead><tbody>${OILS.map(o => { const x = oil(o); return `<tr class="${x ? '' : 'off'}"><td>${L2('o_' + o)}</td><td class="q">${x && x.qty != null ? esc(fmtQ(x.qty)) : '—'}</td><td>${esc(x?.note || '')}</td></tr>`; }).join('')}</tbody></table></div>
+      <table><thead><tr><th>${L2('thOil')}</th><th>${L2('jfLitres')}</th><th>${L2('jfNote')}</th></tr></thead><tbody>${OILS.map(o => { const x = oil(o); return `<tr class="${x ? '' : 'off'}"><td>${L2('o_' + o)}</td><td class="q">${x && x.qty != null ? esc(fmtQ(x.qty)) : '—'}</td><td>${esc(x ? oilName(x) : '')}</td></tr>`; }).join('')}</tbody></table></div>
       <div>${sec(4, 'jsFilters')}
       <table><thead><tr><th>${L2('thFilter')}</th><th>${L2('jfPartNo')}</th><th>${L2('jfAction')}</th></tr></thead><tbody>${JFILTERS.map(f => { const x = flt(f); return `<tr class="${x ? '' : 'off'}"><td>${L2('fl_' + f)}</td><td class="q">${esc(x?.part_no || (x ? '' : '—'))}</td><td>${x ? `<span class="act ${esc(x.action || 'change')}">${esc(t('ac_' + (x.action || 'change')))}</span>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>
     ${sec(5, 'jsWork')}
     <div class="works">${WORKS.map(w => `<span class="wk ${(c.work || []).includes(w) ? 'on' : ''}"><i></i>${esc(t('w_' + w))}</span>`).join('')}</div>
-    ${nextOf(c).length ? `<div class="box" style="min-height:0;margin-top:6px"><span class="bh">${L2('ppNext')}</span>${nextOf(c).map(x => `${esc(x.name)} — <span class="ltr">${esc(dSlash(x.due))}</span>`).join(' · ')}</div>` : ''}
+    ${nextOf(c).length ? `<div class="box" style="min-height:0;margin-top:6px"><span class="bh">${L2('ppNext')}</span>${nextOf(c).map(x => `${esc(x.name)} — <span class="ltr">${esc(x.dueTxt)}</span>`).join(' · ')}</div>` : ''}
     ${sec(6, 'jsDiag')}
     <div class="two"><div class="box"><span class="bh">${L2('jsDiag')}</span><span dir="auto">${esc(c.diagnosis || '')}</span></div><div class="box"><span class="bh">${L2('jsParts')}</span><span dir="auto">${esc(c.parts || '')}</span></div></div>
     ${sec(7, 'jsSign')}
